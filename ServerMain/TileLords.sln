@@ -11,6 +11,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameModelTests", "..\GameMo
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ServerTests", "..\ServerTests\ServerTests.csproj", "{807062E2-797D-411B-ACA6-AE1B43F33056}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NetworkManager", "..\NetworkManager\NetworkManager.csproj", "{2B61DD46-B33D-4AB0-8529-5697F31A6AA0}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NetworkManagerTests", "..\NetworkManagerTests\NetworkManagerTests.csproj", "{5D3A9F01-B172-41B2-96AC-0FB775916AA8}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -33,6 +37,14 @@ Global
 		{807062E2-797D-411B-ACA6-AE1B43F33056}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{807062E2-797D-411B-ACA6-AE1B43F33056}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{807062E2-797D-411B-ACA6-AE1B43F33056}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2B61DD46-B33D-4AB0-8529-5697F31A6AA0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2B61DD46-B33D-4AB0-8529-5697F31A6AA0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2B61DD46-B33D-4AB0-8529-5697F31A6AA0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2B61DD46-B33D-4AB0-8529-5697F31A6AA0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5D3A9F01-B172-41B2-96AC-0FB775916AA8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5D3A9F01-B172-41B2-96AC-0FB775916AA8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5D3A9F01-B172-41B2-96AC-0FB775916AA8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5D3A9F01-B172-41B2-96AC-0FB775916AA8}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
