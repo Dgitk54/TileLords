@@ -3,17 +3,17 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.29009.5
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Server", "Server.csproj", "{739E4A66-D387-4EA2-9013-1E8255517A1A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Server", "ServerMain\Server.csproj", "{739E4A66-D387-4EA2-9013-1E8255517A1A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameModel", "..\GameModel\GameModel.csproj", "{49967A8D-1550-49A6-8384-24F7FFAEE4E3}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GameModel", "GameModel\GameModel.csproj", "{49967A8D-1550-49A6-8384-24F7FFAEE4E3}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameModelTests", "..\GameModelTests\GameModelTests.csproj", "{121D8B09-1C9F-4648-94E0-E8A0A7F29635}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GameModelTests", "GameModelTests\GameModelTests.csproj", "{121D8B09-1C9F-4648-94E0-E8A0A7F29635}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ServerTests", "..\ServerTests\ServerTests.csproj", "{807062E2-797D-411B-ACA6-AE1B43F33056}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ServerTests", "ServerTests\ServerTests.csproj", "{807062E2-797D-411B-ACA6-AE1B43F33056}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NetworkManager", "..\NetworkManager\NetworkManager.csproj", "{2B61DD46-B33D-4AB0-8529-5697F31A6AA0}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NetworkManager", "NetworkManager\NetworkManager.csproj", "{2B61DD46-B33D-4AB0-8529-5697F31A6AA0}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NetworkManagerTests", "..\NetworkManagerTests\NetworkManagerTests.csproj", "{5D3A9F01-B172-41B2-96AC-0FB775916AA8}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NetworkManagerTests", "NetworkManagerTests\NetworkManagerTests.csproj", "{5D3A9F01-B172-41B2-96AC-0FB775916AA8}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
