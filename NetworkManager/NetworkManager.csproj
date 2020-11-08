@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
@@ -11,6 +11,10 @@
     <PackageReference Include="DotNetty.Common" Version="0.6.0" />
     <PackageReference Include="DotNetty.Handlers" Version="0.6.0" />
     <PackageReference Include="DotNetty.Transport" Version="0.6.0" />
+    <PackageReference Include="System.Reactive" Version="4.4.1" />
+    <PackageReference Include="System.Reactive.Core" Version="4.4.1" />
+    <PackageReference Include="System.Reactive.Interfaces" Version="4.4.1" />
+    <PackageReference Include="System.Reactive.Linq" Version="4.4.1" />
   </ItemGroup>
 
 </Project>

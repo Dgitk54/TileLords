@@ -5,9 +5,9 @@ VisualStudioVersion = 16.0.29009.5
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Server", "ServerMain\Server.csproj", "{739E4A66-D387-4EA2-9013-1E8255517A1A}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GameModel", "GameModel\GameModel.csproj", "{49967A8D-1550-49A6-8384-24F7FFAEE4E3}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DataModel", "GameModel\DataModel.csproj", "{49967A8D-1550-49A6-8384-24F7FFAEE4E3}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GameModelTests", "GameModelTests\GameModelTests.csproj", "{121D8B09-1C9F-4648-94E0-E8A0A7F29635}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DataModelTests", "GameModelTests\DataModelTests.csproj", "{121D8B09-1C9F-4648-94E0-E8A0A7F29635}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ServerTests", "ServerTests\ServerTests.csproj", "{807062E2-797D-411B-ACA6-AE1B43F33056}"
 EndProject
