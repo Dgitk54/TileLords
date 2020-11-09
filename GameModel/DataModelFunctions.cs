@@ -5,6 +5,7 @@ using System.Reactive.Linq;
 using System.Reactive.Joins;
 using System.Reactive.PlatformServices;
 using DataModel;
+using System.Linq;
 
 namespace DataModel
 {
@@ -18,5 +19,8 @@ namespace DataModel
             => from i in gps
                from j in precision
                select new PlusCode(new OpenLocationCode(i.Lat, i.Lon, j).Code, j);
+
+
+        
     }
 }

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using DataModel;
+using System;
 
 namespace ServerMain
 {
@@ -6,7 +7,7 @@ namespace ServerMain
     {
         static void Main(string[] args)
         {
-            Console.WriteLine("Hello World Test!");
+
         }
     }
 }
