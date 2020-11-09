@@ -10,6 +10,7 @@ using NUnit.Framework;
 using Google.OpenLocationCode;
 using Microsoft.Reactive.Testing;
 using System.Linq;
+using System.Diagnostics;
 
 namespace DataModelTests
 {
@@ -66,26 +67,33 @@ namespace DataModelTests
         [Test]
         public void GetPlusCodeCapableOfMultipleGpsInputs()
         {
+
             precisionStraem = Observable.Create<int>(v => { v.OnNext(8); return v.OnCompleted; });
-            gpsStream = Observable.Create<GPS>(v => 
+            gpsStream = Observable.Create<GPS>(v =>
             {
                 v.OnNext(new GPS(49.944365, 7.919616));
                 v.OnNext(new GPS(52.519126, 13.406101));
                 return v.OnCompleted;
             });
-            var sub = func.GetPlusCode(gpsStream, precisionStraem)
-                .Do(v => 
+            var sub = func.GetPlusCode(gpsStream, precisionStraem);
+
+            int count = 0;
+            List<PlusCode> codes = new List<PlusCode>();
+
+            sub.Subscribe(
+                v =>
                 {
-                    Assert.IsTrue(v.Code.Length == 9 && v.Precision == 8);
-                    Assert.IsTrue(v.Code.Equals("8FX9WWV9+"));
-                })
-                .Do(v =>
+                    count = count + 1;
+                    codes.Add(v);
+                },
+                c =>
                 {
-                    Assert.IsTrue(v.Code.Length == 9 && v.Precision == 8);
-                    Assert.IsTrue(v.Code.Equals("9F4MGC94+"));
+                    Assert.IsTrue(count == 2);
+                    Assert.IsTrue(codes[0].Equals("8FX9WWV9+"));
+                    Assert.IsTrue(codes[1].Equals("9F4MGC94+"));
                 })
-                .Subscribe();
-            sub.Dispose();
+
+                .Dispose();
         }
     }
 }
