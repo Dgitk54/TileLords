@@ -10,6 +10,6 @@ namespace DataModel
     /// </summary>
     interface NetworkMessageProvider
     {
-        IObservable<INetworkMessage> NetworkMessageReceived();
+        IObservable<INetworkMessage> NetworkMessageReceived { get; }
     }
 }
