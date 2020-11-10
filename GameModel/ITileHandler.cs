@@ -6,8 +6,12 @@ namespace DataModel
 {
     interface ITileHandler
     {
-        IObservable<Tile> PlusCodeTileMapper(IObservable<PlusCode> pluscode);
-     
+        IObservable<Tile> LookUpTiles(IObservable<PlusCode> pluscode, IObservable<int> playerID);
+        IObservable<Tile> RequestTiles(IObservable<PlusCode> pluscode);
+        IObservable<Tile> UpdateTiles(IObservable<PlusCode> pluscode, IObservable<Tile> tile);
+        IObservable<Tile> RequestTileUIUpdate();
+
+
 
     }
 }
