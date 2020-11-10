@@ -19,7 +19,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\GameModel\DataModel.Common.csproj" />
+    <ProjectReference Include="..\DataModel\DataModel.Common.csproj" />
   </ItemGroup>
 
 </Project>
