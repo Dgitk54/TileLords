@@ -14,6 +14,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\GameModel\DataModel.Common.csproj" />
+    <ProjectReference Include="..\NetworkManager\NetworkManager.csproj" />
   </ItemGroup>
 
 </Project>
