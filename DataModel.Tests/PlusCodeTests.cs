@@ -11,6 +11,7 @@ using Google.OpenLocationCode;
 using Microsoft.Reactive.Testing;
 using System.Linq;
 using System.Diagnostics;
+using System.Threading.Tasks;
 
 namespace DataModelTests
 {
@@ -34,6 +35,14 @@ namespace DataModelTests
         //Berlin Rathaus
         //52.519126, 13.406101
         //9F4MGC94+MC
+
+
+        //TH Bingen 
+        //49.953111, 7.923055
+
+
+        //Berg Norden von TH bingen
+        //49.962096, 7.923703
 
         [SetUp]
         public void SetUp()
@@ -68,29 +77,80 @@ namespace DataModelTests
         public void GetPlusCodeCapableOfMultipleGpsInputs()
         {
 
-            precisionStraem = Observable.Create<int>(v => { v.OnNext(8); return v.OnCompleted; });
-            gpsStream = Observable.Create<GPS>(v =>
-            {
-                v.OnNext(new GPS(49.944365, 7.919616));
-                v.OnNext(new GPS(52.519126, 13.406101));
-                return v.OnCompleted;
-            });
-            var sub = func.GetPlusCode(gpsStream, precisionStraem);
+            List<GPS> gpsList = new List<GPS>();
+            gpsList.Add(new GPS(49.944365, 7.919616));
+            gpsList.Add(new GPS(52.519126, 13.406101));
+
+            List<int> intList = new List<int>();
+            intList.Add(8);
+
+
+            var sub = func.GetPlusCode(gpsList.ToObservable(), intList.ToObservable());
 
             int count = 0;
             List<PlusCode> codes = new List<PlusCode>();
 
+
             sub.Subscribe(
                 v =>
                 {
+
                     count = count + 1;
                     codes.Add(v);
+
+
+
                 },
-                c =>
+                () =>
                 {
+
+                    //   Debug.WriteLine("GetPlusCodeCapableOfMultipleGpsInputs: " + codes[0].Code);
+                    //   Debug.WriteLine("GetPlusCodeCapableOfMultipleGpsInputs: " + codes[1].Code);
                     Assert.IsTrue(count == 2);
-                    Assert.IsTrue(codes[0].Equals("8FX9WWV9+"));
-                    Assert.IsTrue(codes[1].Equals("9F4MGC94+"));
+                    Assert.IsTrue(codes[0].Code.Equals("8FX9WWV9+"));
+                    Assert.IsTrue(codes[1].Code.Equals("9F4MGC94+"));
+
+                })
+
+                .Dispose();
+        }
+
+
+        [Test]
+        public void PlusCodePrintingTest()
+        {
+
+            List<GPS> gpsList = new List<GPS>();
+            gpsList.Add(new GPS(49.944365, 7.919616));
+            gpsList.Add(new GPS(52.519126, 13.406101));
+
+            List<int> intList = new List<int>();
+            intList.Add(8);
+
+
+            var sub = func.GetPlusCode(gpsList.ToObservable(), intList.ToObservable());
+
+            int count = 0;
+            List<PlusCode> codes = new List<PlusCode>();
+
+
+            sub.Subscribe(
+                v =>
+                {
+
+                    count = count + 1;
+                    codes.Add(v);
+
+
+
+                },
+                () =>
+                {
+
+                    Debug.WriteLine("PlusCodePrintingTest: " + codes[0].Code);
+                    Debug.WriteLine("PlusCodePrintingTest: " + codes[1].Code);
+
+
                 })
 
                 .Dispose();
