@@ -1,4 +1,5 @@
-﻿using System;
+﻿using DataModel.Common;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -17,7 +18,7 @@ namespace DataModel
         Water
 
     }
-    public class Resource
+    public class Resource : ITileContent
     {
 
 

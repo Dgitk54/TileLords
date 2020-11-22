@@ -37,12 +37,7 @@ namespace DataModelTests
         //9F4MGC94+MC
 
 
-        //TH Bingen 
-        //49.953111, 7.923055
-
-
-        //Berg Norden von TH bingen
-        //49.962096, 7.923703
+    
 
         [SetUp]
         public void SetUp()
@@ -116,13 +111,20 @@ namespace DataModelTests
         }
 
 
+        //TH Bingen 
+        //49.953111, 7.923055
+
+
+        //Berg Norden von TH bingen
+        //49.962096, 7.923703
+
         [Test]
         public void PlusCodePrintingTest()
         {
 
             List<GPS> gpsList = new List<GPS>();
-            gpsList.Add(new GPS(49.944365, 7.919616));
-            gpsList.Add(new GPS(52.519126, 13.406101));
+            gpsList.Add(new GPS(49.953111, 7.923055));
+            gpsList.Add(new GPS(49.962096, 7.923703));
 
             List<int> intList = new List<int>();
             intList.Add(8);

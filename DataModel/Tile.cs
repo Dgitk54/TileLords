@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Runtime.ConstrainedExecution;
 using System.Text;
 
-namespace DataModel
+namespace DataModel.Common
 {
     public enum TileType
     {
@@ -21,16 +21,15 @@ namespace DataModel
     public class Tile
     {
 
-        public readonly PlusCode code;
-        public readonly TileType ttype;
-        public readonly Resource activeResource;
+        public  PlusCode code { get; }
+        public  TileType ttype { get; }
 
-        
+        public IReadOnlyList<IReadOnlyList<MiniTile>> MiniTileListList { get; }
 
-        public Tile(PlusCode c, TileType t) => (code, ttype) = (c, t);
-        public double PlusCode { get; }
-        public double TileType { get; }
-        public double Resource { get; }
+
+
+        public Tile(PlusCode c, TileType t, List<List<MiniTile>> miniTiles) => (code, ttype, MiniTileListList) = (c, t, miniTiles );
+      
 
     }
 }
