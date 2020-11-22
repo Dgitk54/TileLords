@@ -26,8 +26,6 @@ namespace DataModel.Common
 
         public IReadOnlyList<IReadOnlyList<MiniTile>> MiniTileListList { get; }
 
-
-
         public Tile(PlusCode c, TileType t, List<List<MiniTile>> miniTiles) => (code, ttype, MiniTileListList) = (c, t, miniTiles );
       
 

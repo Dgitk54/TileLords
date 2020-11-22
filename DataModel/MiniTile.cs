@@ -18,26 +18,19 @@ namespace DataModel.Common
 
     }
 
+    /// <summary>
+    /// Class for wrapping up a roughly 14mx14m area in the world.
+    /// </summary>
     public class MiniTile
     {
-
-
-
-        public MiniTile()
-        {
-
-        }
-
-
-
 
         public PlusCode code { get; }
         public MiniTileType tileType { get; }
 
-        private readonly IReadOnlyList<ITileContent> content;
+        public IReadOnlyList<ITileContent> Content { get; }
 
-        public MiniTile(PlusCode c, MiniTileType t, List<ITileContent> con) => (code, tileType, content) = (c, t, con);
-        public IReadOnlyList<ITileContent> Content => content;
+        public MiniTile(PlusCode c, MiniTileType t, List<ITileContent> con) => (code, tileType, Content) = (c, t, con);
+
 
     }
 }

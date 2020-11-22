@@ -9,26 +9,30 @@ namespace DataModel.Common
     class TileUtility
     {
 
-  
+        
 
 
-       /* public MiniTile getMiniTile(PlusCode locationCode, List<List<Tile>> tileList)
+
+        public MiniTile GetMiniTile(PlusCode locationCode, List<List<Tile>> tileList)
         {
             var minitile =
               from tileRows in tileList
               from tile in tileRows
-              from miniTile in tile.miniTileList
+              from miniTileRows in tile.MiniTileListList
+              from miniTile in miniTileRows
               where miniTile.code.Code == locationCode.Code
               select miniTile;
 
             return minitile.First();
-        } */
+        }
+
+
+       
 
 
 
-    
 
-        
+
 
 
     }

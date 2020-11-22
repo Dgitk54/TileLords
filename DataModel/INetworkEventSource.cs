@@ -4,7 +4,7 @@ using System.Text;
 
 namespace DataModel.Common
 {
-    public interface ITileContent
+    public interface INetworkEventSource
     {
 
     }

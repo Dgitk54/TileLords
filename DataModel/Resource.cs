@@ -20,16 +20,11 @@ namespace DataModel
     }
     public class Resource : ITileContent
     {
-
-
         public readonly ResourceType rtype;
-
 
         public Resource(ResourceType r) => (rtype) = (r);
 
         public double ResourceType { get; }
-
-
 
     }
 }
