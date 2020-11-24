@@ -4,11 +4,10 @@ using System.Reactive;
 using System.Reactive.Linq;
 using System.Reactive.Joins;
 using System.Reactive.PlatformServices;
-using DataModel;
 using System.Linq;
 using System.Reactive.Subjects;
 
-namespace DataModel
+namespace DataModel.Common
 {
     public class DataModelFunctions
     {

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using DataModel;
+using DataModel.Common;
 using System.Reactive;
 using System.Reactive.Linq;
 using System.Reactive.Joins;
@@ -12,6 +12,7 @@ using Microsoft.Reactive.Testing;
 using System.Linq;
 using System.Diagnostics;
 using System.Threading.Tasks;
+
 
 namespace DataModelTests
 {

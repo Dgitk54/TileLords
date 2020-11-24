@@ -1,0 +1,81 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Text;
+using DataModel;
+using System.Reactive;
+using System.Reactive.Linq;
+using System.Reactive.Joins;
+using System.Reactive.PlatformServices;
+using NUnit.Framework;
+using Google.OpenLocationCode;
+using Microsoft.Reactive.Testing;
+using System.Linq;
+using System.Diagnostics;
+using System.Threading.Tasks;
+using DataModel.Common;
+
+namespace DataModel.Tests
+{
+    [TestFixture]
+    class TileGeneratorTests
+    {
+        TileGenerator tileGen;
+
+        [SetUp]
+        public void SetUp()
+        {
+            tileGen = new TileGenerator();
+        }
+
+
+
+
+        [Test]
+        public void PrintGeneratedArea()
+        {
+
+
+            TileGenerator.GenerateArea(new PlusCode("8FX9WWV9+PR", 8), 1).ForEach(v =>
+            {
+                Debug.WriteLine(v.ToString() + "CONTENTS: \n ");
+                v.MiniTiles.ForEach(v2 =>
+                {
+                    Debug.WriteLine(v2.ToString());
+
+
+                });
+            });
+
+
+        }
+
+
+        [Test]
+        public void CoordsFileTest()
+        {
+            List<Tile> tileList = TileGenerator.GenerateArea(new PlusCode("8FX9WWV9+PR", 8), 1);
+            foreach (Tile t in tileList)
+            {
+                TileUtility.ReadableMini2DArrayFile(TileUtility.GetMiniTile2DArray(t.MiniTiles, 20), @"C:\Users\Kat\Desktop\2DTileArray.txt");
+            }
+
+
+        }
+
+
+        [Test]
+        public void SomeCoordsTest()
+        {
+            List<MiniTile> tileList = TileGenerator.GenerateMiniTiles(new PlusCode("8FX9WWV9+", 8));
+
+            MiniTile[,] miniTile2D = TileUtility.GetMiniTile2DArray(tileList, 20);
+            Assert.AreEqual("8FX9WWV9+2X" , miniTile2D[19, 19].Code.Code);
+            Assert.AreEqual("8FX9WWV9+4R" , miniTile2D[17, 16].Code.Code);
+            Assert.AreEqual("8FX9WWV9+22", miniTile2D[19, 0].Code.Code);
+            Assert.AreEqual("8FX9WWV9+C5", miniTile2D[11, 3].Code.Code);
+            Assert.AreEqual("8FX9WWV9+P7", miniTile2D[5, 5].Code.Code);
+
+
+        }
+    }
+}

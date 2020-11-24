@@ -21,13 +21,14 @@ namespace DataModel.Common
     public class Tile
     {
 
-        public  PlusCode code { get; }
-        public  TileType ttype { get; }
+        public  PlusCode Code { get; }
+        public  TileType Ttype { get; }
 
-        public IReadOnlyList<IReadOnlyList<MiniTile>> MiniTileListList { get; }
+        public List<MiniTile> MiniTiles { get; }
+        public Tile(PlusCode c, TileType t, List<MiniTile> MiniTileContent) => (Code, Ttype, MiniTiles) = (c, t, MiniTileContent);
 
-        public Tile(PlusCode c, TileType t, List<List<MiniTile>> miniTiles) => (code, ttype, MiniTileListList) = (c, t, miniTiles );
-      
+
+        public override string ToString() { return "Tile:" + Code.Code; }
 
     }
 }
