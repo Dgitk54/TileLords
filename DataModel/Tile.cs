@@ -12,9 +12,9 @@ namespace DataModel.Common
         public  PlusCode Code { get; }
         public  TileType Ttype { get; }
 
-        public IReadOnlyList<IReadOnlyList<MiniTile>> MiniTileListList { get; }
+        public List<MiniTile> MiniTiles { get; }
 
-        public Tile(PlusCode c, TileType t, List<List<MiniTile>> miniTiles) => (Code, Ttype, MiniTileListList) = (c, t, miniTiles );
+        public Tile(PlusCode c, TileType t, List<MiniTile> miniTiles) => (Code, Ttype, MiniTiles) = (c, t, miniTiles );
       
 
     }
