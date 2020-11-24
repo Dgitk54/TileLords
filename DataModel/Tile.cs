@@ -5,7 +5,10 @@ using System.Text;
 
 namespace DataModel.Common
 {
-   
+    /// <summary>
+    /// Class for wrapping up a roughly 275mx275m area in the world.
+    /// Made up of MiniTiles.
+    /// </summary>
     public class Tile
     {
 

@@ -12,10 +12,16 @@ namespace DataModel.Common
 
 
 
-
-        public static List<String> FindRenderRange(String code, int radius, int precision)
+        /// <summary>
+        /// Function which returns a section of PlusCode strings 
+        /// </summary>
+        /// <param name="code">PlusCode of the "Tile" in the middle of the desired section.</param>
+        /// <param name="radius">The radius of the section to create.</param>
+        /// <param name="precision">The PlusCode precision of this section.</param>
+        /// <returns>The list containing all PlusCodes of this section</returns>
+        public static List<String> GetTileSection(String code, int radius, int precision)
         {
-            Dictionary<String, int> codeToInt = new Dictionary<string, int>();
+            Dictionary<String, int> codeToInt;
             codeToInt = CreateDictionary();
             int[] xArray = new int[precision / 2];
             int[] yArray = new int[precision / 2];
@@ -79,8 +85,20 @@ namespace DataModel.Common
             return locationCodes;
         }
 
-
-        public static void DetermineLocationCodes(String code, List<String> locationCodes, Dictionary<String, int> codeToInt, int radius, int precision, int[] xArray, int[] yArray, int[] xSaveArray, int[] ySaveArray)
+        /// <summary>
+        /// Function which calculates the Location Codes for the desired section
+        /// </summary>
+        /// <param name="code">PlusCode of the "Tile" in the middle of the desired section.</param>
+        /// <param name="plusCodes">The List which will hold the created PlusCode strings.</param>
+        /// <param name="codeToInt">Dictionary to convert PlusCode signs into ints.</param>
+        /// <param name="radius">radius of desired section.</param>
+        /// <param name="precision">precision of given PlusCode.</param>
+        /// <param name="xArray">Array holding each PlusCode part of x (left/right).</param>
+        /// <param name="yArray">Array holding each PlusCode part of Y (north/south).</param>
+        /// <param name="xSaveArray">Array with original "Tile" X PlusCode parts.</param>
+        /// <param name="ySaveArray">Array with original "Tile" Y PlusCode parts.</param>
+        
+        public static void DetermineLocationCodes(String code, List<String> plusCodes, Dictionary<String, int> codeToInt, int radius, int precision, int[] xArray, int[] yArray, int[] xSaveArray, int[] ySaveArray)
         {
             String newCode = "";
             //set top left
@@ -94,7 +112,7 @@ namespace DataModel.Common
                     newCode = "";
 
                     GoLeft(xArray);
-                    locationCodes.Add(ConvertBackToString(newCode, codeToInt, precision, xArray, yArray));
+                    plusCodes.Add(ConvertBackToString(newCode, codeToInt, precision, xArray, yArray));
                 }
                 Array.Copy(ResetX(xSaveArray), xArray, xArray.Length);
             }
@@ -110,7 +128,7 @@ namespace DataModel.Common
                 newCode = "";
 
                 GoUp(yArray);
-                locationCodes.Add(ConvertBackToString(newCode, codeToInt, precision, xArray, yArray));
+                plusCodes.Add(ConvertBackToString(newCode, codeToInt, precision, xArray, yArray));
 
             }
             Array.Copy(ResetX(xSaveArray), xArray, xArray.Length);
@@ -130,7 +148,7 @@ namespace DataModel.Common
 
                     GoRight(xArray);
                     //convert the code back into a location code and add it to the list
-                    locationCodes.Add(ConvertBackToString(newCode, codeToInt, precision, xArray, yArray));
+                    plusCodes.Add(ConvertBackToString(newCode, codeToInt, precision, xArray, yArray));
                 }
                 //resetting X values to original one
                 Array.Copy(ResetX(xSaveArray), xArray, xArray.Length);
@@ -151,7 +169,7 @@ namespace DataModel.Common
                 newCode = "";
 
                 GoLeft(xArray);
-                locationCodes.Add(ConvertBackToString(newCode, codeToInt, precision, xArray, yArray));
+                plusCodes.Add(ConvertBackToString(newCode, codeToInt, precision, xArray, yArray));
 
             }
             Array.Copy(ResetX(xSaveArray), xArray, xArray.Length);
@@ -159,7 +177,7 @@ namespace DataModel.Common
 
 
             //set middle
-            locationCodes.Add(code);
+            plusCodes.Add(code);
 
 
 
@@ -172,7 +190,7 @@ namespace DataModel.Common
                 newCode = "";
 
                 GoRight(xArray);
-                locationCodes.Add(ConvertBackToString(newCode, codeToInt, precision, xArray, yArray));
+                plusCodes.Add(ConvertBackToString(newCode, codeToInt, precision, xArray, yArray));
 
             }
             Array.Copy(ResetX(xSaveArray), xArray, xArray.Length);
@@ -192,7 +210,7 @@ namespace DataModel.Common
 
                     GoLeft(xArray);
 
-                    locationCodes.Add(ConvertBackToString(newCode, codeToInt, precision, xArray, yArray));
+                    plusCodes.Add(ConvertBackToString(newCode, codeToInt, precision, xArray, yArray));
                 }
                 Array.Copy(ResetX(xSaveArray), xArray, xArray.Length);
             }
@@ -208,7 +226,7 @@ namespace DataModel.Common
                 newCode = "";
 
                 GoDown(yArray);
-                locationCodes.Add(ConvertBackToString(newCode, codeToInt, precision, xArray, yArray));
+                plusCodes.Add(ConvertBackToString(newCode, codeToInt, precision, xArray, yArray));
 
             }
 
@@ -228,7 +246,7 @@ namespace DataModel.Common
                     newCode = "";
 
                     GoRight(xArray);
-                    locationCodes.Add(ConvertBackToString(newCode, codeToInt, precision, xArray, yArray));
+                    plusCodes.Add(ConvertBackToString(newCode, codeToInt, precision, xArray, yArray));
                 }
                 Array.Copy(ResetX(xSaveArray), xArray, xArray.Length);
             }
@@ -244,7 +262,9 @@ namespace DataModel.Common
         }
 
 
-
+        /// <summary>
+        /// Function which converts PlusCode into int values
+        /// </summary>
         public static void CodeToIntegerValues(String code, Dictionary<String, int> codeToInt, int[] xArray, int[] yArray)
         {
             int xCounter = 0;
@@ -273,6 +293,10 @@ namespace DataModel.Common
             }
         }
 
+
+        /// <summary>
+        /// Function which copies values of given array
+        /// </summary>
         public static int[] ResetX(int[] xSaveArray)
         {
             int[] xArray = xSaveArray;
@@ -280,7 +304,9 @@ namespace DataModel.Common
 
         }
 
-
+        /// <summary>
+        /// Function which copies values of given array
+        /// </summary>
         public static int[] ResetY(int[] ySaveArray)
         {
             int[] yArray = ySaveArray;
@@ -288,6 +314,9 @@ namespace DataModel.Common
 
         }
 
+        /// <summary>
+        /// Function which converts int to PlusCode back
+        /// </summary>
         public static String ConvertBackToString(String newCode, Dictionary<String, int> codeToInt, int precision, int[] xArray, int[] yArray)
         {
             int xArrayCounter = 0;
@@ -315,7 +344,9 @@ namespace DataModel.Common
 
 
 
-
+        /// <summary>
+        /// Function which creates the dictionary to convert PlusCodes to int and back
+        /// </summary>
         public static Dictionary<String, int> CreateDictionary()
         {
 
@@ -344,6 +375,9 @@ namespace DataModel.Common
             return codeToInt;
         }
 
+        /// <summary>
+        /// Function which determines the right PlusCode
+        /// </summary>
         public static void GoRight(int[] xArray)
         {
 
@@ -362,6 +396,9 @@ namespace DataModel.Common
 
 
 
+        /// <summary>
+        /// Function which determines the left PlusCode
+        /// </summary>
         public static void GoLeft(int[] xArray)
         {
             for (int i = xArray.Length - 1; i > 0; i--)
@@ -374,6 +411,10 @@ namespace DataModel.Common
                 xArray[i] = 20;
             }
         }
+
+        /// <summary>
+        /// Function which determines the upper PlusCode
+        /// </summary>
 
         public static void GoUp(int[] yArray)
         {
@@ -389,6 +430,10 @@ namespace DataModel.Common
             }
         }
 
+
+        /// <summary>
+        /// Function which determines the lower PlusCode
+        /// </summary>
         public static void GoDown(int[] yArray)
         {
             for (int i = yArray.Length - 1; i > 0; i--)
@@ -403,24 +448,11 @@ namespace DataModel.Common
         }
 
 
-        /*public static List<String> GetAllAfterPlus()
-        {
-            String all = "23456789CFGHJMPQRVWX";
-            List<String> allAfterPlus = new List<String>();
-            for (int i = 0; i < all.Length; i++)
-            {
-                char c = all[i];
-                for (int j = 0; j < all.Length; j++)
-                {
-                    char h = all[j];
-                    String combine = c + "" + h + "";
-                    allAfterPlus.Add(combine);
 
-                }
-            }
-            return allAfterPlus;
-        }*/
-
+        /// <summary>
+        /// Function which determines the two PlusCodes signs that come after the "+"
+        /// </summary>
+        ///  <returns>The list with all PlusCodes that come after the "+"</returns>
         public static List<String> GetAllAfterPlus()
         {
             String all = "23456789CFGHJMPQRVWX";
@@ -434,14 +466,18 @@ namespace DataModel.Common
             return sum.ToList();
         }
 
-        public static List<String> GetAndCombineWithAllAfterPlus(String locationCode)
+        /// <summary>
+        /// Function which determines the two PlusCodes signs that come after the "+" and combines it with a given parent PlusCode string
+        /// </summary>
+        ///  <returns>The List of complete PlusCodes (8 signs "+" 2 signs)</returns>
+        public static List<String> GetAndCombineWithAllAfterPlus(String plusCode)
         {
            
             List<string> allAfterPlus = GetAllAfterPlus();
             List<string> completeCodeList = new List<string>();
             for (int i = 0; i < allAfterPlus.Count; i++)
             {
-                completeCodeList.Add(locationCode + allAfterPlus[i]);
+                completeCodeList.Add(plusCode + allAfterPlus[i]);
             }
             return completeCodeList;
         }
