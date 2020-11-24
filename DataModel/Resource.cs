@@ -6,18 +6,6 @@ using System.Text;
 namespace DataModel
 {
 
-    public enum ResourceType
-    {
-        Stone,
-        Wood,
-        Gold,
-        Silver,
-        Food,
-        Iron,
-        Copper,
-        Water
-
-    }
     public class Resource : ITileContent
     {
         public readonly ResourceType rtype;

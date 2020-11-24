@@ -5,18 +5,7 @@ using System.Text;
 namespace DataModel.Common
 {
 
-    public enum MiniTileType
-    {
-        Grassland,
-        WaterBody,
-        River,
-        Mountain,
-        Desert,
-        Snow,
-        Stone,
-        Mud
-
-    }
+   
 
     /// <summary>
     /// Class for wrapping up a roughly 14mx14m area in the world.
@@ -24,12 +13,12 @@ namespace DataModel.Common
     public class MiniTile
     {
 
-        public PlusCode code { get; }
-        public MiniTileType tileType { get; }
+        public PlusCode Code { get; }
+        public MiniTileType TileType { get; }
 
         public IReadOnlyList<ITileContent> Content { get; }
 
-        public MiniTile(PlusCode c, MiniTileType t, List<ITileContent> con) => (code, tileType, Content) = (c, t, con);
+        public MiniTile(PlusCode c, MiniTileType t, List<ITileContent> con) => (Code, TileType, Content) = (c, t, con);
 
 
     }

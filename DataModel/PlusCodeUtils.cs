@@ -107,7 +107,7 @@ namespace DataModel.Common
             }
             if (absolute)
             {
-                return Math.Abs(tileDistance)
+                return Math.Abs(tileDistance);
             }
             return tileDistance;
         }

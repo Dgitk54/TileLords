@@ -5,6 +5,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="DotNetty.Transport" Version="0.6.0" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\DataModel\DataModel.Common.csproj" />
   </ItemGroup>
 

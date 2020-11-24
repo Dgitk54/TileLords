@@ -4,8 +4,8 @@ using System.Text;
 
 namespace DataModel.Common
 {
-    public interface INetworkEventSource
+    public interface INetworkByteMessage
     {
-
+        byte[] BytePayload { get; }
     }
 }
