@@ -122,8 +122,14 @@ namespace DataModelTests
         [Test]
         public void PlusCodePrintingTest()
         {
+            String all = "23456789CFGHJMPQRVWX";
+            String rev = "XWVRQPMJHGFC98765432";
 
-            List<GPS> gpsList = new List<GPS>();
+            var sum = from c1 in all
+                      from c2 in rev
+                      select new string(c1 + "" + c2 + "");
+
+            List < GPS > gpsList = new List<GPS>();
             gpsList.Add(new GPS(49.953111, 7.923055));
             gpsList.Add(new GPS(49.962096, 7.923703));
 

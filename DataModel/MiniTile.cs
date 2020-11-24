@@ -5,18 +5,7 @@ using System.Text;
 namespace DataModel.Common
 {
 
-    public enum MiniTileType
-    {
-        Grassland,
-        WaterBody,
-        River,
-        Mountain,
-        Desert,
-        Snow,
-        Stone,
-        Mud
-
-    }
+   
 
     /// <summary>
     /// Class for wrapping up a roughly 14mx14m area in the world.

@@ -7,8 +7,10 @@ namespace DataModel.Common
     /// <summary>
     /// Base interface implemented by all network messages.
     /// </summary>
-    public interface INetworkMessage
+    public class NetworkJsonMessage
     {
-        string Message { get; }
+        public string JsonPayload { get; }
+
+        public NetworkJsonMessage(string message) => (JsonPayload) = message;
     }
 }

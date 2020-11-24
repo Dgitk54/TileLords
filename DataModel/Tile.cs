@@ -5,30 +5,17 @@ using System.Text;
 
 namespace DataModel.Common
 {
-    public enum TileType
-    {
-       Grassland,
-       WaterBody,
-       River,
-       Mountain,
-       Desert,
-       Snow,
-       Stone,
-       Mud
-           
-    }
-
+   
     public class Tile
     {
 
         public  PlusCode Code { get; }
         public  TileType Ttype { get; }
 
-        public List<MiniTile> MiniTiles { get; }
-        public Tile(PlusCode c, TileType t, List<MiniTile> MiniTileContent) => (Code, Ttype, MiniTiles) = (c, t, MiniTileContent);
+        public IReadOnlyList<IReadOnlyList<MiniTile>> MiniTileListList { get; }
 
-
-        public override string ToString() { return "Tile:" + Code.Code; }
+        public Tile(PlusCode c, TileType t, List<List<MiniTile>> miniTiles) => (Code, Ttype, MiniTileListList) = (c, t, miniTiles );
+      
 
     }
 }
