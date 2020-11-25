@@ -54,9 +54,10 @@ namespace DataModel.Tests
         [Test]
         public void CoordsFileTest()
         {
-            List<int> tileTypeGen = new List<int>() { 0, 1, 2, 3, 4, 5, 6, 7 };
-            List<int> miniTileTypeGen = new List<int>() { 0, 1, 2, 3, 3, 3, 3 };
-            List<Tile> tileList = TileGenerator.GenerateArea(new PlusCode("8FX9WWV9+PR", 8), 1, tileTypeGen, miniTileTypeGen);
+             List<int> tileTypeGen = new List<int>() { 0, 1, 2, 3, 4, 5, 6, 7 };
+             List<int> miniTileTypeGen = new List<int>() { 0, 1, 2, 3, 3, 3, 3 };
+            // List<Tile> tileList = TileGenerator.GenerateArea(new PlusCode("8FX9WWV9+PR", 8), 1, tileTypeGen, miniTileTypeGen); 
+            List<Tile> tileList = TileGenerator.GenerateArea(new PlusCode("8FX9WWV9+PR", 8), 1);
             foreach (Tile t in tileList)
             {
                 TileUtility.ReadableMini2DArrayFile(TileUtility.GetMiniTile2DArray(t.MiniTiles, 20), @"C:\Users\Kat\Desktop\2DTileArray.txt");

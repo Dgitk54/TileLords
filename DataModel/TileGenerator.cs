@@ -47,6 +47,15 @@ namespace DataModel.Common
             return tiles.ToList();
         }
 
+        public static List<Tile> GenerateArea(PlusCode code, int radius)
+        {
+            List<int> tileTypeList = new List<int>() { 0,1,2,3,4,5,6,7};
+            List<int> miniTileTypeList = new List<int>() { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
+            var tiles = from miniTileCodeString in LocationCodeTileUtility.GetTileSection(code.Code, radius, 8)
+                        select GenerateTile(new PlusCode(miniTileCodeString, 8), tileTypeList, miniTileTypeList);
+            return tiles.ToList();
+        }
+
         public static MiniTileType getRandomMiniTileType(List<int> tileTypeList)
         {
             Random r = new Random();
