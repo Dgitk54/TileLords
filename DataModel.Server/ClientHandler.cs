@@ -18,11 +18,12 @@ namespace DataModel.Server
     {
         static readonly IInternalLogger Logger = InternalLoggerFactory.GetInstance<ClientHandler>();
 
-        private readonly Subject<byte[]> byteStream;
+        private readonly Subject<byte[]> byteStream = new Subject<byte[]>();
         private readonly ServerFunctions functions = new ServerFunctions();
         
         public override void ChannelActive(IChannelHandlerContext ctx)
         {
+            Console.WriteLine("ClientHandler active");
             var jsonMessages = functions.TransformPacket(byteStream);
             var gpsUpdates = functions.GPSMessageStream(jsonMessages);
             var clientPlusCodeStream = functions.GpsAsPlusCode8(gpsUpdates);
@@ -47,8 +48,9 @@ namespace DataModel.Server
             var byteBuffer = message as IByteBuffer;
             if (byteBuffer != null)
             {
-                byteStream.OnNext(byteBuffer.Array);
                 Console.WriteLine("Received from server: " + byteBuffer.ToString(Encoding.UTF8));
+                byteStream.OnNext(byteBuffer.Array);
+                
             }
             context.WriteAsync(message);
             

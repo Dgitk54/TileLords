@@ -11,7 +11,7 @@ namespace DataModel.Server
 {
     public class ServerInstance
     {
-        static async Task RunServerAsync()
+        public static async Task RunServerAsync()
         {
             var logLevel = LogLevel.INFO;
 

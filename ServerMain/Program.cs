@@ -5,6 +5,7 @@ using DotNetty.Transport.Channels.Sockets;
 
 using System;
 using System.Threading.Tasks;
+using DataModel.Server;
 
 namespace ServerMain
 {
@@ -14,6 +15,8 @@ namespace ServerMain
 
         public static void Main(String[] args)
         {
+
+            ServerInstance.RunServerAsync().Wait();
 
         }
     }

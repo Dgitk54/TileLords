@@ -13,6 +13,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\DataModel.Server\DataModel.Server.csproj" />
     <ProjectReference Include="..\GameModel\DataModel.Common.csproj" />
     <ProjectReference Include="..\NetworkManager\NetworkManager.csproj" />
   </ItemGroup>
