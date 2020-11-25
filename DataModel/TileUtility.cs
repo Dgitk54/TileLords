@@ -13,12 +13,11 @@ namespace DataModel.Common
 
 
 
-       /* public List<MiniTile> GetTileSection(PlusCode locationCode,  Tile[,] tile2DArray, int precision)
+        public List<MiniTile> GetTileSection(PlusCode locationCode,  List<Tile> tileList, int precision)
         {
             List<MiniTile> miniTileList = new List<MiniTile>();
             var minitile =
-             from tileRows in tile2DArray
-             from tile in tileRows
+             from tile in tileList
              from miniTile in tile.MiniTiles
              where PlusCodeUtils.GetManhattenDistance(miniTile.Code, locationCode) < precision
              select miniTile;
@@ -26,7 +25,7 @@ namespace DataModel.Common
             return minitile.ToList();
 
 
-        } */
+        } 
 
         /// <summary>
         /// Function which creates a 2d array to represent the MiniTiles
@@ -95,7 +94,7 @@ namespace DataModel.Common
                     for (int j = 0; j < miniTileArray.GetLength(1); j++)
                     {
 
-                        file.Write(miniTileArray[i, j].Code.Code + " | ");
+                        file.Write(miniTileArray[i, j].Code.Code + " (" + miniTileArray[i, j].TileType + ") | ");
 
                     }
                 }
@@ -119,6 +118,8 @@ namespace DataModel.Common
 
             return minitile.First();
         }
+
+       
 
         public static string SerializeTile(Tile tile)
         {
