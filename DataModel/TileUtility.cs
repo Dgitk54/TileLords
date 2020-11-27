@@ -13,7 +13,7 @@ namespace DataModel.Common
 
 
 
-        public List<MiniTile> GetTileSection(PlusCode locationCode,  List<Tile> tileList, int precision)
+        public static List<MiniTile> GetTileSectionForRender(PlusCode locationCode,  List<Tile> tileList, int precision)
         {
             List<MiniTile> miniTileList = new List<MiniTile>();
             var minitile =
@@ -101,6 +101,8 @@ namespace DataModel.Common
 
         }
 
+
+
         /// <summary>
         /// Function which finds a Minitile inside a given tileList
         /// </summary>
@@ -119,7 +121,27 @@ namespace DataModel.Common
             return minitile.First();
         }
 
-       
+        public static MiniTile GetMiniTile(PlusCode locationCode, List<Tile> tileList)
+        {
+            var minitile =
+              from tile in tileList
+              from miniTile in tile.MiniTiles
+              where miniTile.Code.Code == locationCode.Code
+              select miniTile;
+
+            return minitile.First();
+        }
+
+        public static MiniTile GetMiniTile(PlusCode locationCode, List<MiniTile> miniTileList)
+        {
+            var minitile =
+              from miniTile in miniTileList
+              where miniTile.Code.Code == locationCode.Code
+              select miniTile;
+
+            return minitile.First();
+        }
+
 
         public static string SerializeTile(Tile tile)
         {

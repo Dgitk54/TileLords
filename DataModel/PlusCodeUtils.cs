@@ -23,15 +23,18 @@ namespace DataModel.Common
 
         private static int CharacterDistance(char c1, char c2)
         {
-            var alphabet = "23456789CFGHJMPQRVWX".ToCharArray();
+            if (c1 == c2 && c1 == '+')
+                return 0;
+
+            var alphabet = "23456789CFGHJMPQRVWX";
             var charToIndex = new Dictionary<char, int>();
             int index = 0;
             foreach (char character in alphabet)
             {
-                char lowerCaseCharacter = char.ToLower(character);
+                //char lowerCaseCharacter = char.ToLower(character);
 
                 charToIndex.Add(character, index);
-                charToIndex.Add(lowerCaseCharacter, index);
+               // charToIndex.Add(lowerCaseCharacter, index);
                 index++;
             }
 

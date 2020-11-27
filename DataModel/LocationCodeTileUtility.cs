@@ -97,7 +97,7 @@ namespace DataModel.Common
         /// <param name="yArray">Array holding each PlusCode part of Y (north/south).</param>
         /// <param name="xSaveArray">Array with original "Tile" X PlusCode parts.</param>
         /// <param name="ySaveArray">Array with original "Tile" Y PlusCode parts.</param>
-        
+
         public static void DetermineLocationCodes(String code, List<String> plusCodes, Dictionary<String, int> codeToInt, int radius, int precision, int[] xArray, int[] yArray, int[] xSaveArray, int[] ySaveArray)
         {
             String newCode = "";
@@ -257,7 +257,7 @@ namespace DataModel.Common
 
 
 
-      
+
 
         }
 
@@ -292,6 +292,24 @@ namespace DataModel.Common
 
             }
         }
+
+        public static void CodeToIntegerValues(String code, Dictionary<String, int> codeToInt, int[] array)
+        {
+
+            for (int i = 0; i < code.Length; i++)
+            {
+                String c = code[i] + "";
+                if (codeToInt.TryGetValue(c, out int j))
+                {
+
+                    array[i] = j;
+
+                }
+
+            }
+        }
+
+
 
 
         /// <summary>
@@ -460,8 +478,8 @@ namespace DataModel.Common
 
             var sum = from c1 in rev
                       from c2 in all
-                      select  c1 + "" + c2;
-          
+                      select c1 + "" + c2;
+
 
             return sum.ToList();
         }
@@ -472,7 +490,7 @@ namespace DataModel.Common
         ///  <returns>The List of complete PlusCodes (8 signs "+" 2 signs)</returns>
         public static List<String> GetAndCombineWithAllAfterPlus(String plusCode)
         {
-           
+
             List<string> allAfterPlus = GetAllAfterPlus();
             List<string> completeCodeList = new List<string>();
             for (int i = 0; i < allAfterPlus.Count; i++)
@@ -483,9 +501,117 @@ namespace DataModel.Common
         }
 
 
-        
 
-        
+        public static List<MiniTile> SortList(List<MiniTile> miniTileList)
+        {
+            List<MiniTile> sortedList = miniTileList;
+
+            for (int i = 0; i < sortedList.Count - 1; i++)
+            {
+
+                for (int j = 0; j < sortedList.Count - 1; j++)
+                {
+                    PlusCode code = sortedList[j].Code;
+                    PlusCode code2 = sortedList[j + 1].Code;
+                    if (IsTileCodeBigger(code, code2))
+                    {
+                        MiniTile tmp = sortedList[j];
+                        sortedList[j] = sortedList[j + 1];
+                        sortedList[j + 1] = tmp;
+                    }
+
+                }
+            }
+
+
+            return sortedList;
+
+        }
+
+
+
+        public static bool IsTileCodeBigger(PlusCode plusCode, PlusCode plusCode2)
+        {
+            Dictionary<String, int> codeToInt;
+            codeToInt = CreateDictionary();
+
+            String code = plusCode.Code;
+            //remove the plus
+            code = code.Remove(8, 1);
+            int[] array = new int[plusCode.Code.Length];
+
+            CodeToIntegerValues(code, codeToInt, array);
+
+
+            String code2 = plusCode2.Code;
+            //remove the plus
+            code2 = code2.Remove(8, 1);
+            int[] array2 = new int[plusCode2.Code.Length];
+            CodeToIntegerValues(code2, codeToInt, array2);
+
+            return IsBigger(array, array2);
+
+
+        }
+
+
+        public static bool IsBigger(int[] intCode, int[] intCode2) //is intCode bigger intCode2
+        {
+
+            //x values follow the logic 9 < 8 < 7 etc
+            //y values follow normal logic 7 < 8 < 9
+            //the intCode is xyxyxyxyxy 
+            for (int i = 0; i < intCode.Length; i++)
+            {
+                int one = intCode[i];
+                int two = intCode2[i];
+
+                if (one < two)
+                {
+                    if (i % 2 == 0) //apply x value logic
+                    {
+                        //intCode is bigger intCode2
+                        return true;
+
+                    }
+                    else //apply y value logic
+                    {
+                        //intCode is smaller intCode2
+                        return false;
+
+                    }
+
+                }
+                else if (one > two)
+                {
+                    if (i % 2 == 0) //apply x value logic
+                    {
+                        //intCode is smaller intCode2
+                        return false;
+
+                    }
+                    else  //apply y value logic
+                    {
+                        //intCode is bigger intCode2
+                        return true;
+
+                    }
+
+                }
+                else //they are the same, continue the loop
+                {
+
+                }
+            }
+            return false;
+
+
+        }
+
+
+
+
+
     }
 
 }
