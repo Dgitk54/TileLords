@@ -8,7 +8,7 @@ namespace ClientMain
         static void Main(string[] args)
         {
 
-            Client.RunClientAsync().Wait();
+            ClientInstance.RunClientAsync().Wait();
         }
     }
 }

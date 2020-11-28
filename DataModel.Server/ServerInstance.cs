@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Text;
 using DotNetty.Handlers.Logging;
 using System.Threading.Tasks;
+using DotNetty.Codecs;
 
 namespace DataModel.Server
 {
@@ -21,7 +22,7 @@ namespace DataModel.Server
             var bossGroup = new MultithreadEventLoopGroup(1); //  accepts an incoming connection
             var workerGroup = new MultithreadEventLoopGroup(); // handles the traffic of the accepted connection once the boss accepts the connection and registers the accepted connection to the worker
 
-            var serverHandler = new ClientHandler();
+            var serverHandler = new ServerHandler();
 
             try
             {
@@ -35,14 +36,14 @@ namespace DataModel.Server
                     .ChildHandler(new ActionChannelInitializer<ISocketChannel>(channel =>
                     {
                         IChannelPipeline pipeline = channel.Pipeline;
-
+                        pipeline.AddLast("framing-enc", new LengthFieldPrepender(2));
+                        pipeline.AddLast("framing-dec", new LengthFieldBasedFrameDecoder(ushort.MaxValue, 0, 2, 0, 2));
                         pipeline.AddLast(serverHandler);
                     }));
 
                 IChannel bootstrapChannel = await bootstrap.BindAsync(serverPort);
 
-                Console.WriteLine("Let us test the server in a command prompt");
-                Console.WriteLine($"\n telnet localhost {serverPort}");
+                Console.WriteLine("ServerTesting");
                 Console.ReadLine();
 
                 await bootstrapChannel.CloseAsync();

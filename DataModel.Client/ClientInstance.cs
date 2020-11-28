@@ -13,11 +13,11 @@ using System.Threading.Tasks;
 namespace DataModel.Client
 {
 
-   public class Client
+   public class ClientInstance
     {
         public static async Task RunClientAsync()
         {
-            Console.WriteLine(" IM ALIVE");
+            Console.WriteLine("ClientAlive");
 
             var group = new MultithreadEventLoopGroup();
 
@@ -34,8 +34,9 @@ namespace DataModel.Client
                     .Handler(new ActionChannelInitializer<ISocketChannel>(channel =>
                     {
                         IChannelPipeline pipeline = channel.Pipeline;
-
-                        pipeline.AddLast(new ServerHandler());
+                        pipeline.AddLast("framing-enc", new LengthFieldPrepender(2));
+                        pipeline.AddLast("framing-dec", new LengthFieldBasedFrameDecoder(ushort.MaxValue, 0, 2, 0, 2));
+                        pipeline.AddLast(new ClientHandler());
                     }));
 
                 IChannel bootstrapChannel = await bootstrap.ConnectAsync(new IPEndPoint(serverIP, serverPort));
@@ -46,11 +47,11 @@ namespace DataModel.Client
             }
             finally
             {
-                group.ShutdownGracefullyAsync().Wait(1000);
+                Console.WriteLine("CLOSING!");
+                group.ShutdownGracefullyAsync().Wait();
             }
         }
 
-        static void Main() => RunClientAsync().Wait();
 
 
     }

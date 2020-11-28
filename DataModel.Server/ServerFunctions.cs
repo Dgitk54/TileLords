@@ -10,14 +10,20 @@ using System.Reactive.Joins;
 using Google.OpenLocationCode;
 using DotNetty.Transport.Channels;
 using System.Diagnostics;
+using DotNetty.Buffers;
 
 namespace DataModel.Server
 {
     public class ServerFunctions
     {
-        public IObservable<NetworkJsonMessage> TransformPacket(IObservable<byte[]> dataStream) => from jsonCode in (from bytePacket in dataStream
-                                                                                                                    select JsonConvert.ToString(bytePacket))
-                                                                                                  select new NetworkJsonMessage(jsonCode);
+
+        /*
+           from jsonCode in (from bytePacket in dataStream
+                            select JsonConvert.ToString(bytePacket))
+            select new NetworkJsonMessage(jsonCode);*/
+
+        public IObservable<NetworkJsonMessage> TransformPacket(IObservable<string> dataStream) => from message in dataStream
+                                                                                                  select new NetworkJsonMessage(message);
 
         public IObservable<GPS> GPSMessageStream(IObservable<NetworkJsonMessage> message) => from msg in message
                                                                                              select JsonConvert.DeserializeObject<GPS>(msg.JsonPayload);
@@ -35,17 +41,36 @@ namespace DataModel.Server
 
 
         //TODO: Add persistent storage/database access, currently only for small milestone/debugging
-        public IObservable<List<Tile>> TilesForPlusCode(IObservable<PlusCode> code) => from val in code
-                                                                                       select TileGenerator.GenerateArea(val, 1);
+        public IObservable<List<Tile>> TilesForPlusCode(IObservable<PlusCode> code)
+        {
+
+            return from val in code
+                   select TileGenerator.GenerateArea(val, 1);
+        }
 
         public IObservable<NetworkJsonMessage> EncodeTileUpdate(IObservable<List<Tile>> tileStream) => from tileList in tileStream
                                                                                                        let encoded = JsonConvert.SerializeObject(tileList)
                                                                                                        select new NetworkJsonMessage(encoded);
 
 
-        public void AddClientCallBack<T>(IObservable<T> obj, IChannelHandlerContext context) => obj.Subscribe(v => context.WriteAndFlushAsync(v), e => Debug.WriteLine("Error occured writing" + obj), () => Debug.WriteLine("Write Sequence Completed"));
+        public IDisposable StreamSink<T>(IObservable<T> obj, IChannelHandlerContext context, int bufferSize)
+        {
+
+            return obj.Subscribe(v =>
+             {
+                 var insideBuffer = Unpooled.Buffer(bufferSize);
+                 var asStringPayload = JsonConvert.SerializeObject(v);
+                 var asByteMessage = Encoding.UTF8.GetBytes(asStringPayload);
 
 
+                 insideBuffer.WriteBytes(asByteMessage);
+                 Console.WriteLine("PUSHING: TILELIST" + asByteMessage.GetLength(0));
+                 context.WriteAndFlushAsync(insideBuffer);
+
+             },
+             e => Console.WriteLine("Error occured writing" + obj),
+             () => Console.WriteLine("StreamSink Write Sequence Completed"));
+        }
 
 
     }

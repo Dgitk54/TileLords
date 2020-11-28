@@ -15,32 +15,30 @@ using Newtonsoft.Json;
 
 namespace DataModel.Client
 {
-    public class ServerHandler : ChannelHandlerAdapter
+    public class ClientHandler : ChannelHandlerAdapter
     {
-        static readonly IInternalLogger Logger = InternalLoggerFactory.GetInstance<ServerHandler>();
+        static readonly IInternalLogger Logger = InternalLoggerFactory.GetInstance<ClientHandler>();
 
+        List<GPS> gpsList = new List<GPS>();
 
+        public ClientHandler()
+        {
+            gpsList.Add(new GPS(49.944365, 7.919616));
+            gpsList.Add(new GPS(49.944366, 7.919616));
+            gpsList.Add(new GPS(49.944366, 7.919617));
+            gpsList.Add(new GPS(52.519126, 13.406101));
+        }
 
-        public override void ChannelActive(IChannelHandlerContext ctx)
+        public override void ChannelActive(IChannelHandlerContext context)
         {
 
-
-            List<GPS> gpsList = new List<GPS>();
-            gpsList.Add(new GPS(49.944365, 7.919616));
-            gpsList.Add(new GPS(52.519126, 13.406101));
-
-            var disp = gpsList.ToObservable().Subscribe(v => 
-            { 
-                var sendstring = JsonConvert.SerializeObject(v);
-                Console.WriteLine("Send to server: " + sendstring);
-                ctx.WriteAndFlushAsync(ByteBufferUtil.EncodeString(ctx.Allocator, JsonConvert.SerializeObject(new NetworkJsonMessage(sendstring)), Encoding.ASCII)).Wait(); 
-             } );
+            ClientFunctions.StreamSink<GPS>(gpsList.ToObservable(), context, 1024);
 
 
-            // Detect when client disconnects
-            ctx.Channel.CloseCompletion.ContinueWith((x) => Console.WriteLine("Channel Closed"));
+            // Detect when server disconnects
+            context.Channel.CloseCompletion.ContinueWith((x) => Console.WriteLine("Channel Closed"));
 
-            disp.Dispose();
+
         }
 
 
@@ -49,17 +47,16 @@ namespace DataModel.Client
             var byteBuffer = message as IByteBuffer;
             if (byteBuffer != null)
             {
-                
                 Console.WriteLine("Received from server: " + byteBuffer.ToString(Encoding.UTF8));
             }
-            context.WriteAsync(message);
+           // context.WriteAsync(message);
 
         }
 
         // The Channel is closed hence the connection is closed
         public override void ChannelInactive(IChannelHandlerContext ctx)
         {
-            Console.WriteLine("Client disconnected");
+            Console.WriteLine("Client shut down");
         }
 
 
