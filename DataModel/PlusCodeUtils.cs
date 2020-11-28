@@ -49,19 +49,25 @@ namespace DataModel.Common
         }
 
 
-        private static int GetLatitudinalTileDistance(PlusCode one, PlusCode two, bool absolute)
+        public static int GetLatitudinalTileDistance(PlusCode one, PlusCode two, bool absolute)
         {
             if (one.Precision != two.Precision)
                 throw new Exception("Precision of Tiles must be equal");
 
             int numIterations = one.Precision / 2; //1..5
             int tileDistance = 0;
+            
+            //Removes +
+            var code1 = one.Code.Remove(8, 1);
+            var code2 = two.Code.Remove(8, 1);
+
             for (int i = 0; i < numIterations; i++)
             {
                 tileDistance *= 20;
-                char c1 = one.Code[i * 2];
-                char c2 = two.Code[i * 2];
+                char c1 = code1[i * 2];
+                char c2 = code2[i * 2];
                 tileDistance += CharacterDistance(c1, c2);
+                ;
             }
 
             if (absolute)
@@ -71,18 +77,20 @@ namespace DataModel.Common
             return tileDistance;
         }
 
-        private static int GetLongitudinalTileDistance(PlusCode one, PlusCode two, bool absolute)
+        public static int GetLongitudinalTileDistance(PlusCode one, PlusCode two, bool absolute)
         {
             if (one.Precision != two.Precision)
                 throw new Exception("Precision of Tiles must be equal");
 
             int numIterations = one.Precision / 2; //1..5
             int tileDistance = 0;
+            var code1 = one.Code.Remove(8, 1);
+            var code2 = two.Code.Remove(8, 1);
             for (int i = 0; i < numIterations; i++)
             {
                 tileDistance *= 20;
-                char c1 = one.Code[i * 2 + 1];
-                char c2 = two.Code[i * 2 + 1];
+                char c1 = code1[i * 2 + 1];
+                char c2 = code2[i * 2 + 1];
 
                 //for the first longitudinal value, we need to take care of wrapping - basically,
                 //if it's shorter to go the other way around, do so
@@ -107,6 +115,7 @@ namespace DataModel.Common
                 {
                     tileDistance += CharacterDistance(c1, c2);
                 }
+                ;
             }
             if (absolute)
             {

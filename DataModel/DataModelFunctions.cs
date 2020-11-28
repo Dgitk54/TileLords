@@ -16,6 +16,9 @@ namespace DataModel.Common
             => from i in gps
                from j in precision
                select new PlusCode(new OpenLocationCode(i.Lat, i.Lon, j).Code, j);
-        
+
+        public static PlusCode GetPlusCode(GPS gps, int precision)
+             => new PlusCode(new OpenLocationCode(gps.Lat, gps.Lon, precision).Code, precision);
+
     }
 }

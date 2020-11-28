@@ -46,6 +46,7 @@ namespace DataModelTests
             func = new DataModelFunctions();
         }
 
+
         [Test]
         public void TestGetPlusCodeReturnsCorrectString()
         {
@@ -69,6 +70,54 @@ namespace DataModelTests
                 .Subscribe();
             sub.Dispose();
         }
+
+
+        [Test]
+        public void ManhattenDistanceDebugPrintLat()
+        {
+            List<GPS> latChangeList = new List<GPS>();
+
+            latChangeList.Add(new GPS(49.000000, 7.900000));
+            latChangeList.Add(new GPS(49.000100, 7.900000));
+            latChangeList.Add(new GPS(49.000200, 7.900000));
+            latChangeList.Add(new GPS(49.000300, 7.900000));
+            latChangeList.Add(new GPS(49.000400, 7.900000));
+            latChangeList.Add(new GPS(49.000500, 7.900000));
+            latChangeList.Add(new GPS(49.000600, 7.900000));
+            latChangeList.Add(new GPS(49.000700, 7.900000));
+            latChangeList.Add(new GPS(49.000800, 7.900000));
+
+            var plusCodes = new List<PlusCode>();
+            latChangeList.ForEach(v => plusCodes.Add(DataModelFunctions.GetPlusCode(v, 10)));
+
+
+            plusCodes.ForEach(v => Debug.WriteLine(v.Code + " distance from first: " + PlusCodeUtils.GetLatitudinalTileDistance(plusCodes[0], v, true)));
+            
+        }
+
+        [Test]
+        public void ManhattenDistanceDebugPrintLon()
+        {
+            List<GPS> latChangeList = new List<GPS>();
+
+            latChangeList.Add(new GPS(49.000000, 7.900000));
+            latChangeList.Add(new GPS(49.000000, 7.901000));
+            latChangeList.Add(new GPS(49.000000, 7.900200));
+            latChangeList.Add(new GPS(49.000000, 7.900300));
+            latChangeList.Add(new GPS(49.000000, 7.900400));
+            latChangeList.Add(new GPS(49.000000, 7.900500));
+            latChangeList.Add(new GPS(49.000000, 7.900600));
+            latChangeList.Add(new GPS(49.000000, 7.900700));
+            latChangeList.Add(new GPS(49.000000, 7.900800));
+
+            var plusCodes = new List<PlusCode>();
+            latChangeList.ForEach(v => plusCodes.Add(DataModelFunctions.GetPlusCode(v, 10)));
+            plusCodes.ForEach(v => Debug.WriteLine(v.Code + " distance from first: " + PlusCodeUtils.GetLongitudinalTileDistance(plusCodes[0], v, true)));
+        }
+
+
+
+
         [Test]
         public void GetPlusCodeCapableOfMultipleGpsInputs()
         {
