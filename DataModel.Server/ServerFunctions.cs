@@ -53,19 +53,15 @@ namespace DataModel.Server
                                                                                                        select new NetworkJsonMessage(encoded);
 
 
-        public IDisposable StreamSink<T>(IObservable<T> obj, IChannelHandlerContext context, int bufferSize)
+        public IDisposable StreamSink<T>(IObservable<T> obj, IChannelHandlerContext context)
         {
 
             return obj.Subscribe(v =>
              {
-                 var insideBuffer = Unpooled.Buffer(bufferSize);
                  var asStringPayload = JsonConvert.SerializeObject(v);
                  var asByteMessage = Encoding.UTF8.GetBytes(asStringPayload);
-
-
-                 insideBuffer.WriteBytes(asByteMessage);
-                 Console.WriteLine("PUSHING: TILELIST" + asByteMessage.GetLength(0));
-                 context.WriteAndFlushAsync(insideBuffer);
+                 Console.WriteLine("PUSHING: DATA" + asByteMessage.GetLength(0));
+                 context.WriteAndFlushAsync(Unpooled.WrappedBuffer(asByteMessage));
 
              },
              e => Console.WriteLine("Error occured writing" + obj),

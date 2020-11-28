@@ -11,6 +11,7 @@ using System.Reactive.Linq;
 using System.Reactive.Joins;
 using System.Reactive.Subjects;
 using System.Diagnostics;
+using System.Reactive.Concurrency;
 
 namespace DataModel.Server
 {
@@ -30,22 +31,21 @@ namespace DataModel.Server
             var clientPlusCodeStream = functions.GpsAsPlusCode8(gpsUpdates);
             var clientChangedTile = functions.TileHasChangedStream(clientPlusCodeStream);
             var clientTileUpdate = functions.TilesForPlusCode(clientChangedTile);
-            var encodeTileUpdate = functions.EncodeTileUpdate(clientTileUpdate);
 
 
-            var debug = new List<string>();
-            debug.Add("TEST1");
-            debug.Add("TEST2");
-            debug.Add("TEST3");
-            debug.Add("TEST4");
-            debug.Add("TEST5");
+            const int periodInSec = 2;
+            var obs = Observable.Interval(TimeSpan.FromSeconds(periodInSec),
+                                          Scheduler.Default);
 
-            sinks.Add(functions.StreamSink<string>(debug.ToObservable(), ctx, 1024));
-            sinks.Add(functions.StreamSink<List<Tile>>(clientTileUpdate, ctx, 1024));
-            
-            //functions.AddClientCallBack<NetworkJsonMessage>(encodeTileUpdate, ctx);
-            
-           
+
+            sinks.Add(functions.StreamSink<PlusCode>(clientChangedTile, ctx));
+
+            //TODO: Why does this sink not work?
+            sinks.Add(functions.StreamSink<List<Tile>>(clientTileUpdate, ctx));
+
+            sinks.Add(functions.StreamSink<long>(obs, ctx));
+
+
             // Detect when client disconnects
             ctx.Channel.CloseCompletion.ContinueWith((x) => Console.WriteLine("Channel Closed"));
             
@@ -70,7 +70,7 @@ namespace DataModel.Server
         public override void ChannelInactive(IChannelHandlerContext ctx)
         {
             Console.WriteLine("Client disconnected");
-            jsonClientSource.Dispose();
+            jsonClientSource.OnCompleted();
             sinks.ForEach(v => v.Dispose());
         }
 
