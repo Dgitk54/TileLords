@@ -41,16 +41,19 @@ namespace DataModel.Server
 
 
         //TODO: Add persistent storage/database access, currently only for small milestone/debugging
-        public IObservable<List<Tile>> TilesForPlusCode(IObservable<PlusCode> code)
-        {
+        public IObservable<List<Tile>> TilesForPlusCode(IObservable<PlusCode> code) => from val in code
+                                                                                       select TileGenerator.GenerateArea(val, 1);
+        public IObservable<Tile> EachTileSeperate(IObservable<List<Tile>> observable) => from list in observable
+                                                                                      from tile in list.ToObservable()
+                                                                                      select tile;
 
-            return from val in code
-                   select TileGenerator.GenerateArea(val, 1);
-        }
 
         public IObservable<NetworkJsonMessage> EncodeTileUpdate(IObservable<List<Tile>> tileStream) => from tileList in tileStream
                                                                                                        let encoded = JsonConvert.SerializeObject(tileList)
                                                                                                        select new NetworkJsonMessage(encoded);
+
+
+
 
 
         public IDisposable StreamSink<T>(IObservable<T> obj, IChannelHandlerContext context)

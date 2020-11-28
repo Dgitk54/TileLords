@@ -31,19 +31,17 @@ namespace DataModel.Server
             var clientPlusCodeStream = functions.GpsAsPlusCode8(gpsUpdates);
             var clientChangedTile = functions.TileHasChangedStream(clientPlusCodeStream);
             var clientTileUpdate = functions.TilesForPlusCode(clientChangedTile);
-
+            var eachTileSeperateSink = functions.EachTileSeperate(clientTileUpdate);
 
             const int periodInSec = 2;
             var obs = Observable.Interval(TimeSpan.FromSeconds(periodInSec),
                                           Scheduler.Default);
 
 
-            sinks.Add(functions.StreamSink<PlusCode>(clientChangedTile, ctx));
-
-            //TODO: Why does this sink not work?
-            sinks.Add(functions.StreamSink<List<Tile>>(clientTileUpdate, ctx));
-
-            sinks.Add(functions.StreamSink<long>(obs, ctx));
+            //sinks.Add(functions.StreamSink<PlusCode>(clientChangedTile, ctx));
+            //sinks.Add(functions.StreamSink<List<Tile>>(clientTileUpdate, ctx));
+            sinks.Add(functions.StreamSink<Tile>(eachTileSeperateSink, ctx));
+            //sinks.Add(functions.StreamSink<long>(obs, ctx));
 
 
             // Detect when client disconnects
