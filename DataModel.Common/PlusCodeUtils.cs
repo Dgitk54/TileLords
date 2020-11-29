@@ -19,6 +19,13 @@ namespace DataModel.Common
 
         }
 
+        public static int GetChebyshevDistance(PlusCode one, PlusCode two)
+        {
+            if (one.Precision != two.Precision)
+                throw new Exception("Precision of Tiles must be equal");
+            return Math.Max(GetLatitudinalTileDistance(one, two, true), GetLongitudinalTileDistance(one, two, true));
+        }
+
 
 
         private static int CharacterDistance(char c1, char c2)
