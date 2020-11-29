@@ -54,17 +54,17 @@ namespace DataModel.Tests
 
 
 
-            bool isBigger = LocationCodeTileUtility.IsTileCodeBigger(new PlusCode("9F4MGC94+X2", 10), new PlusCode("8F4MGC94+X2", 10));
+            bool isBigger = MiniTileComp.IsTileCodeBigger(new PlusCode("9F4MGC94+X2", 10), new PlusCode("8F4MGC94+X2", 10));
             Assert.IsFalse(isBigger);
-            isBigger = LocationCodeTileUtility.IsTileCodeBigger(new PlusCode("8F4MGC94+X2", 10), new PlusCode("9F4MGC94+X2", 10));
+            isBigger = MiniTileComp.IsTileCodeBigger(new PlusCode("8F4MGC94+X2", 10), new PlusCode("9F4MGC94+X2", 10));
             Assert.IsTrue(isBigger);
-            isBigger = LocationCodeTileUtility.IsTileCodeBigger(new PlusCode("9F4MGC94+X2", 10), new PlusCode("924MGC94+X2", 10));
+            isBigger = MiniTileComp.IsTileCodeBigger(new PlusCode("9F4MGC94+X2", 10), new PlusCode("924MGC94+X2", 10));
             Assert.IsTrue(isBigger);
-            isBigger = LocationCodeTileUtility.IsTileCodeBigger(new PlusCode("924MGC94+X2", 10), new PlusCode("9F4MGC94+X2", 10));
+            isBigger = MiniTileComp.IsTileCodeBigger(new PlusCode("924MGC94+X2", 10), new PlusCode("9F4MGC94+X2", 10));
             Assert.IsFalse(isBigger);
-            isBigger = LocationCodeTileUtility.IsTileCodeBigger(new PlusCode("9F4MGC94+2X", 10), new PlusCode("9F4MGC94+X2", 10));
+            isBigger = MiniTileComp.IsTileCodeBigger(new PlusCode("9F4MGC94+2X", 10), new PlusCode("9F4MGC94+X2", 10));
             Assert.IsTrue(isBigger);
-            isBigger = LocationCodeTileUtility.IsTileCodeBigger(new PlusCode("9F4MGC94+X2", 10), new PlusCode("9F4MGC94+2X", 10));
+            isBigger = MiniTileComp.IsTileCodeBigger(new PlusCode("9F4MGC94+X2", 10), new PlusCode("9F4MGC94+2X", 10));
             Assert.IsFalse(isBigger);
         }
 
@@ -101,7 +101,11 @@ namespace DataModel.Tests
         public void TestManhattenDistance()
         {
 
-           int dist =  PlusCodeUtils.GetManhattenDistance(new PlusCode("9F4MGC84+X2", 10), new PlusCode("9F4MGC94+XX", 10));
+            int dist = PlusCodeUtils.GetManhattenDistance(new PlusCode("8FX9XW2F+XX", 10), new PlusCode("8FX9XW2G+X2", 10));
+            Debug.WriteLine(dist);
+            dist = PlusCodeUtils.GetManhattenDistance(new PlusCode("8FX9XW2F+22", 10), new PlusCode("8FX9XW2F+XX", 10));
+            Debug.WriteLine(dist);
+            dist = PlusCodeUtils.GetManhattenDistance(new PlusCode("8FX9XW2F+22", 10), new PlusCode("8FX9XW2F+2X", 10));
             Debug.WriteLine(dist);
 
         }

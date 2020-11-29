@@ -19,7 +19,7 @@ namespace DataModel.Common
             var minitile =
              from tile in tileList
              from miniTile in tile.MiniTiles
-             where PlusCodeUtils.GetManhattenDistance(miniTile.Code, locationCode) < precision
+             where PlusCodeUtils.GetManhattenDistance(locationCode, miniTile.Code) < precision
              select miniTile;
 
             return minitile.ToList();

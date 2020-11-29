@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 
@@ -10,5 +11,11 @@ namespace DataModel.Common
         public int Precision { get; }
 
         public PlusCode(string code, int precision) => (Code, Precision) = (code, precision);
+
+       
     }
+  
+
+
+
 }

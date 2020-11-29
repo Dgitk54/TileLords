@@ -34,8 +34,8 @@ namespace DataModel.Tests
         public void PrintGeneratedArea()
         {
 
-            List<int> tileTypeGen = new List<int>(){ 0, 1, 2, 3, 4, 5, 6, 7};
-            List<int> miniTileTypeGen = new List<int>() { 0, 1, 2, 3, 3, 3, 3};
+            List<int> tileTypeGen = new List<int>() { 0, 1, 2, 3, 4, 5, 6, 7 };
+            List<int> miniTileTypeGen = new List<int>() { 0, 1, 2, 3, 3, 3, 3 };
             TileGenerator.GenerateArea(new PlusCode("8FX9WWV9+PR", 8), 1, tileTypeGen, miniTileTypeGen).ForEach(v =>
             {
                 Debug.WriteLine(v.ToString() + "CONTENTS: \n ");
@@ -47,7 +47,7 @@ namespace DataModel.Tests
                 });
             });
 
-            
+
         }
 
 
@@ -60,26 +60,42 @@ namespace DataModel.Tests
             foreach (Tile t in tileList)
             {
                 TileUtility.ReadableMini2DArrayFile(TileUtility.GetMiniTile2DArray(t.MiniTiles, 20), @"C:\Users\Kat\Desktop\2DTileArray" + tileCount + ".txt");
+         
                 tileCount++;
             }
 
-           List<MiniTile> tileSect = TileUtility.GetTileSectionForRender(new PlusCode("8FX9XW2F+XX", 10), tileList, 20);
-           tileSect = LocationCodeTileUtility.SortList(tileSect);
-           TileUtility.ReadableMini2DArrayFile(TileUtility.GetMiniTile2DArray(tileSect, 20), @"C:\Users\Kat\Desktop\2DTileArrayTileSect.txt");
-            
+            List<MiniTile> tileSect = TileUtility.GetTileSectionForRender(new PlusCode("8FX9XW2F+XX", 10), tileList, 15);
+            List<MiniTile> sortedTileSect = LocationCodeTileUtility.SortList(tileSect);
+            int contains = 0;
+
+            foreach(MiniTile t in tileSect)
+            {
+                foreach(MiniTile s in sortedTileSect)
+                {
+                    if (s.Code.Code.Equals(t.Code.Code)){
+                        contains++;
+                    //    Debug.WriteLine(s.Code.Code + " " + t.Code.Code);
+                    } 
+                }
+
+            }
+
+            Debug.WriteLine(contains + " " + sortedTileSect.Count);
+           
+
         }
 
 
         [Test]
         public void SomeCoordsTest()
         {
-           
+
             List<int> miniTileTypeGen = new List<int>() { 0, 1, 2, 3, 3, 3, 3 };
             List<MiniTile> tileList = TileGenerator.GenerateMiniTiles(new PlusCode("8FX9WWV9+", 8), miniTileTypeGen);
 
             MiniTile[,] miniTile2D = TileUtility.GetMiniTile2DArray(tileList, 20);
-            Assert.AreEqual("8FX9WWV9+2X" , miniTile2D[19, 19].Code.Code);
-            Assert.AreEqual("8FX9WWV9+4R" , miniTile2D[17, 16].Code.Code);
+            Assert.AreEqual("8FX9WWV9+2X", miniTile2D[19, 19].Code.Code);
+            Assert.AreEqual("8FX9WWV9+4R", miniTile2D[17, 16].Code.Code);
             Assert.AreEqual("8FX9WWV9+22", miniTile2D[19, 0].Code.Code);
             Assert.AreEqual("8FX9WWV9+C5", miniTile2D[11, 3].Code.Code);
             Assert.AreEqual("8FX9WWV9+P7", miniTile2D[5, 5].Code.Code);
@@ -88,6 +104,6 @@ namespace DataModel.Tests
         }
 
 
-        
+
     }
 }
