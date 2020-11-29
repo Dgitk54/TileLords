@@ -19,21 +19,19 @@ namespace DataModel.Client
     {
         static readonly IInternalLogger Logger = InternalLoggerFactory.GetInstance<ClientHandler>();
 
-        List<GPS> gpsList = new List<GPS>();
+        public Subject<GPS> GPSSource { get; }
+        
 
         public ClientHandler()
         {
-            gpsList.Add(new GPS(49.944365, 7.919616));
-            gpsList.Add(new GPS(49.944366, 7.919616));
-            gpsList.Add(new GPS(49.944366, 7.919617));
-            gpsList.Add(new GPS(52.519126, 13.406101));
+            GPSSource = new Subject<GPS>();
         }
 
         public override void ChannelActive(IChannelHandlerContext context)
         {
 
-            ClientFunctions.StreamSink<GPS>(gpsList.ToObservable(), context, 1024);
-
+            //ClientFunctions.StreamSink<GPS>(gpsList.ToObservable(), context, 1024);
+            ClientFunctions.StreamSink<GPS>(GPSSource, context, 1024);
 
             // Detect when server disconnects
             context.Channel.CloseCompletion.ContinueWith((x) => Console.WriteLine("Channel Closed"));
