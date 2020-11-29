@@ -14,7 +14,7 @@ using System.Diagnostics;
 using System.Threading.Tasks;
 using DataModel.Common;
 
-namespace DataModel.Tests
+namespace DataModel.Common.Tests
 {
     [TestFixture]
     class TileGeneratorTests

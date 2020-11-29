@@ -14,7 +14,7 @@ using System.Diagnostics;
 using System.Threading.Tasks;
 
 
-namespace DataModelTests
+namespace DataModel.Common.Tests
 {
 
     [TestFixture]

@@ -3,11 +3,10 @@ using System.Collections.Generic;
 using NUnit.Framework;
 using System.Linq;
 using System.Diagnostics;
-
 using DataModel.Common;
 using System.Reactive.Linq;
 
-namespace DataModel.Tests
+namespace DataModel.Common.Tests
 {
     [TestFixture]
     class TileUtilityTests
