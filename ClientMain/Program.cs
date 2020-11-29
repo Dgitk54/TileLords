@@ -7,8 +7,8 @@ namespace ClientMain
     {
         static void Main(string[] args)
         {
-
-            ClientInstance.RunClientAsync().Wait();
+            var instance = new ClientInstance();
+            instance.RunClientAsync().Wait();
         }
     }
 }

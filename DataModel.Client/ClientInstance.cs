@@ -1,4 +1,5 @@
-﻿using DotNetty.Buffers;
+﻿using DataModel.Common;
+using DotNetty.Buffers;
 using DotNetty.Codecs;
 using DotNetty.Common.Internal.Logging;
 using DotNetty.Transport.Bootstrapping;
@@ -7,15 +8,23 @@ using DotNetty.Transport.Channels.Sockets;
 
 using System;
 using System.Net;
+using System.Reactive.Linq;
+using System.Reactive.Subjects;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace DataModel.Client
 {
 
-   public class ClientInstance
+    public class ClientInstance
     {
-        public static async Task RunClientAsync()
+
+
+        public ClientInstance()
+        {
+        }
+        
+        public async Task RunClientAsync()
         {
             Console.WriteLine("ClientAlive");
 
@@ -40,7 +49,7 @@ namespace DataModel.Client
                     }));
 
                 IChannel bootstrapChannel = await bootstrap.ConnectAsync(new IPEndPoint(serverIP, serverPort));
-                
+
                 Console.ReadLine();
 
                 await bootstrapChannel.CloseAsync();
