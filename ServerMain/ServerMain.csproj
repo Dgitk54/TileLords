@@ -14,8 +14,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\DataModel.Server\DataModel.Server.csproj" />
-    <ProjectReference Include="..\DataModel\DataModel.Common.csproj" />
-    <ProjectReference Include="..\NetworkManager\NetworkManager.csproj" />
   </ItemGroup>
 
 </Project>
