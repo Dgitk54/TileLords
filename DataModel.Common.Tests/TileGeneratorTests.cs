@@ -87,7 +87,36 @@ namespace DataModel.Common.Tests
 
         }
 
+        [Test]
+        public void GetTileSectionWithinChebyshevDistanceAndSortTest()
+        {
 
-        
+            //8FX9XW2F+XX
+            List<Tile> tileList = TileGenerator.GenerateArea(new PlusCode("8FX9XW2F+XX", 8), 1);
+          
+
+            List<MiniTile> tileSect = TileUtility.GetTileSectionWithinChebyshevDistance(new PlusCode("8FX9XW2F+XX", 10), tileList, 1);
+            tileSect = LocationCodeTileUtility.SortList(tileSect);
+
+            List<string> tileSectCorrectCodes = new List<string>();
+            tileSectCorrectCodes.Add("8FX9XW3F+2W");
+            tileSectCorrectCodes.Add("8FX9XW3F+2X");
+            tileSectCorrectCodes.Add("8FX9XW3G+22");
+            tileSectCorrectCodes.Add("8FX9XW2F+XW");
+            tileSectCorrectCodes.Add("8FX9XW2F+XX");
+            tileSectCorrectCodes.Add("8FX9XW2G+X2");
+            tileSectCorrectCodes.Add("8FX9XW2F+WW");
+            tileSectCorrectCodes.Add("8FX9XW2F+WX");
+            tileSectCorrectCodes.Add("8FX9XW2G+W2");
+
+            for (int i = 0; i < tileSect.Count; i++)
+            {
+                Assert.AreEqual(tileSectCorrectCodes[i], tileSect[i].PlusCode.Code);
+            }
+
+
+        }
+
+
     }
 }

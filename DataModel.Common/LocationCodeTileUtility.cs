@@ -301,7 +301,7 @@ namespace DataModel.Common
                 String c = code[i] + "";
                 if (codeToInt.TryGetValue(c, out int j))
                 {
-
+                  
                     array[i] = j;
 
                 }
