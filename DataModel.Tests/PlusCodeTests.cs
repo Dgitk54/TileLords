@@ -38,7 +38,14 @@ namespace DataModelTests
         //9F4MGC94+MC
 
 
-    
+        //TH Bingen 
+        //49.953111, 7.923055
+
+
+        //Berg Norden von TH bingen
+        //49.962096, 7.923703
+
+
 
         [SetUp]
         public void SetUp()
@@ -72,50 +79,97 @@ namespace DataModelTests
         }
 
 
-        [Test]
-        public void ManhattenDistanceDebugPrintLat()
-        {
-            List<GPS> latChangeList = new List<GPS>();
+        
 
-            latChangeList.Add(new GPS(49.000000, 7.900000));
-            latChangeList.Add(new GPS(49.000100, 7.900000));
-            latChangeList.Add(new GPS(49.000200, 7.900000));
-            latChangeList.Add(new GPS(49.000300, 7.900000));
-            latChangeList.Add(new GPS(49.000400, 7.900000));
-            latChangeList.Add(new GPS(49.000500, 7.900000));
-            latChangeList.Add(new GPS(49.000600, 7.900000));
-            latChangeList.Add(new GPS(49.000700, 7.900000));
-            latChangeList.Add(new GPS(49.000800, 7.900000));
+        [Test]
+        public void WithChangedLatValuesLatDistanceGrows()
+        {
+           
+            var start = new GPS(49.000000, 7.900000);
+            var deltaChange = 0.000150;
+
+            var list = DataModelFunctions.GPSNodesWithOffsets(start, deltaChange, 0, 20);
 
             var plusCodes = new List<PlusCode>();
-            latChangeList.ForEach(v => plusCodes.Add(DataModelFunctions.GetPlusCode(v, 10)));
+            list.ForEach(v => plusCodes.Add(DataModelFunctions.GetPlusCode(v, 10)));
 
-
-            plusCodes.ForEach(v => Debug.WriteLine(v.Code + " distance from first: " + PlusCodeUtils.GetLatitudinalTileDistance(plusCodes[0], v, true)));
-            
+            PlusCode tmp= default;
+            plusCodes.ForEach(v =>
+            {
+                if (tmp.Equals( default(PlusCode)))
+                    tmp = v;
+                var deltaDistance = PlusCodeUtils.GetLatitudinalTileDistance(tmp, v, true);
+                Assert.IsTrue(deltaDistance >= 0);
+                Debug.WriteLine(v.Code + " distance delta from " + tmp.Code + " = " + deltaDistance);
+                tmp = v;
+            });
         }
 
         [Test]
-        public void ManhattenDistanceDebugPrintLon()
+        public void WithChangedLonValuesLonDistanceGrows()
         {
-            List<GPS> latChangeList = new List<GPS>();
+            var start = new GPS(49.000000, 7.900000);
+            var deltaChange = 0.000150;
 
-            latChangeList.Add(new GPS(49.000000, 7.900000));
-            latChangeList.Add(new GPS(49.000000, 7.901000));
-            latChangeList.Add(new GPS(49.000000, 7.900200));
-            latChangeList.Add(new GPS(49.000000, 7.900300));
-            latChangeList.Add(new GPS(49.000000, 7.900400));
-            latChangeList.Add(new GPS(49.000000, 7.900500));
-            latChangeList.Add(new GPS(49.000000, 7.900600));
-            latChangeList.Add(new GPS(49.000000, 7.900700));
-            latChangeList.Add(new GPS(49.000000, 7.900800));
-
+            var list = DataModelFunctions.GPSNodesWithOffsets(start, 0, deltaChange, 20);
             var plusCodes = new List<PlusCode>();
-            latChangeList.ForEach(v => plusCodes.Add(DataModelFunctions.GetPlusCode(v, 10)));
-            plusCodes.ForEach(v => Debug.WriteLine(v.Code + " distance from first: " + PlusCodeUtils.GetLongitudinalTileDistance(plusCodes[0], v, true)));
+            list.ForEach(v => plusCodes.Add(DataModelFunctions.GetPlusCode(v, 10)));
+
+            PlusCode tmp = default;
+            plusCodes.ForEach(v =>
+            {
+                if (tmp.Equals(default(PlusCode)))
+                    tmp = v;
+                var deltaDistance = PlusCodeUtils.GetLongitudinalTileDistance(tmp, v, true);
+                Assert.IsTrue(deltaDistance >= 0);
+                Debug.WriteLine(v.Code + " distance delta from " + tmp.Code + " = " + deltaDistance);
+                tmp = v;
+            });
         }
 
+        [Test]
+        public void WithChangedLonValuesTheLatDistanceStaysSame()
+        {
+            var start = new GPS(49.000000, 7.900000);
+            var deltaChange = 0.000150;
 
+            var list = DataModelFunctions.GPSNodesWithOffsets(start, 0, deltaChange, 20);
+            var plusCodes = new List<PlusCode>();
+            list.ForEach(v => plusCodes.Add(DataModelFunctions.GetPlusCode(v, 10)));
+
+            PlusCode tmp = default;
+            plusCodes.ForEach(v =>
+            {
+                if (tmp.Equals(default(PlusCode)))
+                    tmp = v;
+                var deltaDistance = PlusCodeUtils.GetLatitudinalTileDistance(tmp, v, true);
+                Assert.IsTrue(deltaDistance == 0);
+                Debug.WriteLine(v.Code + " distance delta from " + tmp.Code + " = " + deltaDistance);
+                tmp = v;
+            });
+        }
+
+        [Test]
+        public void WithChangedLatValuesTheLonDistanceStaysSame()
+        {
+            var start = new GPS(49.000000, 7.900000);
+            var deltaChange = 0.000150;
+
+            var list = DataModelFunctions.GPSNodesWithOffsets(start, deltaChange, 0, 20);
+            var plusCodes = new List<PlusCode>();
+            list.ForEach(v => plusCodes.Add(DataModelFunctions.GetPlusCode(v, 10)));
+
+            PlusCode tmp = default;
+            plusCodes.ForEach(v =>
+            {
+                if (tmp.Equals(default(PlusCode)))
+                    tmp = v;
+                var deltaDistance = PlusCodeUtils.GetLongitudinalTileDistance(tmp, v, true);
+                Assert.IsTrue(deltaDistance == 0);
+                Debug.WriteLine(v.Code + " distance delta from " + tmp.Code + " = " + deltaDistance);
+                tmp = v;
+            });
+        }
 
 
         [Test]
@@ -161,12 +215,7 @@ namespace DataModelTests
         }
 
 
-        //TH Bingen 
-        //49.953111, 7.923055
-
-
-        //Berg Norden von TH bingen
-        //49.962096, 7.923703
+        
 
         [Test]
         public void PlusCodePrintingTest()
