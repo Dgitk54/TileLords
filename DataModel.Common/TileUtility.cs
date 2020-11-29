@@ -13,7 +13,7 @@ namespace DataModel.Common
 
 
         /// <summary>
-        /// Given the List of possible tiles, this code returns all tiles within a chebyshev distance. The 
+        /// Given the List of possible tiles, this code returns all tiles within a chebyshev distance.
         /// </summary>
         /// <param name="locationCode"></param>
         /// <param name="tileList"></param>
