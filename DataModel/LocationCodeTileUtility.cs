@@ -511,8 +511,8 @@ namespace DataModel.Common
 
                 for (int j = 0; j < sortedList.Count - 1; j++)
                 {
-                    PlusCode code = sortedList[j].Code;
-                    PlusCode code2 = sortedList[j + 1].Code;
+                    PlusCode code = sortedList[j].PlusCode;
+                    PlusCode code2 = sortedList[j + 1].PlusCode;
                     if (IsTileCodeBigger(code, code2))
                     {
                         MiniTile tmp = sortedList[j];

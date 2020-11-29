@@ -79,12 +79,22 @@ namespace DataModelTests
         }
 
 
-        
+        [Test]
+        public void GivenPlusCodeTrimWorksCorrectly()
+        {
+            var given = new PlusCode("8FX9XW2F+XX", 10);
+            var got = DataModelFunctions.ToLowerResolution(given, 8);
+            Assert.IsTrue(got.Precision == 8);
+            Assert.IsTrue(got.Code.Equals("8FX9XW2F+"));
+            var fromCode = new PlusCode("8FX9XW2F+", 8);
+            Assert.IsTrue(got.Equals(fromCode));
+        }
+
 
         [Test]
         public void WithChangedLatValuesLatDistanceGrows()
         {
-           
+
             var start = new GPS(49.000000, 7.900000);
             var deltaChange = 0.000150;
 
@@ -93,10 +103,10 @@ namespace DataModelTests
             var plusCodes = new List<PlusCode>();
             list.ForEach(v => plusCodes.Add(DataModelFunctions.GetPlusCode(v, 10)));
 
-            PlusCode tmp= default;
+            PlusCode tmp = default;
             plusCodes.ForEach(v =>
             {
-                if (tmp.Equals( default(PlusCode)))
+                if (tmp.Equals(default(PlusCode)))
                     tmp = v;
                 var deltaDistance = PlusCodeUtils.GetLatitudinalTileDistance(tmp, v, true);
                 Assert.IsTrue(deltaDistance >= 0);
@@ -215,7 +225,7 @@ namespace DataModelTests
         }
 
 
-        
+
 
         [Test]
         public void PlusCodePrintingTest()
@@ -227,7 +237,7 @@ namespace DataModelTests
                       from c2 in rev
                       select new string(c1 + "" + c2 + "");
 
-            List < GPS > gpsList = new List<GPS>();
+            List<GPS> gpsList = new List<GPS>();
             gpsList.Add(new GPS(49.953111, 7.923055));
             gpsList.Add(new GPS(49.962096, 7.923703));
 

@@ -12,19 +12,22 @@ namespace DataModel.Common
     {
 
 
-
-        public static List<MiniTile> GetTileSectionForRender(PlusCode locationCode,  List<Tile> tileList, int precision)
+        /// <summary>
+        /// Given the List of possible tiles, this code returns all tiles within a chebyshev distance. The 
+        /// </summary>
+        /// <param name="locationCode"></param>
+        /// <param name="tileList"></param>
+        /// <param name="precision"></param>
+        /// <returns></returns>
+        public static List<MiniTile> GetTileSectionWithinChebyshevDistance(PlusCode locationCode, List<Tile> tileList, int distance)
         {
-            List<MiniTile> miniTileList = new List<MiniTile>();
             var minitile =
              from tile in tileList
              from miniTile in tile.MiniTiles
-             where PlusCodeUtils.GetManhattenDistance(miniTile.Code, locationCode) < precision
+             where PlusCodeUtils.GetChebyshevDistance(locationCode, miniTile.PlusCode) <= distance
              select miniTile;
 
             return minitile.ToList();
-
-
         } 
 
         /// <summary>
@@ -94,7 +97,7 @@ namespace DataModel.Common
                     for (int j = 0; j < miniTileArray.GetLength(1); j++)
                     {
 
-                        file.Write(miniTileArray[i, j].Code.Code + " (" + miniTileArray[i, j].TileType + ") | ");
+                        file.Write(miniTileArray[i, j].PlusCode.Code + " (" + miniTileArray[i, j].TileType + ") | ");
 
                     }
                 }
@@ -115,7 +118,7 @@ namespace DataModel.Common
               from tileRows in tileList
               from tile in tileRows
               from miniTile in tile.MiniTiles
-              where miniTile.Code.Code == locationCode.Code
+              where miniTile.PlusCode.Code == locationCode.Code
               select miniTile;
 
             return minitile.First();
@@ -126,7 +129,7 @@ namespace DataModel.Common
             var minitile =
               from tile in tileList
               from miniTile in tile.MiniTiles
-              where miniTile.Code.Code == locationCode.Code
+              where miniTile.PlusCode.Code == locationCode.Code
               select miniTile;
 
             return minitile.First();
@@ -136,7 +139,7 @@ namespace DataModel.Common
         {
             var minitile =
               from miniTile in miniTileList
-              where miniTile.Code.Code == locationCode.Code
+              where miniTile.PlusCode.Code == locationCode.Code
               select miniTile;
 
             return minitile.First();

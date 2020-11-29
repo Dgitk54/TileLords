@@ -61,7 +61,11 @@ namespace DataModel.Common
             for (int i = 0; i < nodeAmount; i++)
                 changeList.Add(DataModelFunctions.AddOFfset(startPos, latNodeOffset * i, lonNodeOffset * i));
             return changeList;
-        } 
+        }
+
+        public static PlusCode ToLowerResolution(PlusCode code, int target)
+            => new PlusCode(string.Concat(code.Code.Take(target+1)), target);
+
 
     }
 }
