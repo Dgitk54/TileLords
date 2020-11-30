@@ -44,8 +44,8 @@ namespace DataModel.Server
         public IObservable<List<Tile>> TilesForPlusCode(IObservable<PlusCode> code) => from val in code
                                                                                        select TileGenerator.GenerateArea(val, 1);
         public IObservable<Tile> EachTileSeperate(IObservable<List<Tile>> observable) => from list in observable
-                                                                                      from tile in list.ToObservable()
-                                                                                      select tile;
+                                                                                         from tile in list.ToObservable()
+                                                                                         select tile;
 
 
         public IObservable<NetworkJsonMessage> EncodeTileUpdate(IObservable<List<Tile>> tileStream) => from tileList in tileStream
@@ -54,7 +54,18 @@ namespace DataModel.Server
 
 
 
+        public static IDisposable DebugEventToConsoleSink<T>(IObservable<T> events) where T : IEvent
+            => events.Subscribe(v => Console.WriteLine("Event occured:" + v.ToString()));
 
+        public IDisposable EventStreamSink<T>(IObservable<T> objStream, IChannelHandlerContext context) where T : DataSinkEvent
+            => objStream.Subscribe(v =>
+            {
+                var asByteMessage = Encoding.UTF8.GetBytes(v.SerializedData);
+                Console.WriteLine("PUSHING: DATA" + asByteMessage.GetLength(0));
+                context.WriteAndFlushAsync(Unpooled.WrappedBuffer(asByteMessage));
+            },
+             e => Console.WriteLine("Error occured writing" + objStream),
+             () => Console.WriteLine("StreamSink Write Sequence Completed"));
 
         public IDisposable StreamSink<T>(IObservable<T> obj, IChannelHandlerContext context)
         {
@@ -65,7 +76,6 @@ namespace DataModel.Server
                  var asByteMessage = Encoding.UTF8.GetBytes(asStringPayload);
                  Console.WriteLine("PUSHING: DATA" + asByteMessage.GetLength(0));
                  context.WriteAndFlushAsync(Unpooled.WrappedBuffer(asByteMessage));
-
              },
              e => Console.WriteLine("Error occured writing" + obj),
              () => Console.WriteLine("StreamSink Write Sequence Completed"));

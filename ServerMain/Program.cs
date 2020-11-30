@@ -15,9 +15,9 @@ namespace ServerMain
 
         public static void Main(String[] args)
         {
-
-            ServerInstance.RunServerAsync().Wait();
-
+            var server = new ServerInstance();
+            var task = server.RunServerAsync();
+            task.Wait();
         }
     }
 }

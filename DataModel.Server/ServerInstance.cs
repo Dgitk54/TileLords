@@ -7,12 +7,19 @@ using System.Text;
 using DotNetty.Handlers.Logging;
 using System.Threading.Tasks;
 using DotNetty.Codecs;
+using DataModel.Common;
 
 namespace DataModel.Server
 {
     public class ServerInstance
     {
-        public static async Task RunServerAsync()
+        readonly IEventBus bus = new ServerEventBus();
+        public ServerInstance()
+        {
+            ServerFunctions.DebugEventToConsoleSink(bus.GetEventStream<ClientConnectedEvent>());
+            ServerFunctions.DebugEventToConsoleSink(bus.GetEventStream<ClientDisconnectedEvent>());
+        }
+        public async Task RunServerAsync()
         {
             var logLevel = LogLevel.INFO;
 
@@ -22,7 +29,6 @@ namespace DataModel.Server
             var bossGroup = new MultithreadEventLoopGroup(1); //  accepts an incoming connection
             var workerGroup = new MultithreadEventLoopGroup(); // handles the traffic of the accepted connection once the boss accepts the connection and registers the accepted connection to the worker
 
-            var serverHandler = new ServerHandler();
 
             try
             {
@@ -38,7 +44,7 @@ namespace DataModel.Server
                         IChannelPipeline pipeline = channel.Pipeline;
                         pipeline.AddLast("framing-enc", new LengthFieldPrepender(2));
                         pipeline.AddLast("framing-dec", new LengthFieldBasedFrameDecoder(ushort.MaxValue, 0, 2, 0, 2));
-                        pipeline.AddLast(serverHandler);
+                        pipeline.AddLast(new ClientHandler(bus));
                     }));
 
                 IChannel bootstrapChannel = await bootstrap.BindAsync(serverPort);

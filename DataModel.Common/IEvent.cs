@@ -2,11 +2,9 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace DataModel.Client
+namespace DataModel.Common
 {
-    public interface GameNetworkInterface
+    public interface IEvent
     {
-
-        
     }
 }

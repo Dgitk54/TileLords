@@ -19,16 +19,16 @@ namespace DataModel.Client
     public class ClientInstance
     {
 
-        private ClientHandler ClientHandler {get;}
+        private ServerHandler ServerHandler {get;}
 
         public ClientInstance()
         {
-            ClientHandler = new ClientHandler();
+            ServerHandler = new ServerHandler();
         }
 
         public void SendGPS(GPS gps)
         {
-            ClientHandler.GPSSource.OnNext(gps);
+            ServerHandler.GPSSource.OnNext(gps);
         }
         
         public async Task RunClientAsync()
@@ -52,7 +52,7 @@ namespace DataModel.Client
                         IChannelPipeline pipeline = channel.Pipeline;
                         pipeline.AddLast("framing-enc", new LengthFieldPrepender(2));
                         pipeline.AddLast("framing-dec", new LengthFieldBasedFrameDecoder(ushort.MaxValue, 0, 2, 0, 2));
-                        pipeline.AddLast(ClientHandler);
+                        pipeline.AddLast(ServerHandler);
                     }));
 
                 IChannel bootstrapChannel = await bootstrap.ConnectAsync(new IPEndPoint(serverIP, serverPort));
@@ -64,7 +64,7 @@ namespace DataModel.Client
             finally
             {
                 Console.WriteLine("CLOSING!");
-                ClientHandler.GPSSource.OnCompleted();
+                ServerHandler.GPSSource.OnCompleted();
                 group.ShutdownGracefullyAsync().Wait();
             }
         }

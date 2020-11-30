@@ -15,14 +15,14 @@ using Newtonsoft.Json;
 
 namespace DataModel.Client
 {
-    public class ClientHandler : ChannelHandlerAdapter
+    public class ServerHandler : ChannelHandlerAdapter
     {
-        static readonly IInternalLogger Logger = InternalLoggerFactory.GetInstance<ClientHandler>();
+        static readonly IInternalLogger Logger = InternalLoggerFactory.GetInstance<ServerHandler>();
 
         public Subject<GPS> GPSSource { get; }
         
 
-        public ClientHandler()
+        public ServerHandler()
         {
             GPSSource = new Subject<GPS>();
         }
