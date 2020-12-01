@@ -18,32 +18,42 @@ namespace DataModel.Client
 
     public class ClientInstance
     {
+        public Subject<string> ReceivedData { get;}
+        ServerHandler ServerHandler {get;}
+        Bootstrap Bootstrap { get; set; }
+        IChannel BootstrapChannel { get; set; }
 
-        private ServerHandler ServerHandler {get;}
-
+        readonly MultithreadEventLoopGroup group = new MultithreadEventLoopGroup();
         public ClientInstance()
         {
-            ServerHandler = new ServerHandler();
+            ServerHandler = new ServerHandler(this);
+            ReceivedData = new Subject<string>();
         }
+
+
 
         public void SendGPS(GPS gps)
         {
             ServerHandler.GPSSource.OnNext(gps);
         }
         
+        public async Task DisconnectClient()
+        {
+            await BootstrapChannel.CloseAsync();
+            ServerHandler.GPSSource.OnCompleted();
+            group.ShutdownGracefullyAsync().Wait();
+        }
+
+
         public async Task RunClientAsync()
         {
-            Console.WriteLine("ClientAlive");
-
-            var group = new MultithreadEventLoopGroup();
-
+            
             var serverIP = IPAddress.Parse("127.0.0.1");
             int serverPort = 8080;
 
-            try
-            {
-                var bootstrap = new Bootstrap();
-                bootstrap
+            
+                Bootstrap = new Bootstrap();
+                Bootstrap
                     .Group(group)
                     .Channel<TcpSocketChannel>()
                     .Option(ChannelOption.TcpNodelay, true) // Do not buffer and send packages right away
@@ -55,18 +65,11 @@ namespace DataModel.Client
                         pipeline.AddLast(ServerHandler);
                     }));
 
-                IChannel bootstrapChannel = await bootstrap.ConnectAsync(new IPEndPoint(serverIP, serverPort));
+                IChannel bootstrapChannel = await Bootstrap.ConnectAsync(new IPEndPoint(serverIP, serverPort));
 
-                Console.ReadLine();
 
-                await bootstrapChannel.CloseAsync();
-            }
-            finally
-            {
-                Console.WriteLine("CLOSING!");
-                ServerHandler.GPSSource.OnCompleted();
-                group.ShutdownGracefullyAsync().Wait();
-            }
+                
+            
         }
 
 

@@ -24,7 +24,10 @@ namespace ClientMain
                 instance.SendGPS(list[counter]);
                 counter++;
             });
-
+            instance.ReceivedData.Subscribe(v =>
+            {
+                Console.WriteLine(v);
+            });
             task.Wait();
 
         }

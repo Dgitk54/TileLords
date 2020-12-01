@@ -20,11 +20,14 @@ namespace DataModel.Client
         static readonly IInternalLogger Logger = InternalLoggerFactory.GetInstance<ServerHandler>();
 
         public Subject<GPS> GPSSource { get; }
+
+        ClientInstance instance;
         
 
-        public ServerHandler()
+        public ServerHandler(ClientInstance instance)
         {
             GPSSource = new Subject<GPS>();
+            this.instance = instance;
         }
 
         public override void ChannelActive(IChannelHandlerContext context)
@@ -34,7 +37,7 @@ namespace DataModel.Client
             ClientFunctions.StreamSink<GPS>(GPSSource, context, 1024);
 
             // Detect when server disconnects
-            context.Channel.CloseCompletion.ContinueWith((x) => Console.WriteLine("Channel Closed"));
+           // context.Channel.CloseCompletion.ContinueWith((x) => Console.WriteLine("Channel Closed"));
 
 
         }
@@ -45,7 +48,7 @@ namespace DataModel.Client
             var byteBuffer = message as IByteBuffer;
             if (byteBuffer != null)
             {
-                Console.WriteLine("Received from server: " + byteBuffer.ToString(Encoding.UTF8));
+                instance.ReceivedData.OnNext(byteBuffer.ToString(Encoding.UTF8));
             }
            // context.WriteAsync(message);
 
@@ -54,7 +57,7 @@ namespace DataModel.Client
         // The Channel is closed hence the connection is closed
         public override void ChannelInactive(IChannelHandlerContext ctx)
         {
-            Console.WriteLine("Client shut down");
+        //    Console.WriteLine("Client shut down");
         }
 
 
