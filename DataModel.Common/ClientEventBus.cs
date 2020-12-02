@@ -5,7 +5,7 @@ using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Text;
 
-namespace DataModel.Server
+namespace DataModel.Common
 {
     public class ClientEventBus: IEventBus
     {

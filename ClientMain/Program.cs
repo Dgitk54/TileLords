@@ -10,7 +10,8 @@ namespace ClientMain
     {
         static void Main(string[] args)
         {
-            var instance = new ClientInstance();
+            var bus = new ClientEventBus();
+            var instance = new ClientInstance(bus);
             var task = instance.RunClientAsync();
 
             const int periodInSec = 2;
@@ -21,12 +22,8 @@ namespace ClientMain
             var counter = 0;
             obs.Subscribe(v =>
             {
-                instance.SendGPS(list[counter]);
+                instance.SendDebugGPS(list[counter]);
                 counter++;
-            });
-            instance.ReceivedData.Subscribe(v =>
-            {
-                Console.WriteLine(v);
             });
             task.Wait();
 

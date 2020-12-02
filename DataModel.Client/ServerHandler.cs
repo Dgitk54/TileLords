@@ -17,29 +17,24 @@ namespace DataModel.Client
 {
     public class ServerHandler : ChannelHandlerAdapter
     {
+
+
+
         static readonly IInternalLogger Logger = InternalLoggerFactory.GetInstance<ServerHandler>();
+        readonly List<IDisposable> disposables = new List<IDisposable>();
+        readonly IEventBus eventBus;
+       
 
-        public Subject<GPS> GPSSource { get; }
 
-        ClientInstance instance;
+
+        public ServerHandler(IEventBus bus) => eventBus = bus;
         
-
-        public ServerHandler(ClientInstance instance)
-        {
-            GPSSource = new Subject<GPS>();
-            this.instance = instance;
-        }
 
         public override void ChannelActive(IChannelHandlerContext context)
         {
-
-            //ClientFunctions.StreamSink<GPS>(gpsList.ToObservable(), context, 1024);
-            ClientFunctions.StreamSink<GPS>(GPSSource, context, 1024);
-
-            // Detect when server disconnects
-           // context.Channel.CloseCompletion.ContinueWith((x) => Console.WriteLine("Channel Closed"));
-
-
+            eventBus.Publish<ClientConnectedEvent>(new ClientConnectedEvent("Connected on " + DateTime.Now.ToString()));
+            disposables.Add(ClientFunctions.EventStreamSink(eventBus.GetEventStream<DataSinkEvent>(), context));
+            disposables.Add(new ClientGPSHandler(eventBus).AttachToBus());
         }
 
 
@@ -48,19 +43,20 @@ namespace DataModel.Client
             var byteBuffer = message as IByteBuffer;
             if (byteBuffer != null)
             {
-                instance.ReceivedData.OnNext(byteBuffer.ToString(Encoding.UTF8));
+                var data = byteBuffer.ToString(Encoding.UTF8);
+                eventBus.Publish<DataSourceEvent>(new DataSourceEvent(data));
             }
-           // context.WriteAsync(message);
 
         }
 
         // The Channel is closed hence the connection is closed
         public override void ChannelInactive(IChannelHandlerContext ctx)
         {
-        //    Console.WriteLine("Client shut down");
+            eventBus.Publish<ClientDisconnectedEvent>(new ClientDisconnectedEvent("Connected on " + DateTime.Now.ToString()));
         }
 
-
+        public void ShutDown() => disposables.ForEach(v => v.Dispose());
+        
 
         public override bool IsSharable => true;
     }

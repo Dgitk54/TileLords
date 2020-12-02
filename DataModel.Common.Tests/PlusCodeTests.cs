@@ -22,7 +22,6 @@ namespace DataModel.Common.Tests
     {
         IObservable<int> precisionStraem;
         IObservable<GPS> gpsStream;
-        DataModelFunctions func;
 
         //Bingen Kreisel
         //49.944365, 7.919616
@@ -50,7 +49,6 @@ namespace DataModel.Common.Tests
         [SetUp]
         public void SetUp()
         {
-            func = new DataModelFunctions();
         }
 
 
@@ -60,7 +58,7 @@ namespace DataModel.Common.Tests
             precisionStraem = Observable.Create<int>(v => { v.OnNext(8); return v.OnCompleted; });
             gpsStream = Observable.Create<GPS>(v => { v.OnNext(new GPS(49.944365, 7.919616)); return v.OnCompleted; });
 
-            var sub = func.GetPlusCode(gpsStream, precisionStraem)
+            var sub = DataModelFunctions.GetPlusCode(gpsStream, precisionStraem)
                 .Do(v => { Assert.IsTrue(v.Code.Equals("8FX9WWV9+")); })
                 .Subscribe();
             sub.Dispose();
@@ -72,7 +70,7 @@ namespace DataModel.Common.Tests
             precisionStraem = Observable.Create<int>(v => { v.OnNext(8); return v.OnCompleted; });
             gpsStream = Observable.Create<GPS>(v => { v.OnNext(new GPS(49.944365, 7.919616)); return v.OnCompleted; });
 
-            var sub = func.GetPlusCode(gpsStream, precisionStraem)
+            var sub = DataModelFunctions.GetPlusCode(gpsStream, precisionStraem)
                 .Do(v => { Assert.IsTrue(v.Code.Length == 9 && v.Precision == 8); })
                 .Subscribe();
             sub.Dispose();
@@ -194,7 +192,7 @@ namespace DataModel.Common.Tests
             intList.Add(8);
 
 
-            var sub = func.GetPlusCode(gpsList.ToObservable(), intList.ToObservable());
+            var sub = DataModelFunctions.GetPlusCode(gpsList.ToObservable(), intList.ToObservable());
 
             int count = 0;
             List<PlusCode> codes = new List<PlusCode>();
@@ -245,7 +243,7 @@ namespace DataModel.Common.Tests
             intList.Add(8);
 
 
-            var sub = func.GetPlusCode(gpsList.ToObservable(), intList.ToObservable());
+            var sub = DataModelFunctions.GetPlusCode(gpsList.ToObservable(), intList.ToObservable());
 
             int count = 0;
             List<PlusCode> codes = new List<PlusCode>();

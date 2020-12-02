@@ -19,32 +19,30 @@ namespace DataModel.Server
     {
         static readonly IInternalLogger Logger = InternalLoggerFactory.GetInstance<ClientHandler>();
 
-        private readonly Subject<string> jsonClientSource = new Subject<string>();
-        private readonly ServerFunctions functions = new ServerFunctions();
+        readonly Subject<string> jsonClientSource = new Subject<string>();
 
-        private List<IDisposable> disposables = new List<IDisposable>();
+        List<IDisposable> disposables = new List<IDisposable>();
 
-        private readonly IEventBus serverBus;
-        private readonly IEventBus clientBus;
+        readonly IEventBus serverBus; // eventbus for serverwide messages
+        readonly IEventBus clientBus; // eventbus for clientwide messages
 
         private readonly ClientLocationHandler gpsClientLocationHandler;
+
         public ClientHandler(IEventBus serverBus)
         {
             this.serverBus = serverBus;
             clientBus = new ClientEventBus();
             gpsClientLocationHandler = new ClientLocationHandler(clientBus);
         }
+
         public override void ChannelActive(IChannelHandlerContext ctx)
         {
             serverBus.Publish<ClientConnectedEvent>(new ClientConnectedEvent(ctx.Name));
-            disposables.Add(functions.EventStreamSink(clientBus.GetEventStream<DataSinkEvent>(), ctx));
+            disposables.Add(ServerFunctions.EventStreamSink(clientBus.GetEventStream<DataSinkEvent>(), ctx));
             disposables.Add(jsonClientSource.Subscribe(v => clientBus.Publish<DataSourceEvent>(new DataSourceEvent(v))));
             disposables.Add(gpsClientLocationHandler.AttachToBus());
             ctx.Channel.CloseCompletion.ContinueWith((x) => Console.WriteLine("Channel Closed"));
-
-
         }
-
 
         public override void ChannelRead(IChannelHandlerContext context, object message)
         {

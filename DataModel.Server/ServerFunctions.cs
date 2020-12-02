@@ -14,6 +14,9 @@ using DotNetty.Buffers;
 
 namespace DataModel.Server
 {
+    /// <summary>
+    /// Class with functions shared between multiple handlers.
+    /// </summary>
     public class ServerFunctions
     {
 
@@ -22,42 +25,12 @@ namespace DataModel.Server
                             select JsonConvert.ToString(bytePacket))
             select new NetworkJsonMessage(jsonCode);*/
 
-        public IObservable<NetworkJsonMessage> TransformPacket(IObservable<string> dataStream) => from message in dataStream
-                                                                                                  select new NetworkJsonMessage(message);
-
-        public IObservable<GPS> GPSMessageStream(IObservable<NetworkJsonMessage> message) => from msg in message
-                                                                                             select JsonConvert.DeserializeObject<GPS>(msg.JsonPayload);
-
-
-        public IObservable<PlusCode> GetPlusCode(IObservable<GPS> gps, IObservable<int> precision)
-            => from i in gps
-               from j in precision
-               select new PlusCode(new OpenLocationCode(i.Lat, i.Lon, j).Code, j);
-
-        public IObservable<PlusCode> GpsAsPlusCode8(IObservable<GPS> gpsStream) => GetPlusCode(gpsStream, Observable.Create<int>(v => { v.OnNext(8); return v.OnCompleted; }));
-
-
-        public IObservable<PlusCode> TileHasChangedStream(IObservable<PlusCode> plusCodeStream) => plusCodeStream.DistinctUntilChanged();
-
-
-        //TODO: Add persistent storage/database access, currently only for small milestone/debugging
-        public IObservable<List<Tile>> TilesForPlusCode(IObservable<PlusCode> code) => from val in code
-                                                                                       select TileGenerator.GenerateArea(val, 1);
-        public IObservable<Tile> EachTileSeperate(IObservable<List<Tile>> observable) => from list in observable
-                                                                                         from tile in list.ToObservable()
-                                                                                         select tile;
-
-
-        public IObservable<NetworkJsonMessage> EncodeTileUpdate(IObservable<List<Tile>> tileStream) => from tileList in tileStream
-                                                                                                       let encoded = JsonConvert.SerializeObject(tileList)
-                                                                                                       select new NetworkJsonMessage(encoded);
-
 
 
         public static IDisposable DebugEventToConsoleSink<T>(IObservable<T> events) where T : IEvent
             => events.Subscribe(v => Console.WriteLine("Event occured:" + v.ToString()));
 
-        public IDisposable EventStreamSink<T>(IObservable<T> objStream, IChannelHandlerContext context) where T : DataSinkEvent
+        public static IDisposable EventStreamSink<T>(IObservable<T> objStream, IChannelHandlerContext context) where T : DataSinkEvent
             => objStream.Subscribe(v =>
             {
                 var asByteMessage = Encoding.UTF8.GetBytes(v.SerializedData);
@@ -67,19 +40,7 @@ namespace DataModel.Server
              e => Console.WriteLine("Error occured writing" + objStream),
              () => Console.WriteLine("StreamSink Write Sequence Completed"));
 
-        public IDisposable StreamSink<T>(IObservable<T> obj, IChannelHandlerContext context)
-        {
-
-            return obj.Subscribe(v =>
-             {
-                 var asStringPayload = JsonConvert.SerializeObject(v);
-                 var asByteMessage = Encoding.UTF8.GetBytes(asStringPayload);
-                 Console.WriteLine("PUSHING: DATA" + asByteMessage.GetLength(0));
-                 context.WriteAndFlushAsync(Unpooled.WrappedBuffer(asByteMessage));
-             },
-             e => Console.WriteLine("Error occured writing" + obj),
-             () => Console.WriteLine("StreamSink Write Sequence Completed"));
-        }
+       
 
 
     }

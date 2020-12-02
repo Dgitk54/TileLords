@@ -8,15 +8,15 @@ using System.Text;
 
 namespace DataModel.Server
 {
-
+    /// <summary>
+    /// Handles gps data received from the client.
+    /// </summary>
     public class ClientLocationHandler
     {
         private IEventBus ClientBus { get; }
         public ClientLocationHandler(IEventBus clientBus)
         {
             ClientBus = clientBus;
-            
-
         }
         public IDisposable AttachToBus()
         {
@@ -27,16 +27,10 @@ namespace DataModel.Server
 
         IObservable<string> DataExtractor(IObservable<DataSourceEvent> eventSource) => from e in eventSource
                                                                                        select e.Data;
-        IObservable < GPS > GPSMessageStream(IObservable<string> message) => from msg in message
+        IObservable<GPS> GPSMessageStream(IObservable<string> message) => from msg in message
                                                                           select JsonConvert.DeserializeObject<GPS>(msg);
 
-
-        IObservable<PlusCode> GetPlusCode(IObservable<GPS> gps, IObservable<int> precision)
-            => from i in gps
-               from j in precision
-               select new PlusCode(new OpenLocationCode(i.Lat, i.Lon, j).Code, j);
-
-        IObservable<PlusCode> GPSAsPluscode8(IObservable<GPS> gpsStream) => GetPlusCode(gpsStream, Observable.Create<int>(v => { v.OnNext(8); return v.OnCompleted; }));
+        IObservable<PlusCode> GPSAsPluscode8(IObservable<GPS> gpsStream) => DataModelFunctions.GetPlusCode(gpsStream, Observable.Create<int>(v => { v.OnNext(8); return v.OnCompleted; }));
 
 
         IObservable<PlusCode> TileHasChangedStream(IObservable<PlusCode> plusCodeStream) => plusCodeStream.DistinctUntilChanged();

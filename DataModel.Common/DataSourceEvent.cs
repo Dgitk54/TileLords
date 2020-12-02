@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace DataModel.Server
+namespace DataModel.Common
 {
     public class DataSourceEvent : IEvent
     {

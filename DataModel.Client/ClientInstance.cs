@@ -7,6 +7,7 @@ using DotNetty.Transport.Channels;
 using DotNetty.Transport.Channels.Sockets;
 
 using System;
+using System.Collections.Generic;
 using System.Net;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
@@ -18,58 +19,61 @@ namespace DataModel.Client
 
     public class ClientInstance
     {
-        public Subject<string> ReceivedData { get;}
-        ServerHandler ServerHandler {get;}
+        
+        ServerHandler ServerHandler { get; }
         Bootstrap Bootstrap { get; set; }
         IChannel BootstrapChannel { get; set; }
 
         readonly MultithreadEventLoopGroup group = new MultithreadEventLoopGroup();
-        public ClientInstance()
+        readonly IEventBus eventBus;
+        readonly List<IDisposable> disposables = new List<IDisposable>();
+        public ClientInstance(IEventBus bus)
         {
-            ServerHandler = new ServerHandler(this);
-            ReceivedData = new Subject<string>();
+            ServerHandler = new ServerHandler(bus);
+            eventBus = bus;
+            disposables.Add(ClientFunctions.DebugEventToConsoleSink<IEvent>(eventBus.GetEventStream<IEvent>()));
         }
 
 
-
-        public void SendGPS(GPS gps)
-        {
-            ServerHandler.GPSSource.OnNext(gps);
-        }
+        public void SendDebugGPS(GPS gps) => eventBus.Publish<ClientGpsChangedEvent>(new ClientGpsChangedEvent(gps));
         
+
         public async Task DisconnectClient()
         {
+            ServerHandler.ShutDown();
             await BootstrapChannel.CloseAsync();
-            ServerHandler.GPSSource.OnCompleted();
             group.ShutdownGracefullyAsync().Wait();
         }
 
 
         public async Task RunClientAsync()
         {
-            
+            if(Bootstrap != null)
+            {
+                throw new Exception("Client already running!");
+            }
             var serverIP = IPAddress.Parse("127.0.0.1");
             int serverPort = 8080;
 
-            
-                Bootstrap = new Bootstrap();
-                Bootstrap
-                    .Group(group)
-                    .Channel<TcpSocketChannel>()
-                    .Option(ChannelOption.TcpNodelay, true) // Do not buffer and send packages right away
-                    .Handler(new ActionChannelInitializer<ISocketChannel>(channel =>
-                    {
-                        IChannelPipeline pipeline = channel.Pipeline;
-                        pipeline.AddLast("framing-enc", new LengthFieldPrepender(2));
-                        pipeline.AddLast("framing-dec", new LengthFieldBasedFrameDecoder(ushort.MaxValue, 0, 2, 0, 2));
-                        pipeline.AddLast(ServerHandler);
-                    }));
 
-                IChannel bootstrapChannel = await Bootstrap.ConnectAsync(new IPEndPoint(serverIP, serverPort));
+            Bootstrap = new Bootstrap();
+            Bootstrap
+                .Group(group)
+                .Channel<TcpSocketChannel>()
+                .Option(ChannelOption.TcpNodelay, true) // Do not buffer and send packages right away
+                .Handler(new ActionChannelInitializer<ISocketChannel>(channel =>
+                {
+                    IChannelPipeline pipeline = channel.Pipeline;
+                    pipeline.AddLast("framing-enc", new LengthFieldPrepender(2));
+                    pipeline.AddLast("framing-dec", new LengthFieldBasedFrameDecoder(ushort.MaxValue, 0, 2, 0, 2));
+                    pipeline.AddLast(ServerHandler);
+                }));
+
+            IChannel bootstrapChannel = await Bootstrap.ConnectAsync(new IPEndPoint(serverIP, serverPort));
 
 
-                
-            
+            //Console.ReadLine();
+
         }
 
 
