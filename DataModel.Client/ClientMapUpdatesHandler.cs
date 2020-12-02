@@ -11,6 +11,9 @@ namespace DataModel.Client
 {
     public class ClientMapUpdatesHandler
     {
+
+
+
         readonly IEventBus eventBus;
         public ClientMapUpdatesHandler(IEventBus bus) => eventBus = bus;
         
@@ -22,6 +25,8 @@ namespace DataModel.Client
 
             return RenderForUnity(receivedLarge, receivedSmall, latestClient).Subscribe(v => eventBus.Publish<LatestMapEvent>(new LatestMapEvent(v)));
         }
+
+   
 
         //TODO: Fix this
         IObservable<IList<MiniTile>> RenderForUnity(IObservable<MiniTile> observable1, IObservable<MiniTile> observable2, IObservable<PlusCode> location)
@@ -58,5 +63,40 @@ namespace DataModel.Client
                                                                                                      select DataModelFunctions.GetPlusCode(e.NewGPS, 10);
         //TODO:FINISH
 
+
+        public static void CollectToMiniTileList(IObservable<MiniTile> miniTile, IObservable<ClientGpsChangedEvent> observable, List<MiniTile> miniTileList)
+        {
+            PlusCode currentMiniTileCode = new PlusCode();
+            observable.Subscribe(p => currentMiniTileCode = DataModelFunctions.GetPlusCode(p.NewGPS, 10));
+
+            miniTile.Subscribe(v =>
+            {
+              
+                //add minitile to list if its not already in there
+                if (!miniTileList.Contains(v)){
+                    miniTileList.Add(v);
+                }
+
+                //if there is a current miniTile code (on which the player is)
+                if (currentMiniTileCode.Code != null)
+                {
+                    //remove all minitiles that are further away than 200 miniTiles from the list
+                    foreach(MiniTile t in miniTileList)
+                    if (PlusCodeUtils.GetChebyshevDistance(t.PlusCode, currentMiniTileCode) > 200)
+                    {
+                            miniTileList.Remove(t);
+                    }
+                }
+            });
+        }
+
+        public static void CollectToTileList(IObservable<Tile> tile , List<Tile> tileList)
+        {
+            tile.Subscribe(v =>
+            {
+
+
+            });
+        }
     }
 }
