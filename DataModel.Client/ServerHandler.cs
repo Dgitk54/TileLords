@@ -35,6 +35,7 @@ namespace DataModel.Client
             eventBus.Publish<ClientConnectedEvent>(new ClientConnectedEvent("Connected on " + DateTime.Now.ToString()));
             disposables.Add(ClientFunctions.EventStreamSink(eventBus.GetEventStream<DataSinkEvent>(), context));
             disposables.Add(new ClientGPSHandler(eventBus).AttachToBus());
+            disposables.Add(new ClientMapUpdatesHandler(eventBus).AttachToBus());
         }
 
 

@@ -13,10 +13,10 @@ namespace DataModel.Common
     public class MiniTile
     {
 
-        public PlusCode PlusCode { get; }
-        public MiniTileType TileType { get; }
+        public PlusCode PlusCode { get; set; }
+        public MiniTileType TileType { get; set; }
 
-        public IReadOnlyList<ITileContent> Content { get; }
+        public IReadOnlyList<ITileContent> Content { get; set; }
 
         public MiniTile(PlusCode c, MiniTileType t, List<ITileContent> con) => (PlusCode, TileType, Content) = (c, t, con);
 
