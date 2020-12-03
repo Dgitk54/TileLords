@@ -20,15 +20,19 @@ namespace DataModel.Server
         }
         public IDisposable AttachToBus()
         {
-            var dataSinks = from v in EachTileSeperate(TilesForPlusCode(TileHasChangedStream(GPSAsPluscode8(GPSMessageStream(DataExtractor(ClientBus.GetEventStream<DataSourceEvent>()))))))
+            var dataSinks = from v in EachTileSeperate(TilesForPlusCode(TileHasChangedStream(GPSAsPluscode8(GpsFromClientGpsEvent(GPSMessageStream(DataExtractor(ClientBus.GetEventStream<DataSourceEvent>())))))))
                             select new DataSinkEvent(JsonConvert.SerializeObject(v));
             return dataSinks.Subscribe(v => ClientBus.Publish<DataSinkEvent>(v));
         }
 
         IObservable<string> DataExtractor(IObservable<DataSourceEvent> eventSource) => from e in eventSource
                                                                                        select e.Data;
-        IObservable<GPS> GPSMessageStream(IObservable<string> message) => from msg in message
-                                                                          select JsonConvert.DeserializeObject<GPS>(msg);
+
+        IObservable<GPS> GpsFromClientGpsEvent(IObservable<ClientGpsChangedEvent> observable) => from e in observable
+                                                                                                 select e.ClientGPSHasChanged;
+
+        IObservable<ClientGpsChangedEvent> GPSMessageStream(IObservable<string> message) => from msg in message
+                                                                                            select JsonConvert.DeserializeObject<ClientGpsChangedEvent>(msg);
 
         IObservable<PlusCode> GPSAsPluscode8(IObservable<GPS> gpsStream) => DataModelFunctions.GetPlusCode(gpsStream, Observable.Create<int>(v => { v.OnNext(8); return v.OnCompleted; }));
 

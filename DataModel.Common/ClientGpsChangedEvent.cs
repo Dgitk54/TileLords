@@ -6,8 +6,8 @@ namespace DataModel.Common
 {
     public class ClientGpsChangedEvent : IEvent
     {
-        public GPS NewGPS { get; }
-        public ClientGpsChangedEvent(GPS gps) => NewGPS = gps;
+        public GPS ClientGPSHasChanged { get; set; }
+        public ClientGpsChangedEvent(GPS gps) => ClientGPSHasChanged = gps;
             
     }
 }
