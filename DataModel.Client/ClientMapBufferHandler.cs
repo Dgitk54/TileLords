@@ -41,7 +41,7 @@ namespace DataModel.Client
 
 
                 //TODO: for improved performance perform both operations in one.
-                list = TileUtility.ConcatWithReplaceOld(list, l1.tiles, l1.code, 20);
+                list = TileGenerator.RegenerateArea(l1.code,list, l1.tiles, 40);
 
                 //var concat = TileUtility.ConcatWithReplaceOld(list, l1.tiles);
                 //list = TileUtility.GetMiniTileSectionWithinChebyshevDistance(l1.code, concat, 20);

@@ -24,6 +24,34 @@ namespace DataModel.Common
         }
 
 
+        public static List<MiniTile> RegenerateArea(PlusCode miniTileCode, List<MiniTile> currentTiles, IList<MiniTile> newTiles, int radius)
+        {
+            List<string> allNewPlusCodes = LocationCodeTileUtility.GetTileSection(miniTileCode.Code, radius, miniTileCode.Precision);
+            List<MiniTile> newArea = new List<MiniTile>();
+            foreach(MiniTile currentMiniTile in currentTiles)
+            {
+                foreach(string s in allNewPlusCodes)
+                {
+                    if (currentMiniTile.PlusCode.Code.Equals(s))
+                    {
+                        newArea.Add(currentMiniTile);
+                    }
+                }
+            }
+            foreach (MiniTile newMiniTiles in newTiles)
+            {
+                foreach (string s in allNewPlusCodes)
+                {
+                    if (newMiniTiles.PlusCode.Code.Equals(s))
+                    {
+                        newArea.Add(newMiniTiles);
+                    }
+                }
+            }
+            return newArea;
+        }
+
+
         /// <summary>
         /// Function which generates a Tile and the MiniTile children of it
         /// </summary>

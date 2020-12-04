@@ -28,11 +28,11 @@ namespace DataModel.Common.Tests
             var tiles = TileGenerator.GenerateArea(startCode, 1);
             var miniTiles = TileUtility.GetTileSectionWithinChebyshevDistance(startCode, tiles, 1);
 
-            Assert.IsTrue(miniTiles.Count == 3*3);
+            Assert.IsTrue(miniTiles.Count == 3 * 3);
             miniTiles = TileUtility.GetTileSectionWithinChebyshevDistance(startCode, tiles, 0);
-            Assert.IsTrue(miniTiles.Count == 1*1);
+            Assert.IsTrue(miniTiles.Count == 1 * 1);
             miniTiles = TileUtility.GetTileSectionWithinChebyshevDistance(startCode, tiles, 2);
-            Assert.IsTrue(miniTiles.Count == 5*5);
+            Assert.IsTrue(miniTiles.Count == 5 * 5);
         }
 
         [Test]
@@ -44,8 +44,8 @@ namespace DataModel.Common.Tests
             var startTile = DataModelFunctions.ToLowerResolution(startCode, 8);
 
             var neighborMiniTilesOnly = from tile in miniTiles
-                        where !DataModelFunctions.ToLowerResolution(tile.PlusCode, 8).Equals(startTile)
-                        select tile;
+                                        where !DataModelFunctions.ToLowerResolution(tile.PlusCode, 8).Equals(startTile)
+                                        select tile;
 
             var tileParentList = new List<PlusCode>();
             neighborMiniTilesOnly.ToList().ForEach(v =>
@@ -145,6 +145,31 @@ namespace DataModel.Common.Tests
             dist = PlusCodeUtils.GetManhattenDistance(new PlusCode("8FX9XW2F+22", 10), new PlusCode("8FX9XW2F+2X", 10));
             Debug.WriteLine(dist);
 
+        }
+
+
+        //[Test]
+        //takes 6 seconds
+        /*  public void TestConcantWithReplaceOld()
+          {
+              List<MiniTile> miniTileList = TileGenerator.GenerateMiniTiles(new PlusCode("9F4MGC94+", 8), miniTileTypeList);
+              List<MiniTile> miniTileList2 = TileGenerator.GenerateMiniTiles(new PlusCode("9F4MGC84+", 8), miniTileTypeList);
+              List<MiniTile> newList = TileUtility.ConcatWithReplaceOld(miniTileList, miniTileList2, new PlusCode("9F4MGC94+X2",10), 40);
+              Debug.WriteLine(newList.Count);
+          } */
+
+        [Test]
+
+        public void TestRegenerateArea()
+        {
+            List<MiniTile> miniTileList = TileGenerator.GenerateMiniTiles(new PlusCode("9F4MGC94+", 8), miniTileTypeList);
+            List<MiniTile> miniTileList2 = TileGenerator.GenerateMiniTiles(new PlusCode("9F4MGC84+", 8), miniTileTypeList);
+            List<MiniTile> newList = TileGenerator.RegenerateArea(new PlusCode("9F4MGC94+X2", 10), miniTileList, miniTileList2, 10);
+            Debug.WriteLine(newList.Count);
+            foreach (MiniTile m in newList)
+            {
+                Debug.WriteLine(m);
+            }
         }
     }
 }
