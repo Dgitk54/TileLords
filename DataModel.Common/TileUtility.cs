@@ -37,10 +37,46 @@ namespace DataModel.Common
             return minitile.ToList();
         }
 
+        public static bool EqualsBasedOnPlusCode(MiniTile t1, MiniTile t2) => t1.PlusCode.Code.Equals(t2.PlusCode.Code);
+
+        public static List<MiniTile> ConcatWithReplaceOld(IList<MiniTile> old, IList<MiniTile> newList, PlusCode currentLocation, int distanceCutoff)
+        {
+            //TODO: fix this ...
+            IEnumerable<MiniTile> result;
+            if(newList.Count != 0 && old.Count != 0)
+            {
+                result = from v1 in old
+                         from v2 in newList
+                         where (EqualsBasedOnPlusCode(v1,v2) || PlusCodeUtils.GetChebyshevDistance(currentLocation, v1.PlusCode) > distanceCutoff)
+                         select v1;
+            }  
+            else
+            {
+                result = GetMiniTileSectionWithinChebyshevDistance(currentLocation, old, 20);
+            }
+             
+            var resultAsList = result.ToList();
+
+            var updatedEnumeration = old.Except(result);
+            
+            var asList = updatedEnumeration.Concat(newList).ToList();
+
+
+
+            var resultCount = result.Count();
+            var resultAsListCount = resultAsList.Count();
+            var updatedEnumerationCount = updatedEnumeration.Count();
+            var asListCount = asList.Count();
+
+            //breakpoint
+            ;
+            return asList;
+
+        }
 
         public static List<MiniTile> ConcatWithReplaceOld(IList<MiniTile> old, IList<MiniTile> @new)
         {
-            
+
             var result = from v1 in old
                          from v2 in @new
                          where (v1.PlusCode.Equals(v2.PlusCode))

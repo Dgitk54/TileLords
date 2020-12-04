@@ -38,8 +38,13 @@ namespace DataModel.Client
         {
             var output = bufferedMiniTileStream.WithLatestFrom(location, (tiles, code) => new { tiles, code }).Scan(new List<MiniTile>(), (list, l1) =>
             {
-                var concat = TileUtility.ConcatWithReplaceOld(list, l1.tiles);
-                list = TileUtility.GetMiniTileSectionWithinChebyshevDistance(l1.code, concat, 20);
+
+
+                //TODO: for improved performance perform both operations in one.
+                list = TileUtility.ConcatWithReplaceOld(list, l1.tiles, l1.code, 20);
+
+                //var concat = TileUtility.ConcatWithReplaceOld(list, l1.tiles);
+                //list = TileUtility.GetMiniTileSectionWithinChebyshevDistance(l1.code, concat, 20);
                 return list;
             });
             return output;
