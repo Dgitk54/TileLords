@@ -18,7 +18,8 @@ namespace ClientMain
             var obs = Observable.Interval(TimeSpan.FromSeconds(periodInSec),
                                           Scheduler.Default);
             var start = new GPS(49.000000, 7.900000);
-            var list = DataModelFunctions.GPSNodesWithOffsets(start, 0.000150, 0.000150, 60);
+            double step = 0.000150;
+            var list = DataModelFunctions.GPSNodesWithOffsets(start, 0.000350, 0.000150, 60);
             var counter = 0;
             obs.Subscribe(v =>
             {

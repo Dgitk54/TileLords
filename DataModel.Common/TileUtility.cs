@@ -28,7 +28,28 @@ namespace DataModel.Common
              select miniTile;
 
             return minitile.ToList();
-        } 
+        }
+        public static List<MiniTile> GetMiniTileSectionWithinChebyshevDistance(PlusCode locationCode, IList<MiniTile> tileList, int distance)
+        {
+            var minitile = from miniTile in tileList
+                           where PlusCodeUtils.GetChebyshevDistance(locationCode, miniTile.PlusCode) <= distance
+                           select miniTile;
+            return minitile.ToList();
+        }
+
+
+        public static List<MiniTile> ConcatWithReplaceOld(IList<MiniTile> old, IList<MiniTile> @new)
+        {
+            
+            var result = from v1 in old
+                         from v2 in @new
+                         where (v1.PlusCode.Equals(v2.PlusCode))
+                         select v1;
+
+            var updatedEnumeration = old.Except(result);
+            return updatedEnumeration.Concat(@new).ToList();
+        }
+
 
         /// <summary>
         /// Function which creates a 2d array to represent the MiniTiles
@@ -159,8 +180,8 @@ namespace DataModel.Common
 
 
 
-        
-        
+
+
 
 
 

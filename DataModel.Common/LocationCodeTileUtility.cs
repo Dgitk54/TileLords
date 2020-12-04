@@ -9,7 +9,62 @@ namespace DataModel.Common
     public class LocationCodeTileUtility
     {
 
+        /// <summary>
+        /// Function which determines the two PlusCodes signs that come after the "+" and combines it with a given parent PlusCode string
+        /// </summary>
+        /// <returns>The List of complete PlusCodes (8 signs "+" 2 signs)</returns>
+        public static List<MiniTile> SortList(List<MiniTile> miniTileList)
+        {
+            List<MiniTile> sortedList = miniTileList;
 
+            miniTileList.Sort(new MiniTileComp());
+
+
+            return sortedList;
+        }
+
+        public static Dictionary<String, int> CreateDictionary()
+        {
+
+            var codeToInt = new Dictionary<String, int>();
+            codeToInt.Add("2", 1);
+            codeToInt.Add("3", 2);
+            codeToInt.Add("4", 3);
+            codeToInt.Add("5", 4);
+            codeToInt.Add("6", 5);
+            codeToInt.Add("7", 6);
+            codeToInt.Add("8", 7);
+            codeToInt.Add("9", 8);
+            codeToInt.Add("C", 9);
+            codeToInt.Add("F", 10);
+            codeToInt.Add("G", 11);
+            codeToInt.Add("H", 12);
+            codeToInt.Add("J", 13);
+            codeToInt.Add("M", 14);
+            codeToInt.Add("P", 15);
+            codeToInt.Add("Q", 16);
+            codeToInt.Add("R", 17);
+            codeToInt.Add("V", 18);
+            codeToInt.Add("W", 19);
+            codeToInt.Add("X", 20);
+
+            return codeToInt;
+        }
+
+
+        public static List<String> GetAndCombineWithAllAfterPlus(String plusCode)
+        {
+
+            List<string> allAfterPlus = GetAllAfterPlus();
+            List<string> completeCodeList = new List<string>();
+            for (int i = 0; i < allAfterPlus.Count; i++)
+            {
+                completeCodeList.Add(plusCode + allAfterPlus[i]);
+            }
+            return completeCodeList;
+        }
+
+        
 
 
         /// <summary>
@@ -84,7 +139,21 @@ namespace DataModel.Common
 
             return locationCodes;
         }
+        public static void CodeToIntegerValues(String code, Dictionary<String, int> codeToInt, int[] array)
+        {
 
+            for (int i = 0; i < code.Length; i++)
+            {
+                String c = code[i] + "";
+                if (codeToInt.TryGetValue(c, out int j))
+                {
+
+                    array[i] = j;
+
+                }
+
+            }
+        }
         /// <summary>
         /// Function which calculates the Location Codes for the desired section
         /// </summary>
@@ -98,7 +167,7 @@ namespace DataModel.Common
         /// <param name="xSaveArray">Array with original "Tile" X PlusCode parts.</param>
         /// <param name="ySaveArray">Array with original "Tile" Y PlusCode parts.</param>
 
-        public static void DetermineLocationCodes(String code, List<String> plusCodes, Dictionary<String, int> codeToInt, int radius, int precision, int[] xArray, int[] yArray, int[] xSaveArray, int[] ySaveArray)
+        static void DetermineLocationCodes(String code, List<String> plusCodes, Dictionary<String, int> codeToInt, int radius, int precision, int[] xArray, int[] yArray, int[] xSaveArray, int[] ySaveArray)
         {
             String newCode = "";
             //set top left
@@ -265,7 +334,7 @@ namespace DataModel.Common
         /// <summary>
         /// Function which converts PlusCode into int values
         /// </summary>
-        public static void CodeToIntegerValues(String code, Dictionary<String, int> codeToInt, int[] xArray, int[] yArray)
+        static void CodeToIntegerValues(String code, Dictionary<String, int> codeToInt, int[] xArray, int[] yArray)
         {
             int xCounter = 0;
             int yCounter = 0;
@@ -293,21 +362,7 @@ namespace DataModel.Common
             }
         }
 
-        public static void CodeToIntegerValues(String code, Dictionary<String, int> codeToInt, int[] array)
-        {
-
-            for (int i = 0; i < code.Length; i++)
-            {
-                String c = code[i] + "";
-                if (codeToInt.TryGetValue(c, out int j))
-                {
-                  
-                    array[i] = j;
-
-                }
-
-            }
-        }
+        
 
 
 
@@ -315,7 +370,7 @@ namespace DataModel.Common
         /// <summary>
         /// Function which copies values of given array
         /// </summary>
-        public static int[] ResetX(int[] xSaveArray)
+        static int[] ResetX(int[] xSaveArray)
         {
             int[] xArray = xSaveArray;
             return xArray;
@@ -325,7 +380,7 @@ namespace DataModel.Common
         /// <summary>
         /// Function which copies values of given array
         /// </summary>
-        public static int[] ResetY(int[] ySaveArray)
+        static int[] ResetY(int[] ySaveArray)
         {
             int[] yArray = ySaveArray;
             return yArray;
@@ -335,7 +390,7 @@ namespace DataModel.Common
         /// <summary>
         /// Function which converts int to PlusCode back
         /// </summary>
-        public static String ConvertBackToString(String newCode, Dictionary<String, int> codeToInt, int precision, int[] xArray, int[] yArray)
+        static String ConvertBackToString(String newCode, Dictionary<String, int> codeToInt, int precision, int[] xArray, int[] yArray)
         {
             int xArrayCounter = 0;
             int yArrayCounter = 0;
@@ -365,38 +420,12 @@ namespace DataModel.Common
         /// <summary>
         /// Function which creates the dictionary to convert PlusCodes to int and back
         /// </summary>
-        public static Dictionary<String, int> CreateDictionary()
-        {
-
-            Dictionary<String, int> codeToInt = new Dictionary<String, int>();
-            codeToInt.Add("2", 1);
-            codeToInt.Add("3", 2);
-            codeToInt.Add("4", 3);
-            codeToInt.Add("5", 4);
-            codeToInt.Add("6", 5);
-            codeToInt.Add("7", 6);
-            codeToInt.Add("8", 7);
-            codeToInt.Add("9", 8);
-            codeToInt.Add("C", 9);
-            codeToInt.Add("F", 10);
-            codeToInt.Add("G", 11);
-            codeToInt.Add("H", 12);
-            codeToInt.Add("J", 13);
-            codeToInt.Add("M", 14);
-            codeToInt.Add("P", 15);
-            codeToInt.Add("Q", 16);
-            codeToInt.Add("R", 17);
-            codeToInt.Add("V", 18);
-            codeToInt.Add("W", 19);
-            codeToInt.Add("X", 20);
-
-            return codeToInt;
-        }
+        
 
         /// <summary>
         /// Function which determines the right PlusCode
         /// </summary>
-        public static void GoRight(int[] xArray)
+        static void GoRight(int[] xArray)
         {
 
 
@@ -417,7 +446,7 @@ namespace DataModel.Common
         /// <summary>
         /// Function which determines the left PlusCode
         /// </summary>
-        public static void GoLeft(int[] xArray)
+        static void GoLeft(int[] xArray)
         {
             for (int i = xArray.Length - 1; i > 0; i--)
             {
@@ -434,7 +463,7 @@ namespace DataModel.Common
         /// Function which determines the upper PlusCode
         /// </summary>
 
-        public static void GoUp(int[] yArray)
+        static void GoUp(int[] yArray)
         {
 
             for (int i = yArray.Length - 1; i > 0; i--)
@@ -452,7 +481,7 @@ namespace DataModel.Common
         /// <summary>
         /// Function which determines the lower PlusCode
         /// </summary>
-        public static void GoDown(int[] yArray)
+        static void GoDown(int[] yArray)
         {
             for (int i = yArray.Length - 1; i > 0; i--)
             {
@@ -471,7 +500,7 @@ namespace DataModel.Common
         /// Function which determines the two PlusCodes signs that come after the "+"
         /// </summary>
         ///  <returns>The list with all PlusCodes that come after the "+"</returns>
-        public static List<String> GetAllAfterPlus()
+        static List<String> GetAllAfterPlus()
         {
             String all = "23456789CFGHJMPQRVWX";
             String rev = "XWVRQPMJHGFC98765432";
@@ -484,34 +513,7 @@ namespace DataModel.Common
             return sum.ToList();
         }
 
-        /// <summary>
-        /// Function which determines the two PlusCodes signs that come after the "+" and combines it with a given parent PlusCode string
-        /// </summary>
-        ///  <returns>The List of complete PlusCodes (8 signs "+" 2 signs)</returns>
-        public static List<String> GetAndCombineWithAllAfterPlus(String plusCode)
-        {
-
-            List<string> allAfterPlus = GetAllAfterPlus();
-            List<string> completeCodeList = new List<string>();
-            for (int i = 0; i < allAfterPlus.Count; i++)
-            {
-                completeCodeList.Add(plusCode + allAfterPlus[i]);
-            }
-            return completeCodeList;
-        }
-
-
-
-        public static List<MiniTile> SortList(List<MiniTile> miniTileList)
-        {
-            List<MiniTile> sortedList = miniTileList;
-
-            miniTileList.Sort(new MiniTileComp());
-
-
-            return sortedList;
-
-        }
+        
 
 
 
