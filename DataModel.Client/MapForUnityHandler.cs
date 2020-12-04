@@ -21,37 +21,41 @@ namespace DataModel.Client
             //.Subscribe(v => Debug.WriteLine("CLIENTPOS" + v.Code))
             var latestClientLocation = ClientFunctions.LatestClientLocation(eventBus.GetEventStream<ClientGpsChangedEvent>());
             var buffer = eventBus.GetEventStream<ClientMapBufferChanged>();
+            var combinedBufferAndLocation = buffer.WithLatestFrom(latestClientLocation, (buff, latestLocation) => new { buff, latestLocation });
 
-            var visibleMap = GetVisibleMap(ExtractData(eventBus.GetEventStream<ClientMapBufferChanged>()), latestClientLocation); //return .Subscribe(v=>Debug.WriteLine("GETVISIBLEMAP" + v.Count));
-            var sortedMap = SortVisibleMap(visibleMap);
-            var finalMap = sortedMap.CombineLatest(latestClientLocation, (sMap, latestLocation) => new { sMap, latestLocation });
 
-            var mapEvent = from pos in finalMap
-                           select new MapForUnityChanged(pos.latestLocation, pos.sMap);
+            // var visibleMap = GetVisibleMap(ExtractData(eventBus.GetEventStream<ClientMapBufferChanged>()), latestClientLocation); //return .Subscribe(v=>Debug.WriteLine("GETVISIBLEMAP" + v.Count));
+            var visibleMapWithLocation = from bufLoc in combinedBufferAndLocation
+                                         select new { Lists = GetVisibleMap(bufLoc.buff.TilesToRenderForUnity, bufLoc.latestLocation), bufLoc.latestLocation };
+            var sortedMap = from touple in visibleMapWithLocation
+                            select new { SortedList = SortVisibleMap(touple.Lists), touple.latestLocation };
+   
+            
+            var mapEvent = from pos in sortedMap
+                           select new MapForUnityChanged(pos.latestLocation, pos.SortedList);
             return mapEvent.DistinctUntilChanged().Subscribe(v =>
             {
-               // Console.WriteLine("MAPEVENT" + v.ClientLocation.Code + "      " + v.MiniTiles.Count);
+                // Console.WriteLine("MAPEVENT" + v.ClientLocation.Code + "      " + v.MiniTiles.Count);
                 eventBus.Publish<MapForUnityChanged>(v);
             }
             );
         }
 
-        IDisposable Attach()
+        /*  IDisposable Attach()
+          {
+              var latestClient = ClientFunctions.LatestClientLocation(eventBus.GetEventStream<ClientGpsChangedEvent>());
+              return ToEvent(GetVisibleMap(ExtractData(eventBus.GetEventStream<ClientMapBufferChanged>()), latestClient), latestClient)
+                  .Subscribe(v => eventBus.Publish<MapForUnityChanged>(v));
+          } */
+
+                                                                                                  
+
+
+        IList<MiniTile> GetVisibleMap(IList<MiniTile> tiles, PlusCode currentLocation)
         {
-            var latestClient = ClientFunctions.LatestClientLocation(eventBus.GetEventStream<ClientGpsChangedEvent>());
-            return ToEvent(GetVisibleMap(ExtractData(eventBus.GetEventStream<ClientMapBufferChanged>()), latestClient), latestClient)
-                .Subscribe(v => eventBus.Publish<MapForUnityChanged>(v));
+
+            return TileUtility.GetMiniTileSectionWithinChebyshevDistance(currentLocation, tiles, 10);
         }
-
-        IObservable<IList<MiniTile>> ExtractData(IObservable<ClientMapBufferChanged> observable) => from e in observable
-                                                                                                    select e.TilesToRenderForUnity;
-
-
-        IObservable<IList<MiniTile>> GetVisibleMap(IObservable<IList<MiniTile>> tiles, IObservable<PlusCode> currentLocation)
-        => from list in tiles
-           from v in currentLocation
-           select TileUtility.GetMiniTileSectionWithinChebyshevDistance(v, list, 10);
-
 
 
         IObservable<MapForUnityChanged> ToEvent(IObservable<IList<MiniTile>> miniTiles, IObservable<PlusCode> location)
@@ -59,11 +63,10 @@ namespace DataModel.Client
                from v in miniTiles
                select new MapForUnityChanged(e, v);
 
-        IObservable<IList<MiniTile>> SortVisibleMap(IObservable<IList<MiniTile>> tiles)
+        IList<MiniTile> SortVisibleMap(IList<MiniTile> tiles)
         {
-            var sortedListStream = from list in tiles
-                                   select LocationCodeTileUtility.SortList(list);
-            return sortedListStream;
+
+            return LocationCodeTileUtility.SortList(tiles);
         }
     }
 }
