@@ -36,7 +36,7 @@ namespace DataModel.Client
             disposables.Add(ClientFunctions.EventStreamSink(eventBus.GetEventStream<DataSinkEvent>(), context));
             disposables.Add(new ClientGPSHandler(eventBus).AttachToBus());
             disposables.Add(new ClientMapBufferHandler(eventBus).AttachToBus());
-            //disposables.Add(new MapForUnityHandler(eventBus).AttachToBus());
+            disposables.Add(new MapForUnityHandler(eventBus).AttachToBus());
         }
 
 

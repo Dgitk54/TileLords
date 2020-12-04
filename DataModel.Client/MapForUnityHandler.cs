@@ -19,13 +19,21 @@ namespace DataModel.Client
         public IDisposable AttachToBus()
         {
             //.Subscribe(v => Debug.WriteLine("CLIENTPOS" + v.Code))
-            var latestClient = ClientFunctions.LatestClientLocation(eventBus.GetEventStream<ClientGpsChangedEvent>());
-            var visibleMap = GetVisibleMap(ExtractData(eventBus.GetEventStream<ClientMapBufferChanged>()), latestClient); //return .Subscribe(v=>Debug.WriteLine("GETVISIBLEMAP" + v.Count));
+            var latestClientLocation = ClientFunctions.LatestClientLocation(eventBus.GetEventStream<ClientGpsChangedEvent>());
+            var buffer = eventBus.GetEventStream<ClientMapBufferChanged>();
 
-            var mapEvent = from pos in latestClient
-                           from map in visibleMap
-                           select new MapForUnityChanged(pos, map);
-            return mapEvent.DistinctUntilChanged().Subscribe(v => Console.WriteLine("MAPEVENT" + v.ClientLocation.Code + "      " + v.MiniTiles.Count));
+            var visibleMap = GetVisibleMap(ExtractData(eventBus.GetEventStream<ClientMapBufferChanged>()), latestClientLocation); //return .Subscribe(v=>Debug.WriteLine("GETVISIBLEMAP" + v.Count));
+            var sortedMap = SortVisibleMap(visibleMap);
+            var finalMap = sortedMap.CombineLatest(latestClientLocation, (sMap, latestLocation) => new { sMap, latestLocation });
+
+            var mapEvent = from pos in finalMap
+                           select new MapForUnityChanged(pos.latestLocation, pos.sMap);
+            return mapEvent.DistinctUntilChanged().Subscribe(v =>
+            {
+               // Console.WriteLine("MAPEVENT" + v.ClientLocation.Code + "      " + v.MiniTiles.Count);
+                eventBus.Publish<MapForUnityChanged>(v);
+            }
+            );
         }
 
         IDisposable Attach()
@@ -42,7 +50,7 @@ namespace DataModel.Client
         IObservable<IList<MiniTile>> GetVisibleMap(IObservable<IList<MiniTile>> tiles, IObservable<PlusCode> currentLocation)
         => from list in tiles
            from v in currentLocation
-           select TileUtility.GetMiniTileSectionWithinChebyshevDistance(v, list, 20);
+           select TileUtility.GetMiniTileSectionWithinChebyshevDistance(v, list, 10);
 
 
 
@@ -50,5 +58,12 @@ namespace DataModel.Client
             => from e in location
                from v in miniTiles
                select new MapForUnityChanged(e, v);
+
+        IObservable<IList<MiniTile>> SortVisibleMap(IObservable<IList<MiniTile>> tiles)
+        {
+            var sortedListStream = from list in tiles
+                                   select LocationCodeTileUtility.SortList(list);
+            return sortedListStream;
+        }
     }
 }

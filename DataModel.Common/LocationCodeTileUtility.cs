@@ -15,13 +15,24 @@ namespace DataModel.Common
         /// <returns>The List of complete PlusCodes (8 signs "+" 2 signs)</returns>
         public static List<MiniTile> SortList(List<MiniTile> miniTileList)
         {
-            List<MiniTile> sortedList = miniTileList;
 
-            miniTileList.Sort(new MiniTileComp());
+            List<MiniTile> sortedList = new List<MiniTile>(miniTileList);
+
+            sortedList.Sort(new MiniTileComp());
 
 
             return sortedList;
         }
+
+        public static IList<MiniTile> SortList<T>(T miniTileList) where T : IEnumerable<MiniTile>
+        {
+
+            var list = miniTileList.ToList();
+            var ret = new List<MiniTile>(list);
+            ret.Sort(new MiniTileComp());
+            return ret;
+        }
+
 
         public static Dictionary<String, int> CreateDictionary()
         {
@@ -64,7 +75,7 @@ namespace DataModel.Common
             return completeCodeList;
         }
 
-        
+
 
 
         /// <summary>
@@ -362,7 +373,7 @@ namespace DataModel.Common
             }
         }
 
-        
+
 
 
 
@@ -420,7 +431,7 @@ namespace DataModel.Common
         /// <summary>
         /// Function which creates the dictionary to convert PlusCodes to int and back
         /// </summary>
-        
+
 
         /// <summary>
         /// Function which determines the right PlusCode
@@ -513,7 +524,7 @@ namespace DataModel.Common
             return sum.ToList();
         }
 
-        
+
 
 
 
