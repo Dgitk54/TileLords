@@ -163,7 +163,7 @@ namespace DataModel.Common.Tests
         public void TestRegenerateArea()
         {
             List<MiniTile> miniTileList = TileGenerator.GenerateMiniTiles(new PlusCode("9F4MGC94+", 8), miniTileTypeList);
-            List<MiniTile> miniTileList2 = TileGenerator.GenerateMiniTiles(new PlusCode("9F4MGC84+", 8), miniTileTypeList);
+            List<MiniTile> miniTileList2 = TileGenerator.GenerateMiniTiles(new PlusCode("9F4MGC94+", 8), miniTileTypeList);
             List<MiniTile> newList = TileGenerator.RegenerateArea(new PlusCode("9F4MGC94+X2", 10), miniTileList, miniTileList2, 10);
             Debug.WriteLine(newList.Count);
             foreach (MiniTile m in newList)

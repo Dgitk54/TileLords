@@ -26,18 +26,28 @@ namespace DataModel.Common
 
         public static List<MiniTile> RegenerateArea(PlusCode miniTileCode, List<MiniTile> currentTiles, IList<MiniTile> newTiles, int radius)
         {
+            if(newTiles.Count == 0)
+            {
+                return currentTiles;
+            }
+
+    
             List<string> allNewPlusCodes = LocationCodeTileUtility.GetTileSection(miniTileCode.Code, radius, miniTileCode.Precision);
+            List<MiniTile> oldArea = new List<MiniTile>();
             List<MiniTile> newArea = new List<MiniTile>();
-            foreach(MiniTile currentMiniTile in currentTiles)
+            List<MiniTile> miniTileToAdd = new List<MiniTile>();
+   
+            foreach (MiniTile currentMiniTile in currentTiles)
             {
                 foreach(string s in allNewPlusCodes)
                 {
                     if (currentMiniTile.PlusCode.Code.Equals(s))
                     {
-                        newArea.Add(currentMiniTile);
+                        oldArea.Add(currentMiniTile);
                     }
                 }
             }
+        
             foreach (MiniTile newMiniTiles in newTiles)
             {
                 foreach (string s in allNewPlusCodes)
@@ -48,6 +58,35 @@ namespace DataModel.Common
                     }
                 }
             }
+       
+            foreach (MiniTile old in oldArea)
+            {
+                bool allowedToAdd = false;
+
+                foreach (MiniTile newA in newArea)
+                {
+                    if (old.PlusCode.Code.Equals(newA.PlusCode.Code))
+                    {
+                        allowedToAdd = false;
+                        break;
+                    }
+                    else
+                    {
+                        allowedToAdd = true;
+                    }
+                }
+
+                if (allowedToAdd)
+                {
+                    miniTileToAdd.Add(old);
+                }
+            }
+
+            foreach (MiniTile add in miniTileToAdd) 
+            {
+                newArea.Add(add);
+            }
+      
             return newArea;
         }
 
