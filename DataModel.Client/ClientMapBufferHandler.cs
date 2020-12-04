@@ -39,12 +39,8 @@ namespace DataModel.Client
             var output = bufferedMiniTileStream.WithLatestFrom(location, (tiles, code) => new { tiles, code }).Scan(new List<MiniTile>(), (list, l1) =>
             {
 
+                list = TileGenerator.RegenerateArea(l1.code,list, l1.tiles, 40);
 
-                //TODO: for improved performance perform both operations in one.
-                list = TileGenerator.RegenerateArea(l1.code,list, l1.tiles, 25);
-
-                //var concat = TileUtility.ConcatWithReplaceOld(list, l1.tiles);
-                //list = TileUtility.GetMiniTileSectionWithinChebyshevDistance(l1.code, concat, 20);
                 return list;
             });
             return output;
