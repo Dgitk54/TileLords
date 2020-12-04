@@ -66,6 +66,6 @@ namespace DataModel.Common
         public static PlusCode ToLowerResolution(PlusCode code, int target)
             => new PlusCode(string.Concat(code.Code.Take(target+1)), target);
 
-
+        
     }
 }

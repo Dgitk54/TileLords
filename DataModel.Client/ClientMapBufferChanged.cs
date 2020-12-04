@@ -5,14 +5,14 @@ using System.Text;
 
 namespace DataModel.Client
 {
-    public class LatestMapEvent : IEvent
+    public class ClientMapBufferChanged : IEvent
     {
         public IList<MiniTile> TilesToRenderForUnity { get; set; }
-        public LatestMapEvent(IList<MiniTile> tiles) => TilesToRenderForUnity = tiles;
+        public ClientMapBufferChanged(IList<MiniTile> tiles) => TilesToRenderForUnity = tiles;
 
         public override string ToString()
         {
-            return "LatestMap: Count:" + TilesToRenderForUnity.Count;
+            return "ClientMapBufferChanged: Count:" + TilesToRenderForUnity.Count;
         }
     }
 }
