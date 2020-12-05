@@ -36,7 +36,8 @@ namespace DataModel.Client
 
 
         public void SendDebugGPS(GPS gps) => eventBus.Publish<ClientGpsChangedEvent>(new ClientGpsChangedEvent(gps));
-        
+
+        public void SendFlawedData() => eventBus.Publish<DataSinkEvent>(new DataSinkEvent("TEST123ää²³"));
 
         public async Task DisconnectClient()
         {

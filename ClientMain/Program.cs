@@ -25,6 +25,8 @@ namespace ClientMain
             {
                 instance.SendDebugGPS(list[counter]);
                 counter++;
+                if (counter == 10)
+                    instance.SendFlawedData();
             });
             task.Wait();
 

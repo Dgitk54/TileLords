@@ -2,6 +2,7 @@
 using Google.OpenLocationCode;
 using LiteDB;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 using System;
 using System.Collections.Generic;
 using System.Reactive.Linq;
@@ -23,21 +24,39 @@ namespace DataModel.Server
         }
         public IDisposable AttachToBus()
         {
-            var dataSinks = from v in TilesForPlusCode(TileHasChangedStream(GPSAsPluscode8(GpsFromClientGpsEvent(GPSMessageStream(DataExtractor(cEventBus.GetEventStream<DataSourceEvent>()))))))
-                            select new DataSinkEvent(JsonConvert.SerializeObject(v));
-
-
-            return dataSinks.Subscribe(v => cEventBus.Publish<DataSinkEvent>(v));
+            var toSink = from v in TilesForPlusCode(TileHasChangedStream(GPSAsPluscode8(GpsFromClientGpsEvent(ParseOnlyValidIgnoringErrors(cEventBus.GetEventStream<DataSourceEvent>())))))
+                         select new DataSinkEvent(JsonConvert.SerializeObject(v));
+            return toSink.Subscribe(v => cEventBus.Publish<DataSinkEvent>(v));
         }
 
-        IObservable<string> DataExtractor(IObservable<DataSourceEvent> eventSource) => from e in eventSource
-                                                                                       select e.Data;
+
+        IObservable<ClientGpsChangedEvent> ParseOnlyValidIgnoringErrors(IObservable<DataSourceEvent> observable)
+        {
+            var rawData = from e in observable
+                          select e.Data;
+            var parseDataIgnoringErrors = from e in rawData
+                                          select JsonConvert.DeserializeObject<ClientGpsChangedEvent>(e, new JsonSerializerSettings
+                                          {
+                                              Error = HandleDeserializationError
+                                          });
+            return from e in parseDataIgnoringErrors
+                   where e != null
+                   select e;
+
+        }
+
 
         IObservable<GPS> GpsFromClientGpsEvent(IObservable<ClientGpsChangedEvent> observable) => from e in observable
                                                                                                  select e.ClientGPSHasChanged;
 
-        IObservable<ClientGpsChangedEvent> GPSMessageStream(IObservable<string> message) => from msg in message
-                                                                                            select JsonConvert.DeserializeObject<ClientGpsChangedEvent>(msg);
+
+        public void HandleDeserializationError(object sender, ErrorEventArgs errorArgs)
+        {
+            var currentError = errorArgs.ErrorContext.Error.Message;
+            Console.WriteLine(currentError);
+            errorArgs.ErrorContext.Handled = true;
+        }
+
 
         IObservable<PlusCode> GPSAsPluscode8(IObservable<GPS> gpsStream) => DataModelFunctions.GetPlusCode(gpsStream, Observable.Create<int>(v => { v.OnNext(8); return v.OnCompleted; }));
 
@@ -54,8 +73,6 @@ namespace DataModel.Server
             return stream;
 
         }
-        IObservable<Tile> EachTileSeperate(IObservable<IList<Tile>> observable) => from list in observable
-                                                                                  from tile in list.ToObservable()
-                                                                                  select tile;
+
     }
 }
