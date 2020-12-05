@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 
@@ -94,7 +95,7 @@ namespace DataModel.Common
             int[] xSaveArray = new int[precision / 2];
             int[] ySaveArray = new int[precision / 2];
 
-            code = code.Substring(0, precision);
+       
 
             for (int i = 0; i < precision / 2; i++)
             {
