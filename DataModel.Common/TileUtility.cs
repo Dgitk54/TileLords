@@ -75,13 +75,15 @@ namespace DataModel.Common
             return minitile.First();
         }
 
-        public static MiniTile GetMiniTile(PlusCode locationCode, List<MiniTile> miniTileList)
+        public static MiniTile GetMiniTile(this PlusCode locationCode, IList<MiniTile> miniTileList)
         {
             var minitile =
               from miniTile in miniTileList
               where miniTile.MiniTileId.Code == locationCode.Code
               select miniTile;
 
+            if (minitile.Count() == 0)
+                return null;
             return minitile.First();
         }
 

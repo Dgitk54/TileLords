@@ -37,6 +37,7 @@ namespace DataModel.Client
             disposables.Add(new ClientGPSHandler(eventBus).AttachToBus());
             disposables.Add(new ClientMapBufferHandler(eventBus).AttachToBus());
             disposables.Add(new MapForUnityHandler(eventBus).AttachToBus());
+            disposables.Add(new MapAsRenderableForUnityHandler(eventBus).AttachToBus());
         }
 
 

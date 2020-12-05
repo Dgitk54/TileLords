@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace DataModel.Common
@@ -26,11 +27,15 @@ namespace DataModel.Common
             return Math.Max(GetLatitudinalTileDistance(one, two, true), GetLongitudinalTileDistance(one, two, true));
         }
 
-        
 
-        
 
-        
+        public static List<PlusCode> Neighbors(this PlusCode code, int radius)
+        {
+            var strings = LocationCodeTileUtility.GetTileSection(code.Code, radius, code.Precision);
+            return strings.Select(v => new PlusCode(v, code.Precision)).ToList();
+        }
+
+
 
 
         public static int GetLatitudinalTileDistance(PlusCode one, PlusCode two, bool absolute)

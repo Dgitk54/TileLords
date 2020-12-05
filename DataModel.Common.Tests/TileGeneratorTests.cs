@@ -80,10 +80,10 @@ namespace DataModel.Common.Tests
             Assert.IsTrue(tileStrings.Count == 9);
 
             //TODO: Make GetTileSection work for minitiles, too.
-         //   var code2 = new PlusCode("8FX9WWV9+22", 10);
-         //   var tileStrings2 = LocationCodeTileUtility.GetTileSection(code.Code, 1, code.Precision);
-         //   Assert.IsTrue(tileStrings2[0].Length == 11);
-         //   Assert.IsTrue(tileStrings2.Count == 9);
+            var code2 = new PlusCode("8FX9WWV9+22", 10);
+            var tileStrings2 = LocationCodeTileUtility.GetTileSection(code2.Code, 1, code2.Precision);
+            Assert.IsTrue(tileStrings2[0].Length == 11);
+            Assert.IsTrue(tileStrings2.Count == 9);
             
 
         }
