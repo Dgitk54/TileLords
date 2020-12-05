@@ -171,5 +171,76 @@ namespace DataModel.Common.Tests
                 Debug.WriteLine(m);
             }
         }
+
+        [Test]
+
+        public void GeneratePlusCodeAreaCountTest()
+        {
+            List<string> testCodeList = LocationCodeTileUtility.GetTileSection("8FX9WWV9+PR", 1, 10);
+            Assert.AreEqual(9, testCodeList.Count);
+            testCodeList = LocationCodeTileUtility.GetTileSection("8FX9WWV9+PR", 2, 10);
+            Assert.AreEqual(25, testCodeList.Count);
+            testCodeList = LocationCodeTileUtility.GetTileSection("8FX9WWV9+PR", 4, 10);
+            Assert.AreEqual(81, testCodeList.Count);
+            testCodeList = LocationCodeTileUtility.GetTileSection("8FX9WWV9+PR", 9, 10);
+            Assert.AreEqual(361, testCodeList.Count);
+        }
+
+        [Test]
+        public void GeneratePlusCodeAreaProperNeighboursTest()
+        {
+            List<string> testCodeList = LocationCodeTileUtility.GetTileSection("8FX9WWV9+XX", 1, 10);
+
+            List<string> testCodeList3 = LocationCodeTileUtility.GetTileSection("8FX9V9XX", 1, 8);
+
+            List<string> realCodes = new List<String>();
+            realCodes.Add("8FX9WWW9+2W");
+            realCodes.Add("8FX9WWW9+2X");
+            realCodes.Add("8FX9WWWC+22");
+            realCodes.Add("8FX9WWV9+XW");
+            realCodes.Add("8FX9WWV9+XX");
+            realCodes.Add("8FX9WWVC+X2");
+            realCodes.Add("8FX9WWV9+WW");
+            realCodes.Add("8FX9WWV9+WX");
+            realCodes.Add("8FX9WWVC+W2");
+
+            int count = 0;
+            foreach (string code in testCodeList)
+            {
+
+                if (realCodes.Contains(code))
+                {
+                    count++;
+                }
+
+            }
+
+            Assert.AreEqual(9, count);
+
+            List<string> realCodes2 = new List<String>();
+
+            realCodes2.Add("8FXW92W");
+            realCodes2.Add("8FXW92X");
+            realCodes2.Add("8FXwC22");
+            realCodes2.Add("8FXV9XW");
+            realCodes2.Add("8FXV9XX");
+            realCodes2.Add("8FXVCX2");
+            realCodes2.Add("8FXV9WW");
+            realCodes2.Add("8FXV9WX");
+            realCodes2.Add("8FXVCW2");
+
+
+            count = 0;
+            foreach (string code in testCodeList3)
+            {
+                if (realCodes2.Contains(code))
+                {
+                    count++;
+                }
+
+            }
+
+
+        }
     }
 }

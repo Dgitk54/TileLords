@@ -27,56 +27,7 @@ namespace DataModel.Common.Tests
             tileGen = new TileGenerator();
         }
 
-        [Test]
-
-         public void GeneratePlusCodeAreaCountTest()
-        {
-            List<string> testCodeList = LocationCodeTileUtility.GetTileSection("8FX9WWV9+PR", 1, 10);
-            Assert.AreEqual(9, testCodeList.Count);
-            testCodeList = LocationCodeTileUtility.GetTileSection("8FX9WWV9+PR", 2, 10);
-            Assert.AreEqual(25, testCodeList.Count);
-            testCodeList = LocationCodeTileUtility.GetTileSection("8FX9WWV9+PR", 4, 10);
-            Assert.AreEqual(81, testCodeList.Count);
-            testCodeList = LocationCodeTileUtility.GetTileSection("8FX9WWV9+PR", 9, 10);
-            Assert.AreEqual(361, testCodeList.Count);
-        }
-
-        [Test]
-
-        public void GeneratePlusCodeAreaProperNeighboursTest()
-        {
-            List<string> testCodeList = LocationCodeTileUtility.GetTileSection("8FX9WWV9+XX", 1, 10);
-
-            List<string> testCodeList3 = LocationCodeTileUtility.GetTileSection("8FX9WWV9", 1, 8);
-
-            List<string> realCodes = new List<String>();
-            realCodes.Add("8FX9WWw9+2W");
-            realCodes.Add("8FX9WWW9+2X");
-            realCodes.Add("8FX9WWWC+22");
-            realCodes.Add("8FX9WWV9+Xw");
-            realCodes.Add("8FX9WWv9+XX");
-            realCodes.Add("8FX9WWVC+X2");
-            realCodes.Add("8FX9WWv9+WW");
-            realCodes.Add("8FX9WWVC+W2");
-            realCodes.Add("8FX9WWVc+W3");
-
-
-            foreach (string code in testCodeList)
-            {
-                Debug.WriteLine(code);
-
-            }
-
-
-
-            foreach (string code in testCodeList3)
-            {
-                Debug.WriteLine(code);
-
-            }
-
-
-        }
+      
 
 
         [Test]
