@@ -12,7 +12,7 @@ namespace DataModel.Common
     /// </summary>
     public class MiniTile
     {
-
+        public int Id { get; set; }
         public PlusCode MiniTileId { get; set; }
         public MiniTileType TileType { get; set; }
 
@@ -20,7 +20,7 @@ namespace DataModel.Common
 
         public MiniTile(PlusCode c, MiniTileType t, List<ITileContent> con) => (MiniTileId, TileType, Content) = (c, t, con);
 
-
+        public MiniTile() { }
         public override string ToString() { return "MiniTile:" + MiniTileId.Code; }
     }
 }

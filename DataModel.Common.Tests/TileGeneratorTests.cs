@@ -62,6 +62,32 @@ namespace DataModel.Common.Tests
 
         }
 
+        [Test]
+        public void TileGeneratorGeneratesOneTileWithArea0()
+        {
+            var code = new PlusCode("8FX9WWV9+", 8);
+            var list = TileGenerator.GenerateArea(code, 0);
+            Assert.IsTrue(list.Count == 1);
+            Assert.IsTrue(list[0].PlusCode.Code.Equals(code.Code));
+        }
+
+        [Test]
+        public void GivenPlusTheNeighborsAreSame()
+        {
+            var code = new PlusCode("8FX9WWV9+", 8);
+            var tileStrings = LocationCodeTileUtility.GetTileSection(code.Code, 1, code.Precision);
+            Assert.IsTrue(tileStrings[0].Length == 9);
+            Assert.IsTrue(tileStrings.Count == 9);
+
+            //TODO: Make GetTileSection work for minitiles, too.
+         //   var code2 = new PlusCode("8FX9WWV9+22", 10);
+         //   var tileStrings2 = LocationCodeTileUtility.GetTileSection(code.Code, 1, code.Precision);
+         //   Assert.IsTrue(tileStrings2[0].Length == 11);
+         //   Assert.IsTrue(tileStrings2.Count == 9);
+            ;
+
+        }
+
 
         [Test]
         public void CoordsFileTest()

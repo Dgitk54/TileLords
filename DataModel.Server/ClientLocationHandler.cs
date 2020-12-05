@@ -23,11 +23,12 @@ namespace DataModel.Server
         }
         public IDisposable AttachToBus()
         {
-            var changedTile = TileHasChangedStream(GPSAsPluscode8(GpsFromClientGpsEvent(GPSMessageStream(DataExtractor(cEventBus.GetEventStream<DataSourceEvent>())))));
+            //var tileChanged = TileHasChangedStream(GPSAsPluscode8(GpsFromClientGpsEvent(GPSMessageStream(DataExtractor(cEventBus.GetEventStream<DataSourceEvent>())))));
 
-            var dataSinks = from v in EachTileSeperate(TilesForPlusCode(TileHasChangedStream(GPSAsPluscode8(GpsFromClientGpsEvent(GPSMessageStream(DataExtractor(cEventBus.GetEventStream<DataSourceEvent>())))))))
+            var dataSinks = from v in TilesForPlusCode(TileHasChangedStream(GPSAsPluscode8(GpsFromClientGpsEvent(GPSMessageStream(DataExtractor(cEventBus.GetEventStream<DataSourceEvent>()))))))
                             select new DataSinkEvent(JsonConvert.SerializeObject(v));
-            
+
+
             return dataSinks.Subscribe(v => cEventBus.Publish<DataSinkEvent>(v));
         }
 
@@ -46,9 +47,16 @@ namespace DataModel.Server
         IObservable<PlusCode> TileHasChangedStream(IObservable<PlusCode> plusCodeStream) => plusCodeStream.DistinctUntilChanged();
 
 
-        IObservable<List<Tile>> TilesForPlusCode(IObservable<PlusCode> code) => from val in code
-                                                                                select TileGenerator.GenerateArea(val, 1);
-        IObservable<Tile> EachTileSeperate(IObservable<List<Tile>> observable) => from list in observable
+        IObservable<Tile> TilesForPlusCode(IObservable<PlusCode> code)
+        {
+            var stream = from val in code
+                         let neighbors = ServerFunctions.NeighborsIn8(val)
+                         from n in neighbors
+                         select ServerFunctions.LookUp(n, dataBase);
+            return stream;
+
+        }
+        IObservable<Tile> EachTileSeperate(IObservable<IList<Tile>> observable) => from list in observable
                                                                                   from tile in list.ToObservable()
                                                                                   select tile;
     }

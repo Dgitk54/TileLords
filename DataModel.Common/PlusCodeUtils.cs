@@ -26,6 +26,11 @@ namespace DataModel.Common
             return Math.Max(GetLatitudinalTileDistance(one, two, true), GetLongitudinalTileDistance(one, two, true));
         }
 
+        public static IEnumerable<PlusCode> GetPlusCodesForTile(PlusCode start, int radius)
+        {
+            //var codes = LocationCodeTileUtility.GetTileSection(start.Code, radius, start.Precision);
+            return null;
+        }
 
 
         private static int CharacterDistance(char c1, char c2)

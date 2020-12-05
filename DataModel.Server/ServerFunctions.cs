@@ -42,12 +42,39 @@ namespace DataModel.Server
              () => Console.WriteLine("StreamSink Write Sequence Completed"));
 
        
-       // public static Tile LookUp(PlusCode code, ILiteDatabase db)
-       // {
-       //     if (code.Precision == 10)
-       //         DataModelFunctions.ToLowerResolution(code, 8);
-       //         
-       // }
+        //TODO: proper reactive stream?
+        public static Tile LookUp(PlusCode code, ILiteDatabase db)
+        {
+            var largeCode = code;
+            if (largeCode.Precision == 10)
+                DataModelFunctions.ToLowerResolution(code, 8);
+
+            var col = db.GetCollection<Tile>("tiles");
+            col.EnsureIndex(v => v.MiniTiles);
+            col.EnsureIndex(v => v.PlusCode);
+            col.EnsureIndex(v => v.Ttype);
+            var results = col.Find(v => v.PlusCode.Code == code.Code);
+            if(results.Count() == 0)
+            {
+                ;
+                var created = TileGenerator.GenerateArea(largeCode, 0);
+                var tile = created[0];
+                
+                var dbVal = col.Insert(tile);
+                tile.Id = dbVal.AsInt32;
+                return tile;
+            }
+            if (results.Count() > 1)
+                throw new Exception("More than one object for same index!");
+            return results.First();
+        }
+        
+        public static List<PlusCode> NeighborsIn8(PlusCode code)
+        {
+            var strings = LocationCodeTileUtility.GetTileSection(code.Code, 1, code.Precision);
+            strings.RemoveAll(v => v.Equals(code.Code));
+            return strings.Select(v => new PlusCode(v, code.Precision)).ToList();
+        }
 
     }
 }
