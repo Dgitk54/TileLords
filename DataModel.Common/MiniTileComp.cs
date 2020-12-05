@@ -33,14 +33,14 @@ namespace DataModel.Common
             code = code.Remove(8, 1);
             int[] array = new int[code.Length];
 
-            LocationCodeTileUtility.CodeToIntegerValues(code, codeToInt, array);
+            CodeToIntegerValues(code, codeToInt, array);
 
 
             String code2 = plusCode2.Code;
             //remove the plus
             code2 = code2.Remove(8, 1);
             int[] array2 = new int[code.Length];
-            LocationCodeTileUtility.CodeToIntegerValues(code2, codeToInt, array2);
+            CodeToIntegerValues(code2, codeToInt, array2);
 
      
             return IsBigger(array, array2);
@@ -48,8 +48,23 @@ namespace DataModel.Common
 
         }
 
+        static void CodeToIntegerValues(String code, Dictionary<String, int> codeToInt, int[] array)
+        {
 
-        public static bool IsBigger(int[] intCode, int[] intCode2) //is intCode bigger intCode2
+            for (int i = 0; i < code.Length; i++)
+            {
+                String c = code[i] + "";
+                if (codeToInt.TryGetValue(c, out int j))
+                {
+
+                    array[i] = j;
+
+                }
+
+            }
+        }
+
+        static bool IsBigger(int[] intCode, int[] intCode2) //is intCode bigger intCode2
         {
 
             //x values follow the logic 9 < 8 < 7 etc

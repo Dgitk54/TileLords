@@ -10,10 +10,10 @@ using System.Collections.Generic;
 
 namespace DataModel.Common
 {
-    public class DataModelFunctions
+    public static class DataModelFunctions
     {
 
-        public static IObservable<PlusCode> GetPlusCode(IObservable<GPS> gps, IObservable<int> precision)
+        public static IObservable<PlusCode> GetPlusCode(this IObservable<GPS> gps, IObservable<int> precision)
             => from i in gps
                from j in precision
                select new PlusCode(new OpenLocationCode(i.Lat, i.Lon, j).Code, j);
@@ -25,7 +25,7 @@ namespace DataModel.Common
         /// <param name="gps"></param>
         /// <param name="precision"></param>
         /// <returns></returns>
-        public static PlusCode GetPlusCode(GPS gps, int precision)
+        public static PlusCode GetPlusCode(this GPS gps, int precision)
              => new PlusCode(new OpenLocationCode(gps.Lat, gps.Lon, precision).Code, precision);
 
 
@@ -46,11 +46,11 @@ namespace DataModel.Common
         /// <param name="gps"></param>
         /// <param name="amount"></param>
         /// <returns></returns>
-        public static GPS AddLon(GPS gps, double amount)
+        public static GPS AddLon(this GPS gps, double amount)
             => new GPS(gps.Lat, gps.Lon + amount);
 
 
-        public static GPS AddOFfset(GPS gps, double latOffset, double lonOffset)
+        public static GPS AddOFfset(this GPS gps, double latOffset, double lonOffset)
             => new GPS(gps.Lat + latOffset, gps.Lon + lonOffset);
 
 
@@ -63,7 +63,7 @@ namespace DataModel.Common
             return changeList;
         }
 
-        public static PlusCode ToLowerResolution(PlusCode code, int target)
+        public static PlusCode ToLowerResolution(this PlusCode code, int target)
             => new PlusCode(string.Concat(code.Code.Take(target+1)), target);
 
         

@@ -41,7 +41,7 @@ namespace DataModel.Common.Tests
             var startCode = new PlusCode("8FX9XW2F+XX", 10);
             var tiles = TileGenerator.GenerateArea(startCode, 1);
             var miniTiles = TileUtility.GetTileSectionWithinChebyshevDistance(startCode, tiles, 1);
-            var startTile = DataModelFunctions.ToLowerResolution(startCode, 8);
+            var startTile = startCode.ToLowerResolution(8);
 
             var neighborMiniTilesOnly = from tile in miniTiles
                                         where !DataModelFunctions.ToLowerResolution(tile.MiniTileId, 8).Equals(startTile)

@@ -6,14 +6,14 @@ using System.Text;
 namespace DataModel.Common
 {
 
-    public class LocationCodeTileUtility
+    public static class LocationCodeTileUtility
     {
 
         /// <summary>
         /// Function which determines the two PlusCodes signs that come after the "+" and combines it with a given parent PlusCode string
         /// </summary>
         /// <returns>The List of complete PlusCodes (8 signs "+" 2 signs)</returns>
-        public static List<MiniTile> SortList(List<MiniTile> miniTileList)
+        public static List<MiniTile> SortList(this List<MiniTile> miniTileList)
         {
 
             List<MiniTile> sortedList = new List<MiniTile>(miniTileList);
@@ -24,7 +24,7 @@ namespace DataModel.Common
             return sortedList;
         }
 
-        public static IList<MiniTile> SortList<T>(T miniTileList) where T : IEnumerable<MiniTile>
+        public static IList<MiniTile> SortList<T>(this T miniTileList) where T : IEnumerable<MiniTile>
         {
 
             var list = miniTileList.ToList();
@@ -150,21 +150,7 @@ namespace DataModel.Common
 
             return locationCodes;
         }
-        public static void CodeToIntegerValues(String code, Dictionary<String, int> codeToInt, int[] array)
-        {
-
-            for (int i = 0; i < code.Length; i++)
-            {
-                String c = code[i] + "";
-                if (codeToInt.TryGetValue(c, out int j))
-                {
-
-                    array[i] = j;
-
-                }
-
-            }
-        }
+       
         /// <summary>
         /// Function which calculates the Location Codes for the desired section
         /// </summary>

@@ -23,8 +23,6 @@ namespace DataModel.Server
         }
         public IDisposable AttachToBus()
         {
-            //var tileChanged = TileHasChangedStream(GPSAsPluscode8(GpsFromClientGpsEvent(GPSMessageStream(DataExtractor(cEventBus.GetEventStream<DataSourceEvent>())))));
-
             var dataSinks = from v in TilesForPlusCode(TileHasChangedStream(GPSAsPluscode8(GpsFromClientGpsEvent(GPSMessageStream(DataExtractor(cEventBus.GetEventStream<DataSourceEvent>()))))))
                             select new DataSinkEvent(JsonConvert.SerializeObject(v));
 

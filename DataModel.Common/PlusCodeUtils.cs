@@ -9,7 +9,7 @@ namespace DataModel.Common
     {
 
 
-        public static int GetManhattenDistance(PlusCode one, PlusCode two)
+        public static int GetManhattenDistance(this PlusCode one, PlusCode two)
         {
             if (one.Precision != two.Precision)
                 throw new Exception("Precision of Tiles must be equal");
@@ -19,46 +19,16 @@ namespace DataModel.Common
 
         }
 
-        public static int GetChebyshevDistance(PlusCode one, PlusCode two)
+        public static int GetChebyshevDistance(this PlusCode one, PlusCode two)
         {
             if (one.Precision != two.Precision)
                 throw new Exception("Precision of Tiles must be equal");
             return Math.Max(GetLatitudinalTileDistance(one, two, true), GetLongitudinalTileDistance(one, two, true));
         }
 
-        public static IEnumerable<PlusCode> GetPlusCodesForTile(PlusCode start, int radius)
-        {
-            //var codes = LocationCodeTileUtility.GetTileSection(start.Code, radius, start.Precision);
-            return null;
-        }
+        
 
-
-        private static int CharacterDistance(char c1, char c2)
-        {
-            if (c1 == c2 && c1 == '+')
-                return 0;
-
-            var alphabet = "23456789CFGHJMPQRVWX";
-            var charToIndex = new Dictionary<char, int>();
-            int index = 0;
-            foreach (char character in alphabet)
-            {
-                //char lowerCaseCharacter = char.ToLower(character);
-
-                charToIndex.Add(character, index);
-               // charToIndex.Add(lowerCaseCharacter, index);
-                index++;
-            }
-
-            if (!(charToIndex.ContainsKey(c1) && charToIndex.ContainsKey(c2)))
-                throw new Exception("Character does not exist in alphabet");
-
-            int one;
-            int two;
-            charToIndex.TryGetValue(c1, out one);
-            charToIndex.TryGetValue(c2, out two);
-            return one - two;
-        }
+        
 
         
 
@@ -139,7 +109,32 @@ namespace DataModel.Common
         }
 
 
+        private static int CharacterDistance(char c1, char c2)
+        {
+            if (c1 == c2 && c1 == '+')
+                return 0;
 
+            var alphabet = "23456789CFGHJMPQRVWX";
+            var charToIndex = new Dictionary<char, int>();
+            int index = 0;
+            foreach (char character in alphabet)
+            {
+                //char lowerCaseCharacter = char.ToLower(character);
+
+                charToIndex.Add(character, index);
+                // charToIndex.Add(lowerCaseCharacter, index);
+                index++;
+            }
+
+            if (!(charToIndex.ContainsKey(c1) && charToIndex.ContainsKey(c2)))
+                throw new Exception("Character does not exist in alphabet");
+
+            int one;
+            int two;
+            charToIndex.TryGetValue(c1, out one);
+            charToIndex.TryGetValue(c2, out two);
+            return one - two;
+        }
 
 
 
