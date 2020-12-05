@@ -8,16 +8,19 @@ using DotNetty.Handlers.Logging;
 using System.Threading.Tasks;
 using DotNetty.Codecs;
 using DataModel.Common;
+using LiteDB;
 
 namespace DataModel.Server
 {
     public class ServerInstance
     {
         readonly IEventBus bus = new ServerEventBus();
+        readonly ILiteDatabase db = new LiteDatabase(@"MyData.db");
         public ServerInstance()
         {
             ServerFunctions.DebugEventToConsoleSink(bus.GetEventStream<ClientConnectedEvent>());
             ServerFunctions.DebugEventToConsoleSink(bus.GetEventStream<ClientDisconnectedEvent>());
+            
         }
         public async Task RunServerAsync()
         {
@@ -44,7 +47,7 @@ namespace DataModel.Server
                         IChannelPipeline pipeline = channel.Pipeline;
                         pipeline.AddLast("framing-enc", new LengthFieldPrepender(2));
                         pipeline.AddLast("framing-dec", new LengthFieldBasedFrameDecoder(ushort.MaxValue, 0, 2, 0, 2));
-                        pipeline.AddLast(new ClientHandler(bus));
+                        pipeline.AddLast(new ClientHandler(bus, db));
                     }));
 
                 IChannel bootstrapChannel = await bootstrap.BindAsync(serverPort);

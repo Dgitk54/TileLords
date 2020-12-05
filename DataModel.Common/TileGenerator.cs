@@ -41,7 +41,7 @@ namespace DataModel.Common
             {
                 foreach(string s in allNewPlusCodes)
                 {
-                    if (currentMiniTile.PlusCode.Code.Equals(s))
+                    if (currentMiniTile.MiniTileId.Code.Equals(s))
                     {
                         oldArea.Add(currentMiniTile);
                     }
@@ -52,7 +52,7 @@ namespace DataModel.Common
             {
                 foreach (string s in allNewPlusCodes)
                 {
-                    if (newMiniTiles.PlusCode.Code.Equals(s))
+                    if (newMiniTiles.MiniTileId.Code.Equals(s))
                     {
                         newArea.Add(newMiniTiles);
                     }
@@ -65,7 +65,7 @@ namespace DataModel.Common
 
                 foreach (MiniTile newA in newArea)
                 {
-                    if (old.PlusCode.Code.Equals(newA.PlusCode.Code))
+                    if (old.MiniTileId.Code.Equals(newA.MiniTileId.Code))
                     {
                         allowedToAdd = false;
                         break;

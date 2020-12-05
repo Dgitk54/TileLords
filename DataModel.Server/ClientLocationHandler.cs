@@ -1,5 +1,6 @@
 ﻿using DataModel.Common;
 using Google.OpenLocationCode;
+using LiteDB;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -13,16 +14,21 @@ namespace DataModel.Server
     /// </summary>
     public class ClientLocationHandler
     {
-        private IEventBus ClientBus { get; }
-        public ClientLocationHandler(IEventBus clientBus)
+        readonly IEventBus cEventBus;
+        readonly ILiteDatabase dataBase;
+        public ClientLocationHandler(IEventBus clientBus, ILiteDatabase db)
         {
-            ClientBus = clientBus;
+            cEventBus = clientBus;
+            dataBase = db;
         }
         public IDisposable AttachToBus()
         {
-            var dataSinks = from v in EachTileSeperate(TilesForPlusCode(TileHasChangedStream(GPSAsPluscode8(GpsFromClientGpsEvent(GPSMessageStream(DataExtractor(ClientBus.GetEventStream<DataSourceEvent>())))))))
+            var changedTile = TileHasChangedStream(GPSAsPluscode8(GpsFromClientGpsEvent(GPSMessageStream(DataExtractor(cEventBus.GetEventStream<DataSourceEvent>())))));
+
+            var dataSinks = from v in EachTileSeperate(TilesForPlusCode(TileHasChangedStream(GPSAsPluscode8(GpsFromClientGpsEvent(GPSMessageStream(DataExtractor(cEventBus.GetEventStream<DataSourceEvent>())))))))
                             select new DataSinkEvent(JsonConvert.SerializeObject(v));
-            return dataSinks.Subscribe(v => ClientBus.Publish<DataSinkEvent>(v));
+            
+            return dataSinks.Subscribe(v => cEventBus.Publish<DataSinkEvent>(v));
         }
 
         IObservable<string> DataExtractor(IObservable<DataSourceEvent> eventSource) => from e in eventSource

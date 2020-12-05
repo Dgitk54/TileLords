@@ -24,7 +24,7 @@ namespace DataModel.Common
             var minitile =
              from tile in tileList
              from miniTile in tile.MiniTiles
-             where PlusCodeUtils.GetChebyshevDistance(locationCode, miniTile.PlusCode) <= distance
+             where PlusCodeUtils.GetChebyshevDistance(locationCode, miniTile.MiniTileId) <= distance
              select miniTile;
 
             return minitile.ToList();
@@ -32,12 +32,12 @@ namespace DataModel.Common
         public static List<MiniTile> GetMiniTileSectionWithinChebyshevDistance(PlusCode locationCode, IList<MiniTile> tileList, int distance)
         {
             var minitile = from miniTile in tileList
-                           where PlusCodeUtils.GetChebyshevDistance(locationCode, miniTile.PlusCode) <= distance
+                           where PlusCodeUtils.GetChebyshevDistance(locationCode, miniTile.MiniTileId) <= distance
                            select miniTile;
             return minitile.ToList();
         }
 
-        public static bool EqualsBasedOnPlusCode(MiniTile t1, MiniTile t2) => t1.PlusCode.Code.Equals(t2.PlusCode.Code);
+        public static bool EqualsBasedOnPlusCode(MiniTile t1, MiniTile t2) => t1.MiniTileId.Code.Equals(t2.MiniTileId.Code);
 
         public static List<MiniTile> ConcatWithReplaceOld(IList<MiniTile> old, IList<MiniTile> newList, PlusCode currentLocation, int distanceCutoff)
         {
@@ -47,7 +47,7 @@ namespace DataModel.Common
             {
                 result = from v1 in old
                          from v2 in newList
-                         where (EqualsBasedOnPlusCode(v1,v2) || PlusCodeUtils.GetChebyshevDistance(currentLocation, v1.PlusCode) > distanceCutoff)
+                         where (EqualsBasedOnPlusCode(v1,v2) || PlusCodeUtils.GetChebyshevDistance(currentLocation, v1.MiniTileId) > distanceCutoff)
                          select v1;
             }  
             else
@@ -79,7 +79,7 @@ namespace DataModel.Common
 
             var result = from v1 in old
                          from v2 in @new
-                         where (v1.PlusCode.Equals(v2.PlusCode))
+                         where (v1.MiniTileId.Equals(v2.MiniTileId))
                          select v1;
 
             var updatedEnumeration = old.Except(result);
@@ -154,7 +154,7 @@ namespace DataModel.Common
                     for (int j = 0; j < miniTileArray.GetLength(1); j++)
                     {
 
-                        file.Write(miniTileArray[i, j].PlusCode.Code + " (" + miniTileArray[i, j].TileType + ") | ");
+                        file.Write(miniTileArray[i, j].MiniTileId.Code + " (" + miniTileArray[i, j].TileType + ") | ");
 
                     }
                 }
@@ -175,7 +175,7 @@ namespace DataModel.Common
               from tileRows in tileList
               from tile in tileRows
               from miniTile in tile.MiniTiles
-              where miniTile.PlusCode.Code == locationCode.Code
+              where miniTile.MiniTileId.Code == locationCode.Code
               select miniTile;
 
             return minitile.First();
@@ -186,7 +186,7 @@ namespace DataModel.Common
             var minitile =
               from tile in tileList
               from miniTile in tile.MiniTiles
-              where miniTile.PlusCode.Code == locationCode.Code
+              where miniTile.MiniTileId.Code == locationCode.Code
               select miniTile;
 
             return minitile.First();
@@ -196,7 +196,7 @@ namespace DataModel.Common
         {
             var minitile =
               from miniTile in miniTileList
-              where miniTile.PlusCode.Code == locationCode.Code
+              where miniTile.MiniTileId.Code == locationCode.Code
               select miniTile;
 
             return minitile.First();

@@ -11,6 +11,7 @@ using Google.OpenLocationCode;
 using DotNetty.Transport.Channels;
 using System.Diagnostics;
 using DotNetty.Buffers;
+using LiteDB;
 
 namespace DataModel.Server
 {
@@ -41,7 +42,12 @@ namespace DataModel.Server
              () => Console.WriteLine("StreamSink Write Sequence Completed"));
 
        
-
+       // public static Tile LookUp(PlusCode code, ILiteDatabase db)
+       // {
+       //     if (code.Precision == 10)
+       //         DataModelFunctions.ToLowerResolution(code, 8);
+       //         
+       // }
 
     }
 }

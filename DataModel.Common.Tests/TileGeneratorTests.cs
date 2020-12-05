@@ -90,11 +90,11 @@ namespace DataModel.Common.Tests
             List<MiniTile> tileList = TileGenerator.GenerateMiniTiles(new PlusCode("8FX9WWV9+", 8), miniTileTypeGen);
 
             MiniTile[,] miniTile2D = TileUtility.GetMiniTile2DArray(tileList, 20);
-            Assert.AreEqual("8FX9WWV9+2X", miniTile2D[19, 19].PlusCode.Code);
-            Assert.AreEqual("8FX9WWV9+4R", miniTile2D[17, 16].PlusCode.Code);
-            Assert.AreEqual("8FX9WWV9+22", miniTile2D[19, 0].PlusCode.Code);
-            Assert.AreEqual("8FX9WWV9+C5", miniTile2D[11, 3].PlusCode.Code);
-            Assert.AreEqual("8FX9WWV9+P7", miniTile2D[5, 5].PlusCode.Code);
+            Assert.AreEqual("8FX9WWV9+2X", miniTile2D[19, 19].MiniTileId.Code);
+            Assert.AreEqual("8FX9WWV9+4R", miniTile2D[17, 16].MiniTileId.Code);
+            Assert.AreEqual("8FX9WWV9+22", miniTile2D[19, 0].MiniTileId.Code);
+            Assert.AreEqual("8FX9WWV9+C5", miniTile2D[11, 3].MiniTileId.Code);
+            Assert.AreEqual("8FX9WWV9+P7", miniTile2D[5, 5].MiniTileId.Code);
 
 
         }
@@ -123,7 +123,7 @@ namespace DataModel.Common.Tests
 
             for (int i = 0; i < tileSect.Count; i++)
             {
-                Assert.AreEqual(tileSectCorrectCodes[i], tileSect[i].PlusCode.Code);
+                Assert.AreEqual(tileSectCorrectCodes[i], tileSect[i].MiniTileId.Code);
             }
 
 

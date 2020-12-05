@@ -44,13 +44,13 @@ namespace DataModel.Common.Tests
             var startTile = DataModelFunctions.ToLowerResolution(startCode, 8);
 
             var neighborMiniTilesOnly = from tile in miniTiles
-                                        where !DataModelFunctions.ToLowerResolution(tile.PlusCode, 8).Equals(startTile)
+                                        where !DataModelFunctions.ToLowerResolution(tile.MiniTileId, 8).Equals(startTile)
                                         select tile;
 
             var tileParentList = new List<PlusCode>();
             neighborMiniTilesOnly.ToList().ForEach(v =>
             {
-                var tileParent = DataModelFunctions.ToLowerResolution(v.PlusCode, 8);
+                var tileParent = DataModelFunctions.ToLowerResolution(v.MiniTileId, 8);
                 if (!tileParentList.Contains(tileParent))
                     tileParentList.Add(tileParent);
             }
@@ -68,9 +68,9 @@ namespace DataModel.Common.Tests
 
             List<MiniTile> miniTileList = TileGenerator.GenerateMiniTiles(new PlusCode("9F4MGC94+", 8), miniTileTypeList);
             MiniTile miniTile = TileUtility.GetMiniTile(new PlusCode("9F4MGC94+MC", 10), miniTileList);
-            Assert.AreEqual("9F4MGC94+MC", miniTile.PlusCode.Code);
+            Assert.AreEqual("9F4MGC94+MC", miniTile.MiniTileId.Code);
             MiniTile miniTile2 = TileUtility.GetMiniTile(new PlusCode("9F4MGC94+X2", 10), miniTileList);
-            Assert.AreEqual("9F4MGC94+X2", miniTile2.PlusCode.Code);
+            Assert.AreEqual("9F4MGC94+X2", miniTile2.MiniTileId.Code);
 
         }
         [Test]
@@ -79,9 +79,9 @@ namespace DataModel.Common.Tests
 
             List<Tile> tileList = TileGenerator.GenerateArea(new PlusCode("9F4MGC94+", 8), 1, tileTypeList, miniTileTypeList);
             MiniTile miniTile = TileUtility.GetMiniTile(new PlusCode("9F4MGC94+MC", 10), tileList);
-            Assert.AreEqual("9F4MGC94+MC", miniTile.PlusCode.Code);
+            Assert.AreEqual("9F4MGC94+MC", miniTile.MiniTileId.Code);
             MiniTile miniTile2 = TileUtility.GetMiniTile(new PlusCode("9F4MGC94+X2", 10), tileList);
-            Assert.AreEqual("9F4MGC94+X2", miniTile2.PlusCode.Code);
+            Assert.AreEqual("9F4MGC94+X2", miniTile2.MiniTileId.Code);
 
         }
 
@@ -128,7 +128,7 @@ namespace DataModel.Common.Tests
             List<MiniTile> sortedList = LocationCodeTileUtility.SortList(miniTileList);
             foreach (MiniTile t in sortedList)
             {
-                Debug.WriteLine(t.PlusCode.Code);
+                Debug.WriteLine(t.MiniTileId.Code);
             }
 
         }

@@ -12,6 +12,7 @@ using System.Reactive.Joins;
 using System.Reactive.Subjects;
 using System.Diagnostics;
 using System.Reactive.Concurrency;
+using LiteDB;
 
 namespace DataModel.Server
 {
@@ -21,18 +22,18 @@ namespace DataModel.Server
 
         readonly Subject<string> jsonClientSource = new Subject<string>();
 
-        List<IDisposable> disposables = new List<IDisposable>();
+        readonly List<IDisposable> disposables = new List<IDisposable>();
 
         readonly IEventBus serverBus; // eventbus for serverwide messages
         readonly IEventBus clientBus; // eventbus for clientwide messages
 
-        private readonly ClientLocationHandler gpsClientLocationHandler;
+        readonly ClientLocationHandler gpsClientLocationHandler;
 
-        public ClientHandler(IEventBus serverBus)
+        public ClientHandler(IEventBus serverBus, ILiteDatabase dataBase)
         {
             this.serverBus = serverBus;
             clientBus = new ClientEventBus();
-            gpsClientLocationHandler = new ClientLocationHandler(clientBus);
+            gpsClientLocationHandler = new ClientLocationHandler(clientBus, dataBase);
         }
 
         public override void ChannelActive(IChannelHandlerContext ctx)

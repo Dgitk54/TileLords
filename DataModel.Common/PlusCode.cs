@@ -7,6 +7,7 @@ namespace DataModel.Common
 {
     readonly public struct PlusCode
     {
+        
         public string Code { get; }
         public int Precision { get; }
 

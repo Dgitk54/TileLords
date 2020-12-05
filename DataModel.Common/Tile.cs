@@ -12,12 +12,12 @@ namespace DataModel.Common
     public class Tile
     {
 
-        public  PlusCode Code { get; set; }
+        public  PlusCode TileId { get; set; }
         public  TileType Ttype { get; set; }
 
         public List<MiniTile> MiniTiles { get; set; }
 
-        public Tile(PlusCode c, TileType t, List<MiniTile> miniTiles) => (Code, Ttype, MiniTiles) = (c, t, miniTiles );
+        public Tile(PlusCode c, TileType t, List<MiniTile> miniTiles) => (TileId, Ttype, MiniTiles) = (c, t, miniTiles );
       
 
     }

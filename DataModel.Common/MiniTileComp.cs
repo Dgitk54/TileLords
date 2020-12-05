@@ -12,7 +12,7 @@ namespace DataModel.Common
         {
           
 
-            if (IsTileCodeBigger(x.PlusCode, y.PlusCode))
+            if (IsTileCodeBigger(x.MiniTileId, y.MiniTileId))
             {
                 return 1;
             }
