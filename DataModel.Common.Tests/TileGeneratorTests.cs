@@ -50,6 +50,7 @@ namespace DataModel.Common.Tests
 
         }
 
+
         [Test]
         public void TileGeneratorGeneratesOneTileWithArea0()
         {
@@ -106,6 +107,25 @@ namespace DataModel.Common.Tests
             }
 
 
+        }
+
+        [Test]
+
+        public void TestGenerateMiniTiles()
+        {
+            
+            List<int> miniTileTypeGen = new List<int>() { 0, 1, 2, 3, 3, 3, 3 };
+            List<MiniTile> miniTileList = TileGenerator.GenerateMiniTiles(new PlusCode("8FX9XW2F",8), miniTileTypeGen);
+         
+            Assert.AreEqual(400, miniTileList.Count);
+            Debug.WriteLine(miniTileList[10].MiniTileId.Code);
+
+            Assert.AreEqual("8FX9XW2F+X2", miniTileList[0].MiniTileId.Code);
+            Assert.AreEqual("8FX9XW2F+X3", miniTileList[1].MiniTileId.Code);
+            Assert.AreEqual("8FX9XW2F+XX", miniTileList[19].MiniTileId.Code);
+            Assert.AreEqual("8FX9XW2F+W2", miniTileList[20].MiniTileId.Code);
+            Assert.AreEqual("8FX9XW2F+W3", miniTileList[21].MiniTileId.Code);
+            Assert.AreEqual("8FX9XW2F+2X", miniTileList[399].MiniTileId.Code);
         }
 
 

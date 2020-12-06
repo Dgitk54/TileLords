@@ -207,7 +207,7 @@ namespace DataModel.Common.Tests
             int count = 0;
             foreach (string code in testCodeList)
             {
-
+                Debug.WriteLine(code);
                 if (realCodes.Contains(code))
                 {
                     count++;

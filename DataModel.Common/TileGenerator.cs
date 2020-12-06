@@ -16,7 +16,16 @@ namespace DataModel.Common
         /// <returns>The MiniTile list</returns>
         public static List<MiniTile> GenerateMiniTiles(PlusCode tileCode, List<int> miniTileTypeList)
         {
-            var tiles = from miniTileCodeString in LocationCodeTileUtility.GetAndCombineWithAllAfterPlus(tileCode.Code)
+            string code = tileCode.Code;
+            if(code.Length > 9)
+            {
+                code = code.Substring(0, 9);
+            }
+            if (!code.Contains("+"))
+            {
+                code += "+";
+            }
+            var tiles = from miniTileCodeString in LocationCodeTileUtility.GetAndCombineWithAllAfterPlus(code)
                         select new MiniTile(new PlusCode(miniTileCodeString, 10), getRandomMiniTileType(miniTileTypeList), new List<ITileContent>());
 
             return tiles.ToList();
@@ -109,16 +118,26 @@ namespace DataModel.Common
         /// <returns>The generated area as a list of Tiles</returns>
         public static List<Tile> GenerateArea(PlusCode code, int radius, List<int> tileTypeList, List<int> miniTileTypeList)
         {
-            var tiles = from miniTileCodeString in LocationCodeTileUtility.GetTileSection(code.Code, radius, 8)
+            string c = code.Code;
+            if(c.Length > 8)
+            {
+                c = c.Substring(0, 8);
+            }
+            var tiles = from miniTileCodeString in LocationCodeTileUtility.GetTileSection(c, radius, 8)
                         select GenerateTile(new PlusCode(miniTileCodeString, 8), tileTypeList, miniTileTypeList);
             return tiles.ToList();
         }
 
         public static List<Tile> GenerateArea(PlusCode code, int radius)
         {
+            string c = code.Code;
+            if (c.Length > 8)
+            {
+                c = c.Substring(0, 8);
+            }
             List<int> tileTypeList = new List<int>() { 0,1,2,3,4,5,6,7};
             List<int> miniTileTypeList = new List<int>() { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
-            var tiles = from miniTileCodeString in LocationCodeTileUtility.GetTileSection(code.Code, radius, 8)
+            var tiles = from miniTileCodeString in LocationCodeTileUtility.GetTileSection(c, radius, 8)
                         select GenerateTile(new PlusCode(miniTileCodeString, 8), tileTypeList, miniTileTypeList);
             return tiles.ToList();
         }

@@ -88,6 +88,8 @@ namespace DataModel.Common
         /// <returns>The list containing all PlusCodes of this section</returns>
         public static List<String> GetTileSection(String code, int radius, int precision)
         {
+
+         
             Dictionary<String, int> codeToInt;
             codeToInt = CreateDictionary();
             int[] xArray = new int[precision / 2];
@@ -106,14 +108,14 @@ namespace DataModel.Common
                 ySaveArray[i] = 0;
 
             }
-
+         
 
             //remove the plus
             if (precision > 8)
             {
                 code = code.Remove(8, 1);
             }
-
+         
             //create the list to return later
             List<String> locationCodes = new List<String>();
 
