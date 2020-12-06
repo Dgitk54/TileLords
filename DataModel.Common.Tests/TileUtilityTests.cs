@@ -133,6 +133,23 @@ namespace DataModel.Common.Tests
 
         }
 
+        [Test]
+        public void GetTileSectionsReturnsSameStringUnmodified()
+        {
+            var code = new PlusCode("8FX9XW2F+XX", 10);
+            var strings = LocationCodeTileUtility.GetTileSection(code.Code, 1, code.Precision);
+            Assert.IsTrue(strings.Contains(code.Code));
+
+            code = new PlusCode("8FX9WWV9+", 8);
+            strings = LocationCodeTileUtility.GetTileSection(code.Code, 1, code.Precision);
+            Assert.IsTrue(strings.Contains(code.Code));
+
+            code = new PlusCode("8FX9WW2F+", 8);
+            strings = LocationCodeTileUtility.GetTileSection(code.Code, 1, code.Precision);
+            Assert.IsTrue(strings.Contains(code.Code));
+        }
+
+
 
         [Test]
         public void TestManhattenDistance()

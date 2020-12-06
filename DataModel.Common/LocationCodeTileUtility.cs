@@ -108,13 +108,8 @@ namespace DataModel.Common
                 ySaveArray[i] = 0;
 
             }
-         
 
-            //remove the plus
-            if (precision > 8)
-            {
-                code = code.Remove(8, 1);
-            }
+            code = code.Replace("+", "");
          
             //create the list to return later
             List<String> locationCodes = new List<String>();
