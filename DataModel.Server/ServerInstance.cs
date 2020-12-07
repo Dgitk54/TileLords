@@ -52,7 +52,7 @@ namespace DataModel.Server
 
                 IChannel bootstrapChannel = await bootstrap.BindAsync(serverPort);
 
-                Console.WriteLine("ServerTesting");
+                Console.WriteLine("Server Up");
                 Console.ReadLine();
 
                 await bootstrapChannel.CloseAsync();

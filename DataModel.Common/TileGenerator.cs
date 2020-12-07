@@ -146,10 +146,7 @@ namespace DataModel.Common
         {
             Random r = new Random();
             int i = r.Next(0, tileTypeList.Count);
-
-
             return (MiniTileType)tileTypeList[i];
-
         }
 
 
