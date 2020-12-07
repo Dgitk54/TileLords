@@ -30,7 +30,8 @@ namespace DataModel.Common
 
             String code = plusCode.Code;
             //remove the plus
-            code = code.Remove(8, 1);
+            code = code.Replace("+", "");
+            Debug.WriteLine(code);
             int[] array = new int[code.Length];
 
             CodeToIntegerValues(code, codeToInt, array);
@@ -38,7 +39,8 @@ namespace DataModel.Common
 
             String code2 = plusCode2.Code;
             //remove the plus
-            code2 = code2.Remove(8, 1);
+            code2 = code2.Replace("+", "");
+            Debug.WriteLine(code);
             int[] array2 = new int[code.Length];
             CodeToIntegerValues(code2, codeToInt, array2);
 

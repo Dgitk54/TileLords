@@ -16,7 +16,8 @@ namespace DataModel.Common
         Sand_River,
         Rock_Tile,
         Rock_River,
-        WaterBody_Tile
+        WaterBody_Tile,
+        Unknown_Tile
 
     }
 }

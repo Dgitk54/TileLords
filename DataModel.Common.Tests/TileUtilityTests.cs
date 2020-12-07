@@ -107,14 +107,42 @@ namespace DataModel.Common.Tests
 
 
 
-        //TODO WRITE THE TEST PROPERLY!!!!!!!!!
+  
         [Test]
         public void SortList()
         {
 
+            List<MiniTile> unsorted = new List<MiniTile>();
+            unsorted.Add(new MiniTile(new PlusCode("8FX9WWVC+W2",10), MiniTileType.Grass_River, null));
+            unsorted.Add(new MiniTile(new PlusCode("8FX9WWV9+XW", 10), MiniTileType.Grass_River, null));
+            unsorted.Add(new MiniTile(new PlusCode("8FX9WWVC+X2", 10), MiniTileType.Grass_River, null));
+            unsorted.Add(new MiniTile(new PlusCode("8FX9WWV9+WW", 10), MiniTileType.Grass_River, null));
+            unsorted.Add(new MiniTile(new PlusCode("8FX9WWW9+2W", 10), MiniTileType.Grass_River, null));
+            unsorted.Add(new MiniTile(new PlusCode("8FX9WWVC+W2", 10), MiniTileType.Grass_River, null));
+            unsorted.Add(new MiniTile(new PlusCode("8FX9WWWC+22", 10), MiniTileType.Grass_River, null));
+            unsorted.Add(new MiniTile(new PlusCode("8FX9WWV9+WX", 10), MiniTileType.Grass_River, null));
+            unsorted.Add(new MiniTile(new PlusCode("8FX9WWV9+XX", 10), MiniTileType.Grass_River, null));
+            unsorted = LocationCodeTileUtility.SortList(unsorted);
 
+            List<MiniTile> sorted = new List<MiniTile>();
+            sorted.Add(new MiniTile(new PlusCode("8FX9WWW9+2W", 10), MiniTileType.Grass_River, null));
+            sorted.Add(new MiniTile(new PlusCode("8FX9WWW9+2X", 10), MiniTileType.Grass_River, null));
+            sorted.Add(new MiniTile(new PlusCode("8FX9WWWC+22", 10), MiniTileType.Grass_River, null));
+            sorted.Add(new MiniTile(new PlusCode("8FX9WWV9+XW", 10), MiniTileType.Grass_River, null));
+            sorted.Add(new MiniTile(new PlusCode("8FX9WWV9+XX", 10), MiniTileType.Grass_River, null));
+            sorted.Add(new MiniTile(new PlusCode("8FX9WWVC+X2", 10), MiniTileType.Grass_River, null));
+            sorted.Add(new MiniTile(new PlusCode("8FX9WWV9+WW", 10), MiniTileType.Grass_River, null));
+            sorted.Add(new MiniTile(new PlusCode("8FX9WWV9+WX", 10), MiniTileType.Grass_River, null));
+            sorted.Add(new MiniTile(new PlusCode("8FX9WWVC+W2", 10), MiniTileType.Grass_River, null));
+         
+            
 
-            List<MiniTile> miniTileList = new List<MiniTile>();
+           for(int i = 0; i < unsorted.Count; i++)
+            {
+                Debug.WriteLine(sorted[i].MiniTileId.Code + " " + unsorted[i].MiniTileId.Code);
+                Assert.AreEqual(sorted[i].MiniTileId.Code, unsorted[i].MiniTileId.Code);
+            }
+           /* List<MiniTile> miniTileList = new List<MiniTile>();
             miniTileList.Add(new MiniTile(new PlusCode("8F4MGC94+X2", 10), MiniTileType.Grass_Tile, null));
             miniTileList.Add(new MiniTile(new PlusCode("9F4MGC94+X6", 10), MiniTileType.Grass_Tile, null));
             miniTileList.Add(new MiniTile(new PlusCode("8F7MGC94+W2", 10), MiniTileType.Grass_Tile, null));
@@ -129,7 +157,7 @@ namespace DataModel.Common.Tests
             foreach (MiniTile t in sortedList)
             {
                 Debug.WriteLine(t.MiniTileId.Code);
-            }
+            } */
 
         }
 
