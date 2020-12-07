@@ -32,7 +32,7 @@ namespace DataModel.Client
 
         public override void ChannelActive(IChannelHandlerContext context)
         {
-            eventBus.Publish<ClientConnectedEvent>(new ClientConnectedEvent("Connected on " + DateTime.Now.ToString()));
+            eventBus.Publish(new ClientConnectedEvent("Connected on " + DateTime.Now.ToString()));
             disposables.Add(ClientFunctions.EventStreamSink(eventBus.GetEventStream<DataSinkEvent>(), context));
             disposables.Add(new ClientGPSHandler(eventBus).AttachToBus());
             disposables.Add(new ClientMapBufferHandler(eventBus).AttachToBus());
@@ -47,7 +47,8 @@ namespace DataModel.Client
             if (byteBuffer != null)
             {
                 var data = byteBuffer.ToString(Encoding.UTF8);
-                eventBus.Publish<DataSourceEvent>(new DataSourceEvent(data));
+                Console.WriteLine(data);
+                eventBus.Publish(new DataSourceEvent(data));
             }
 
         }

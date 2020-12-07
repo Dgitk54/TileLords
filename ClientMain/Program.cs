@@ -21,13 +21,54 @@ namespace ClientMain
             double step = 0.000150;
             var list = DataModelFunctions.GPSNodesWithOffsets(start, 0.000350, 0.000150, 60);
             var counter = 0;
-            obs.Subscribe(v =>
+            //    obs.Subscribe(v =>
+            //    {
+            //        instance.SendDebugGPS(list[counter]);
+            //        counter++;
+            //        if (counter == 10)
+            //            instance.SendFlawedData();
+            //    });
+
+
+            var mode = Console.ReadLine();
+            int modeInt;
+            Console.WriteLine("1: Create new User,  2: Log in");
+            do
             {
-                instance.SendDebugGPS(list[counter]);
-                counter++;
-                if (counter == 10)
-                    instance.SendFlawedData();
-            });
+                mode = Console.ReadLine();
+            } while (!Int32.TryParse(mode, out modeInt));
+
+
+
+            if (modeInt == 1)
+            {
+                for (; ; )
+                {
+
+                    Console.WriteLine("Enter your Username:");
+                    var name = Console.ReadLine();
+                    if (string.IsNullOrEmpty(name))
+                        continue;
+                    Console.WriteLine("Enter your Password");
+                    var password = Console.ReadLine();
+                    if (string.IsNullOrEmpty(password))
+                        continue;
+
+                    instance.SendRegisterRequest(name, password);
+
+                }
+            }
+
+
+
+
+
+
+
+
+
+
+
             task.Wait();
 
         }

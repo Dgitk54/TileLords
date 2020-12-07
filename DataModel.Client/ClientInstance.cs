@@ -5,7 +5,7 @@ using DotNetty.Common.Internal.Logging;
 using DotNetty.Transport.Bootstrapping;
 using DotNetty.Transport.Channels;
 using DotNetty.Transport.Channels.Sockets;
-
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Net;
@@ -31,13 +31,21 @@ namespace DataModel.Client
         {
             ServerHandler = new ServerHandler(bus);
             eventBus = bus;
-            disposables.Add(ClientFunctions.DebugEventToConsoleSink<IEvent>(eventBus.GetEventStream<IEvent>()));
+            disposables.Add(ClientFunctions.DebugEventToConsoleSink(eventBus.GetEventStream<IEvent>()));
         }
 
 
-        public void SendDebugGPS(GPS gps) => eventBus.Publish<UserGpsEvent>(new UserGpsEvent(gps));
+        public void SendDebugGPS(GPS gps) => eventBus.Publish(new UserGpsEvent(gps));
 
-        public void SendFlawedData() => eventBus.Publish<DataSinkEvent>(new DataSinkEvent("TEST123ää²³"));
+        public void SendFlawedData() => eventBus.Publish(new DataSinkEvent("TEST123ää²³"));
+
+        public void SendRegisterRequest(string username, string password)
+        {
+            var e = new UserRegisterEvent() { Name = username, Password = password };
+            var debugRegisterEvent = new DataSinkEvent(JsonConvert.SerializeObject(e));
+
+            eventBus.Publish(debugRegisterEvent);
+        }
 
         public async Task DisconnectClient()
         {

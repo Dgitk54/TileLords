@@ -28,12 +28,15 @@ namespace DataModel.Server
         readonly IEventBus clientBus; // eventbus for clientwide messages
 
         readonly ClientChunkupdateHandler gpsClientLocationHandler;
+        readonly ClientAccountRegisterHandler registerHandler;
 
         public ClientHandler(IEventBus serverBus, ILiteDatabase dataBase)
         {
             this.serverBus = serverBus;
             clientBus = new ClientEventBus();
             gpsClientLocationHandler = new ClientChunkupdateHandler(clientBus, dataBase);
+            registerHandler = new ClientAccountRegisterHandler(clientBus, dataBase, serverBus);
+           
         }
 
         public override void ChannelActive(IChannelHandlerContext ctx)
@@ -42,6 +45,7 @@ namespace DataModel.Server
             disposables.Add(ServerFunctions.EventStreamSink(clientBus.GetEventStream<DataSinkEvent>(), ctx));
             disposables.Add(jsonClientSource.Subscribe(v => clientBus.Publish(new DataSourceEvent(v))));
             disposables.Add(gpsClientLocationHandler.AttachToBus());
+            disposables.Add(registerHandler.AttachToBus());
             ctx.Channel.CloseCompletion.ContinueWith((x) => Console.WriteLine("Channel Closed"));
         }
 

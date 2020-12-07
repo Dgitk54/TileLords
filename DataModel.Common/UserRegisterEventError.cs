@@ -9,5 +9,9 @@ namespace DataModel.Common
         public readonly string EventType = "UserRegisterError";
 
         public string ErrorMessage { get; set; }
+        public override string ToString()
+        {
+            return base.ToString() +"       " + ErrorMessage;
+        }
     }
 }

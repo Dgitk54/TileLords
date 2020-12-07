@@ -13,6 +13,7 @@ using System.Diagnostics;
 using DotNetty.Buffers;
 using LiteDB;
 using Newtonsoft.Json.Serialization;
+using System.Security.Cryptography;
 
 namespace DataModel.Server
 {
@@ -95,6 +96,24 @@ namespace DataModel.Server
             Console.WriteLine(currentError);
             errorArgs.ErrorContext.Handled = true;
         }
-        
+
+       
+
+        public static byte[] Hash(string value, byte[] salt) => Hash(Encoding.UTF8.GetBytes(value), salt);
+
+
+        public static byte[] Hash(byte[] value, byte[] salt)
+        {
+            var pbkdf2 = new Rfc2898DeriveBytes(value, salt, 10000);
+            return pbkdf2.GetBytes(20);
+        }
+
+        public static bool PasswordMatches(byte[] password, byte[] originalPassword, byte[] originalSalt)
+        {
+            var pbkdf2 = new Rfc2898DeriveBytes(password, originalSalt, 10000);
+            var result = pbkdf2.GetBytes(20);
+            return result.SequenceEqual(originalPassword);
+        }
+
     }
 }

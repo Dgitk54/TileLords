@@ -6,6 +6,7 @@ namespace DataModel.Common
 {
     public class UserActionSuccessEvent : IEvent
     {
-        public string UserAction { get; set; }
+        public readonly string EventType = "UserActionSuccess";
+        public int UserAction { get; set; } 
     }
 }

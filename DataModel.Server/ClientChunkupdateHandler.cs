@@ -25,7 +25,14 @@ namespace DataModel.Server
         public IDisposable AttachToBus()
         {
             var onlyValid = ServerFunctions.ParseOnlyValidUsingErrorHandler<UserGpsEvent>(cEventBus.GetEventStream<DataSourceEvent>(), ServerFunctions.PrintConsoleErrorHandler);
-            var createResponse = from v in TilesForPlusCode(TileHasChangedStream(GPSAsPluscode8(GpsFromClientGpsEvent(onlyValid))))
+
+            var onlyNonDefault = from e in onlyValid
+                          where !e.GpsData.Equals(default)
+                          where !e.GpsData.Lat.Equals(default)
+                          where !e.GpsData.Lon.Equals(default)
+                          select e;
+
+            var createResponse = from v in TilesForPlusCode(TileHasChangedStream(GPSAsPluscode8(GpsFromClientGpsEvent(onlyNonDefault))))
                          select new DataSinkEvent(JsonConvert.SerializeObject(v.GetServerMapEvent()));
             return createResponse.Subscribe(v => cEventBus.Publish(v));
         }
