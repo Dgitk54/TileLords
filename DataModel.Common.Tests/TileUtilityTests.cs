@@ -118,7 +118,7 @@ namespace DataModel.Common.Tests
             unsorted.Add(new MiniTile(new PlusCode("8FX9WWVC+X2", 10), MiniTileType.Grass_River, null));
             unsorted.Add(new MiniTile(new PlusCode("8FX9WWV9+WW", 10), MiniTileType.Grass_River, null));
             unsorted.Add(new MiniTile(new PlusCode("8FX9WWW9+2W", 10), MiniTileType.Grass_River, null));
-            unsorted.Add(new MiniTile(new PlusCode("8FX9WWVC+W2", 10), MiniTileType.Grass_River, null));
+            unsorted.Add(new MiniTile(new PlusCode("8FX9WWW9+2X", 10), MiniTileType.Grass_River, null));
             unsorted.Add(new MiniTile(new PlusCode("8FX9WWWC+22", 10), MiniTileType.Grass_River, null));
             unsorted.Add(new MiniTile(new PlusCode("8FX9WWV9+WX", 10), MiniTileType.Grass_River, null));
             unsorted.Add(new MiniTile(new PlusCode("8FX9WWV9+XX", 10), MiniTileType.Grass_River, null));
@@ -142,22 +142,7 @@ namespace DataModel.Common.Tests
                 Debug.WriteLine(sorted[i].MiniTileId.Code + " " + unsorted[i].MiniTileId.Code);
                 Assert.AreEqual(sorted[i].MiniTileId.Code, unsorted[i].MiniTileId.Code);
             }
-           /* List<MiniTile> miniTileList = new List<MiniTile>();
-            miniTileList.Add(new MiniTile(new PlusCode("8F4MGC94+X2", 10), MiniTileType.Grass_Tile, null));
-            miniTileList.Add(new MiniTile(new PlusCode("9F4MGC94+X6", 10), MiniTileType.Grass_Tile, null));
-            miniTileList.Add(new MiniTile(new PlusCode("8F7MGC94+W2", 10), MiniTileType.Grass_Tile, null));
-            miniTileList.Add(new MiniTile(new PlusCode("8F4MGC94+H2", 10), MiniTileType.Grass_Tile, null));
-            miniTileList.Add(new MiniTile(new PlusCode("8F6MGC94+V2", 10), MiniTileType.Grass_Tile, null));
-            miniTileList.Add(new MiniTile(new PlusCode("3F4MGC94+22", 10), MiniTileType.Grass_Tile, null));
-            miniTileList.Add(new MiniTile(new PlusCode("8F4MGC94+Q2", 10), MiniTileType.Grass_Tile, null));
-            miniTileList.Add(new MiniTile(new PlusCode("8F4MGC97+X5", 10), MiniTileType.Grass_Tile, null));
-            miniTileList.Add(new MiniTile(new PlusCode("824MGC54+32", 10), MiniTileType.Grass_Tile, null));
-            miniTileList.Add(new MiniTile(new PlusCode("8F4MGC94+2X", 10), MiniTileType.Grass_Tile, null));
-            List<MiniTile> sortedList = LocationCodeTileUtility.SortList(miniTileList);
-            foreach (MiniTile t in sortedList)
-            {
-                Debug.WriteLine(t.MiniTileId.Code);
-            } */
+     
 
         }
 
