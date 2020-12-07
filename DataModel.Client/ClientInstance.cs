@@ -35,7 +35,7 @@ namespace DataModel.Client
         }
 
 
-        public void SendDebugGPS(GPS gps) => eventBus.Publish<UserGpsChangedEvent>(new UserGpsChangedEvent(gps));
+        public void SendDebugGPS(GPS gps) => eventBus.Publish<UserGpsEvent>(new UserGpsEvent(gps));
 
         public void SendFlawedData() => eventBus.Publish<DataSinkEvent>(new DataSinkEvent("TEST123ää²³"));
 

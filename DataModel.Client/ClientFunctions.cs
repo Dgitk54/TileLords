@@ -7,6 +7,8 @@ using System.Diagnostics;
 using System.Text;
 using System.Reactive.Linq;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
+
 namespace DataModel.Client
 {
     /// <summary>
@@ -29,7 +31,32 @@ namespace DataModel.Client
 
         
 
-        public static IObservable<PlusCode> LatestClientLocation(IObservable<UserGpsChangedEvent> observable) => from e in observable
+        public static IObservable<PlusCode> LatestClientLocation(IObservable<UserGpsEvent> observable) => from e in observable
                                                                                                                    select DataModelFunctions.GetPlusCode(e.GpsData, 10);
+
+        public static IObservable<T> ParseOnlyValidUsingErrorHandler<T>(this IObservable<DataSourceEvent> observable, EventHandler<ErrorEventArgs> eventHandler) where T : IEvent
+
+        {
+            if (eventHandler == null)
+                throw new Exception("Eventhandler is null!");
+
+            var rawData = from e in observable
+                          select e.Data;
+            var parseDataIgnoringErrors = from e in rawData
+                                          select JsonConvert.DeserializeObject<T>(e, new JsonSerializerSettings
+                                          {
+                                              Error = eventHandler
+                                          }); ;
+            return from e in parseDataIgnoringErrors
+                   where e != null
+                   select e;
+
+        }
+        public static void PrintConsoleErrorHandler(object sender, ErrorEventArgs errorArgs)
+        {
+            var currentError = errorArgs.ErrorContext.Error.Message;
+            Console.WriteLine(currentError);
+            errorArgs.ErrorContext.Handled = true;
+        }
     }
 }

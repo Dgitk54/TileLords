@@ -27,13 +27,13 @@ namespace DataModel.Server
         readonly IEventBus serverBus; // eventbus for serverwide messages
         readonly IEventBus clientBus; // eventbus for clientwide messages
 
-        readonly ClientLocationHandler gpsClientLocationHandler;
+        readonly ClientChunkupdateHandler gpsClientLocationHandler;
 
         public ClientHandler(IEventBus serverBus, ILiteDatabase dataBase)
         {
             this.serverBus = serverBus;
             clientBus = new ClientEventBus();
-            gpsClientLocationHandler = new ClientLocationHandler(clientBus, dataBase);
+            gpsClientLocationHandler = new ClientChunkupdateHandler(clientBus, dataBase);
         }
 
         public override void ChannelActive(IChannelHandlerContext ctx)

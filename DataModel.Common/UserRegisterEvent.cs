@@ -4,9 +4,9 @@ using System.Text;
 
 namespace DataModel.Common
 {
-    public class UserLoginRequest : IEvent
+    public class UserRegisterEvent : IEvent
     {
-        public readonly string EventType = "UserLoginRequest";
+        public readonly string EventType = "UserRegister";
         public string Name { get; set; }
         public string Password { get; set; }
     }

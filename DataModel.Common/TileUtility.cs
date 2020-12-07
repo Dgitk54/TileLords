@@ -36,6 +36,15 @@ namespace DataModel.Common
                            select miniTile;
             return minitile.ToList();
         }
+        public static ServerMapEvent GetServerMapEvent(this Tile tile)
+        {
+            var e = new ServerMapEvent();
+            e.Tiles = new List<Tile> { tile };
+            e.UpdateSize = tile.MiniTiles.Count.ToString();
+            return e;
+
+        }
+
 
         public static bool EqualsBasedOnPlusCode(this MiniTile t1, MiniTile t2) => t1.MiniTileId.Code.Equals(t2.MiniTileId.Code);
 

@@ -4,9 +4,9 @@ using System.Text;
 
 namespace DataModel.Common
 {
-    public class ServerMapUpdate : IEvent
+    public class ServerMapEvent : IEvent
     {
-        public readonly string EventType = "ServerMapUpdate";
+        public readonly string EventType = "ServerMap";
 
         public string UpdateSize { get; set; }
         
