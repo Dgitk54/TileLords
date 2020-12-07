@@ -12,19 +12,15 @@ using DotNetty.Transport.Channels;
 using System.Diagnostics;
 using DotNetty.Buffers;
 using LiteDB;
+using Newtonsoft.Json.Serialization;
 
 namespace DataModel.Server
 {
     /// <summary>
     /// Class with functions shared between multiple handlers.
     /// </summary>
-    public class ServerFunctions
+    public static class ServerFunctions
     {
-
-        /*
-           from jsonCode in (from bytePacket in dataStream
-                            select JsonConvert.ToString(bytePacket))
-            select new NetworkJsonMessage(jsonCode);*/
 
 
 
@@ -75,5 +71,30 @@ namespace DataModel.Server
             return strings.Select(v => new PlusCode(v, code.Precision)).ToList();
         }
 
+        public static IObservable<T> ParseOnlyValidUsingErrorHandler<T>(IObservable<DataSourceEvent> observable, EventHandler<ErrorEventArgs> eventHandler) where T : IEvent
+
+        {
+            if (eventHandler == null)
+                throw new Exception("Eventhandler is null!");
+
+            var rawData = from e in observable
+                          select e.Data;
+            var parseDataIgnoringErrors = from e in rawData
+                                          select JsonConvert.DeserializeObject<T>(e, new JsonSerializerSettings
+                                          {
+                                              Error = eventHandler
+                                          }); ;
+            return from e in parseDataIgnoringErrors
+                   where e != null
+                   select e;
+
+        }
+        public static void PrintConsoleErrorHandler(object sender, ErrorEventArgs errorArgs)
+        {
+            var currentError = errorArgs.ErrorContext.Error.Message;
+            Console.WriteLine(currentError);
+            errorArgs.ErrorContext.Handled = true;
+        }
+        
     }
 }

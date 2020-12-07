@@ -27,20 +27,20 @@ namespace DataModel.Server
         readonly IEventBus serverBus; // eventbus for serverwide messages
         readonly IEventBus clientBus; // eventbus for clientwide messages
 
-        readonly ClientLocationHandler gpsClientLocationHandler;
+        readonly ClientChunkupdateHandler gpsClientLocationHandler;
 
         public ClientHandler(IEventBus serverBus, ILiteDatabase dataBase)
         {
             this.serverBus = serverBus;
             clientBus = new ClientEventBus();
-            gpsClientLocationHandler = new ClientLocationHandler(clientBus, dataBase);
+            gpsClientLocationHandler = new ClientChunkupdateHandler(clientBus, dataBase);
         }
 
         public override void ChannelActive(IChannelHandlerContext ctx)
         {
-            serverBus.Publish<ClientConnectedEvent>(new ClientConnectedEvent(ctx.Name));
+            serverBus.Publish(new ClientConnectedEvent(ctx.Name));
             disposables.Add(ServerFunctions.EventStreamSink(clientBus.GetEventStream<DataSinkEvent>(), ctx));
-            disposables.Add(jsonClientSource.Subscribe(v => clientBus.Publish<DataSourceEvent>(new DataSourceEvent(v))));
+            disposables.Add(jsonClientSource.Subscribe(v => clientBus.Publish(new DataSourceEvent(v))));
             disposables.Add(gpsClientLocationHandler.AttachToBus());
             ctx.Channel.CloseCompletion.ContinueWith((x) => Console.WriteLine("Channel Closed"));
         }
@@ -60,10 +60,12 @@ namespace DataModel.Server
         // The Channel is closed hence the connection is closed
         public override void ChannelInactive(IChannelHandlerContext ctx)
         {
-            serverBus.Publish<ClientDisconnectedEvent>(new ClientDisconnectedEvent(ctx.Name));
+            serverBus.Publish(new ClientDisconnectedEvent(ctx.Name));
             disposables.ForEach(v => v.Dispose());
+            Console.WriteLine("Cleaned up ClientHandler");
         }
 
+        
 
 
         public override bool IsSharable => true;

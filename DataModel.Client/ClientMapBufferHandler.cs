@@ -16,12 +16,19 @@ namespace DataModel.Client
 
         public IDisposable AttachToBus()
         {
-            var receivedLarge = BufferMiniTiles(AsMiniTiles(LargeTileUpdate(eventBus.GetEventStream<DataSourceEvent>())));
+            var onlyValid = eventBus.GetEventStream<DataSourceEvent>().ParseOnlyValidUsingErrorHandler<ServerMapEvent>(ClientFunctions.PrintConsoleErrorHandler);
+
+            var allTiles = from e in onlyValid
+                           where e.Tiles != null
+                           where e.Tiles.Count > 0
+                           from v in e.Tiles
+                           select v;
+            var receivedLarge = BufferMiniTiles(AsMiniTiles(allTiles));
             var receivedSmall = SmallUpdate(MiniTileUpdate(eventBus.GetEventStream<DataSourceEvent>()));
-            var latestClient = ClientFunctions.LatestClientLocation(eventBus.GetEventStream<ClientGpsChangedEvent>());
+            var latestClient = ClientFunctions.LatestClientLocation(eventBus.GetEventStream<UserGpsEvent>());
 
             return MapBufferChanged(receivedLarge, receivedSmall, latestClient)
-                .Subscribe(v => eventBus.Publish<ClientMapBufferChanged>(new ClientMapBufferChanged(v)));
+                .Subscribe(v => eventBus.Publish(new ClientMapBufferChanged(v)));
         }
 
 

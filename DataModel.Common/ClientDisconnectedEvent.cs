@@ -7,9 +7,15 @@ namespace DataModel.Common
 {
     public class ClientDisconnectedEvent : IEvent
     {
-
+        
         public string DebugData { get; }
         public ClientDisconnectedEvent(string data) => DebugData = data;
-        
+
+
+        public override string ToString()
+        {
+            return base.ToString() + "  " + DebugData;
+        }
+
     }
 }
