@@ -6,7 +6,7 @@ namespace DataModel.Common
 {
     public class UserGpsChangedEvent : IEvent
     {
-        public string EventType = "UserGpsChanged";
+        public readonly string EventType = "UserGpsChanged";
         public GPS GpsData { get; set; }
         public UserGpsChangedEvent(GPS gps) => GpsData = gps;
             

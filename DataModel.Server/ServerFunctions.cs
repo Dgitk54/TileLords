@@ -21,11 +21,6 @@ namespace DataModel.Server
     public class ServerFunctions
     {
 
-        /*
-           from jsonCode in (from bytePacket in dataStream
-                            select JsonConvert.ToString(bytePacket))
-            select new NetworkJsonMessage(jsonCode);*/
-
 
 
         public static IDisposable DebugEventToConsoleSink<T>(IObservable<T> events) where T : IEvent

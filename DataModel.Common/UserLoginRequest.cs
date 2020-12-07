@@ -6,7 +6,7 @@ namespace DataModel.Common
 {
     public class UserLoginRequest : IEvent
     {
-        public string EventType = "UserLoginRequest";
+        public readonly string EventType = "UserLoginRequest";
         public string Name { get; set; }
         public string Password { get; set; }
     }
