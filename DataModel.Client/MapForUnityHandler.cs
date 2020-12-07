@@ -18,7 +18,7 @@ namespace DataModel.Client
         }
         public IDisposable AttachToBus()
         {
-            var latestClientLocation = ClientFunctions.LatestClientLocation(eventBus.GetEventStream<ClientGpsChangedEvent>());
+            var latestClientLocation = ClientFunctions.LatestClientLocation(eventBus.GetEventStream<UserGpsChangedEvent>());
             var buffer = eventBus.GetEventStream<ClientMapBufferChanged>();
             var combinedBufferAndLocation = buffer.WithLatestFrom(latestClientLocation, (buff, latestLocation) => new { buff, latestLocation });
 

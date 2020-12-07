@@ -29,7 +29,7 @@ namespace DataModel.Client
 
         
 
-        public static IObservable<PlusCode> LatestClientLocation(IObservable<ClientGpsChangedEvent> observable) => from e in observable
-                                                                                                                   select DataModelFunctions.GetPlusCode(e.ClientGPSHasChanged, 10);
+        public static IObservable<PlusCode> LatestClientLocation(IObservable<UserGpsChangedEvent> observable) => from e in observable
+                                                                                                                   select DataModelFunctions.GetPlusCode(e.GpsData, 10);
     }
 }

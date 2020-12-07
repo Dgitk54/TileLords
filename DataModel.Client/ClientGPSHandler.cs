@@ -18,9 +18,9 @@ namespace DataModel.Client
             eventBus = bus;
         }
 
-        IObservable<DataSinkEvent> AsDataSink(IObservable<ClientGpsChangedEvent> observable) => from e in observable
+        IObservable<DataSinkEvent> AsDataSink(IObservable<UserGpsChangedEvent> observable) => from e in observable
                                                                                                 select new DataSinkEvent(JsonConvert.SerializeObject(e));
-        public IDisposable AttachToBus() => AsDataSink(eventBus.GetEventStream<ClientGpsChangedEvent>())
+        public IDisposable AttachToBus() => AsDataSink(eventBus.GetEventStream<UserGpsChangedEvent>())
             .Subscribe(v => eventBus.Publish<DataSinkEvent>(v));
            
         

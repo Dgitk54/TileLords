@@ -55,7 +55,7 @@ namespace DataModel.Client
         // The Channel is closed hence the connection is closed
         public override void ChannelInactive(IChannelHandlerContext ctx)
         {
-            eventBus.Publish<ClientDisconnectedEvent>(new ClientDisconnectedEvent("Connected on " + DateTime.Now.ToString()));
+            eventBus.Publish(new ClientDisconnectedEvent("DC on " + DateTime.Now.ToString()));
         }
 
         public void ShutDown() => disposables.ForEach(v => v.Dispose());

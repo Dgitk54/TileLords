@@ -18,10 +18,10 @@ namespace DataModel.Client
         {
             var receivedLarge = BufferMiniTiles(AsMiniTiles(LargeTileUpdate(eventBus.GetEventStream<DataSourceEvent>())));
             var receivedSmall = SmallUpdate(MiniTileUpdate(eventBus.GetEventStream<DataSourceEvent>()));
-            var latestClient = ClientFunctions.LatestClientLocation(eventBus.GetEventStream<ClientGpsChangedEvent>());
+            var latestClient = ClientFunctions.LatestClientLocation(eventBus.GetEventStream<UserGpsChangedEvent>());
 
             return MapBufferChanged(receivedLarge, receivedSmall, latestClient)
-                .Subscribe(v => eventBus.Publish<ClientMapBufferChanged>(new ClientMapBufferChanged(v)));
+                .Subscribe(v => eventBus.Publish(new ClientMapBufferChanged(v)));
         }
 
 

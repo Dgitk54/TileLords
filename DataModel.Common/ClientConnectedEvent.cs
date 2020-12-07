@@ -12,5 +12,9 @@ namespace DataModel.Common
 
         public ClientConnectedEvent(string data)
         => DebugData = data;
+        public override string ToString()
+        {
+            return base.ToString() + "  "+ DebugData;
+        }
     }
 }

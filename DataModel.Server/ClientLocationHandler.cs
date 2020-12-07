@@ -26,16 +26,16 @@ namespace DataModel.Server
         {
             var toSink = from v in TilesForPlusCode(TileHasChangedStream(GPSAsPluscode8(GpsFromClientGpsEvent(ParseOnlyValidIgnoringErrors(cEventBus.GetEventStream<DataSourceEvent>())))))
                          select new DataSinkEvent(JsonConvert.SerializeObject(v));
-            return toSink.Subscribe(v => cEventBus.Publish<DataSinkEvent>(v));
+            return toSink.Subscribe(v => cEventBus.Publish(v));
         }
 
 
-        IObservable<ClientGpsChangedEvent> ParseOnlyValidIgnoringErrors(IObservable<DataSourceEvent> observable)
+        IObservable<UserGpsChangedEvent> ParseOnlyValidIgnoringErrors(IObservable<DataSourceEvent> observable)
         {
             var rawData = from e in observable
                           select e.Data;
             var parseDataIgnoringErrors = from e in rawData
-                                          select JsonConvert.DeserializeObject<ClientGpsChangedEvent>(e, new JsonSerializerSettings
+                                          select JsonConvert.DeserializeObject<UserGpsChangedEvent>(e, new JsonSerializerSettings
                                           {
                                               Error = HandleDeserializationError
                                           });
@@ -46,8 +46,8 @@ namespace DataModel.Server
         }
 
 
-        IObservable<GPS> GpsFromClientGpsEvent(IObservable<ClientGpsChangedEvent> observable) => from e in observable
-                                                                                                 select e.ClientGPSHasChanged;
+        IObservable<GPS> GpsFromClientGpsEvent(IObservable<UserGpsChangedEvent> observable) => from e in observable
+                                                                                                 select e.GpsData;
 
 
         public void HandleDeserializationError(object sender, ErrorEventArgs errorArgs)
