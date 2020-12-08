@@ -21,13 +21,13 @@ namespace ClientMain
             double step = 0.000150;
             var list = DataModelFunctions.GPSNodesWithOffsets(start, 0.000350, 0.000150, 60);
             var counter = 0;
-            //    obs.Subscribe(v =>
-            //    {
-            //        instance.SendDebugGPS(list[counter]);
-            //        counter++;
-            //        if (counter == 10)
-            //            instance.SendFlawedData();
-            //    });
+           //     obs.Subscribe(v =>
+           //     {
+           //         instance.SendDebugGPS(list[counter]);
+           //         counter++;
+           //         if (counter == 10)
+           //             instance.SendFlawedData();
+           //     });
 
 
             var mode = Console.ReadLine();
@@ -45,11 +45,11 @@ namespace ClientMain
                 for (; ; )
                 {
 
-                    Console.WriteLine("Enter your Username:");
+                    Console.WriteLine("Enter your RegisterUsername:");
                     var name = Console.ReadLine();
                     if (string.IsNullOrEmpty(name))
                         continue;
-                    Console.WriteLine("Enter your Password");
+                    Console.WriteLine("Enter your RegisterPassword");
                     var password = Console.ReadLine();
                     if (string.IsNullOrEmpty(password))
                         continue;
@@ -57,6 +57,25 @@ namespace ClientMain
                     instance.SendRegisterRequest(name, password);
 
                 }
+            } 
+            if(modeInt == 2)
+            {
+                for(; ; )
+                {
+                    Console.WriteLine("Enter your LoginUsername:");
+                    var name = Console.ReadLine();
+                    if (string.IsNullOrEmpty(name))
+                        continue;
+                    Console.WriteLine("Enter your LoginPassword");
+                    var password = Console.ReadLine();
+                    if (string.IsNullOrEmpty(password))
+                        continue;
+
+                    instance.SendLoginRequest(name, password);
+
+                }
+               
+
             }
 
 

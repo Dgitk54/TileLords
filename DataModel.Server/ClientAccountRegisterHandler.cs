@@ -34,12 +34,24 @@ namespace DataModel.Server
         {
 
             var registerAttempt = ServerFunctions.ParseOnlyValidUsingErrorHandler<UserRegisterEvent>(eventBus.GetEventStream<DataSourceEvent>(), ServerFunctions.PrintConsoleErrorHandler);
-            var withCounter = registerAttempt.Scan(1, (counter, val) => counter++);
+
+
+            
+            var hasValues = from e in registerAttempt
+                            where e != default
+                            where !string.IsNullOrEmpty(e.Name)
+                            where !string.IsNullOrEmpty(e.Password)
+                            where e.EventType == "UserRegister"
+                            select e;
+            
+            var withCounter = hasValues.Scan(1, (counter, val) => counter++);
             var merged = registerAttempt.WithLatestFrom(withCounter, (RegisterEvent, RegisterCounter) => new { RegisterEvent, RegisterCounter });
 
 
             return merged.Subscribe(v =>
                {
+
+                   Console.WriteLine("Firing RegisterHandler!");
                    if (CreateAccount(v.RegisterEvent))
                    {
                        var success = new UserActionSuccessEvent() { UserAction = 1 };

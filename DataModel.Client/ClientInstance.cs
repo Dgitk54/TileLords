@@ -46,6 +46,14 @@ namespace DataModel.Client
 
             eventBus.Publish(debugRegisterEvent);
         }
+        public void SendLoginRequest(string username, string password)
+        {
+            
+            var e = new UserLoginEvent() { Name = username, Password = password };
+            var debugRegisterEvent = new DataSinkEvent(JsonConvert.SerializeObject(e));
+
+            eventBus.Publish(debugRegisterEvent);
+        }
 
         public async Task DisconnectClient()
         {

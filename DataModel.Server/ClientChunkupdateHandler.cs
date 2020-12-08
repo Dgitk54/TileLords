@@ -27,22 +27,20 @@ namespace DataModel.Server
             var onlyValid = ServerFunctions.ParseOnlyValidUsingErrorHandler<UserGpsEvent>(cEventBus.GetEventStream<DataSourceEvent>(), ServerFunctions.PrintConsoleErrorHandler);
 
             var onlyNonDefault = from e in onlyValid
-                          where !e.GpsData.Equals(default)
-                          where !e.GpsData.Lat.Equals(default)
-                          where !e.GpsData.Lon.Equals(default)
-                          select e;
+                                 where !e.GpsData.Equals(default)
+                                 select e;
 
             var createResponse = from v in TilesForPlusCode(TileHasChangedStream(GPSAsPluscode8(GpsFromClientGpsEvent(onlyNonDefault))))
-                         select new DataSinkEvent(JsonConvert.SerializeObject(v.GetServerMapEvent()));
+                                 select new DataSinkEvent(JsonConvert.SerializeObject(v.GetServerMapEvent()));
             return createResponse.Subscribe(v => cEventBus.Publish(v));
         }
 
 
 
         IObservable<GPS> GpsFromClientGpsEvent(IObservable<UserGpsEvent> observable) => from e in observable
-                                                                                                 select e.GpsData;
+                                                                                        select e.GpsData;
 
-        
+
 
         IObservable<PlusCode> GPSAsPluscode8(IObservable<GPS> gpsStream) => DataModelFunctions.GetPlusCode(gpsStream, Observable.Create<int>(v => { v.OnNext(8); return v.OnCompleted; }));
 

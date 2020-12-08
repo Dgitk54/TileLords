@@ -29,6 +29,7 @@ namespace DataModel.Server
 
         readonly ClientChunkupdateHandler gpsClientLocationHandler;
         readonly ClientAccountRegisterHandler registerHandler;
+        readonly ClientAccountLoginHandler loginHandler;
 
         public ClientHandler(IEventBus serverBus, ILiteDatabase dataBase)
         {
@@ -36,6 +37,7 @@ namespace DataModel.Server
             clientBus = new ClientEventBus();
             gpsClientLocationHandler = new ClientChunkupdateHandler(clientBus, dataBase);
             registerHandler = new ClientAccountRegisterHandler(clientBus, dataBase, serverBus);
+            loginHandler = new ClientAccountLoginHandler(clientBus, dataBase);
            
         }
 
@@ -46,6 +48,7 @@ namespace DataModel.Server
             disposables.Add(jsonClientSource.Subscribe(v => clientBus.Publish(new DataSourceEvent(v))));
             disposables.Add(gpsClientLocationHandler.AttachToBus());
             disposables.Add(registerHandler.AttachToBus());
+            disposables.Add(loginHandler.AttachToBus());
             ctx.Channel.CloseCompletion.ContinueWith((x) => Console.WriteLine("Channel Closed"));
         }
 

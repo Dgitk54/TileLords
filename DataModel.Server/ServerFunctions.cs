@@ -83,7 +83,10 @@ namespace DataModel.Server
             var parseDataIgnoringErrors = from e in rawData
                                           select JsonConvert.DeserializeObject<T>(e, new JsonSerializerSettings
                                           {
-                                              Error = eventHandler
+                                              Error = eventHandler,
+                                              MissingMemberHandling = MissingMemberHandling.Error,
+                                              NullValueHandling = NullValueHandling.Ignore
+                                              
                                           }); ;
             return from e in parseDataIgnoringErrors
                    where e != null
