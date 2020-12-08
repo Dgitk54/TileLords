@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Reactive.Linq;
 
 namespace DataModel.Client
 {
@@ -20,7 +21,11 @@ namespace DataModel.Client
             var onlyValid = eventBus.GetEventStream<DataSourceEvent>()
                                     .ParseOnlyValidUsingErrorHandler<UserActionSuccessEvent>(ClientFunctions.PrintConsoleErrorHandler);
 
-            return onlyValid.Subscribe(v => eventBus.Publish(v));
+            var sanityChecked = from e in onlyValid
+                                where e.UserAction != default
+                                select e;
+
+            return sanityChecked.Subscribe(v => eventBus.Publish(v));
 
         }
     }
