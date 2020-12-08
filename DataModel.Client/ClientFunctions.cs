@@ -34,7 +34,7 @@ namespace DataModel.Client
         public static IObservable<PlusCode> LatestClientLocation(IObservable<UserGpsEvent> observable) => from e in observable
                                                                                                                    select DataModelFunctions.GetPlusCode(e.GpsData, 10);
 
-        public static IObservable<T> ParseOnlyValidUsingErrorHandler<T>(IObservable<DataSourceEvent> observable, EventHandler<ErrorEventArgs> eventHandler) where T : IEvent
+        public static IObservable<T> ParseOnlyValidUsingErrorHandler<T>(this IObservable<DataSourceEvent> observable, EventHandler<ErrorEventArgs> eventHandler) where T : IEvent
 
         {
             var settings = new JsonSerializerSettings
