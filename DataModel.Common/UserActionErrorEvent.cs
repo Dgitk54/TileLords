@@ -4,8 +4,8 @@ using System.Text;
 
 namespace DataModel.Common
 {
-    public class UserLoginEventError : IEvent
+    public class UserActionErrorEvent : IEvent
     {
-        public string ErrorMessage { get; set; }
+        public int UserAction { get; set; }
     }
 }

@@ -64,8 +64,8 @@ namespace DataModel.Server
                    }
                    else
                    {
-                       var obj = new UserRegisterEventError() { ErrorMessage = "Could not create account, username taken?" };
-                       var serialized = JsonConvert.SerializeObject(obj, typeof(UserRegisterEventError), settings);
+                       var obj = new UserActionErrorEvent() { UserAction = 1 };
+                       var serialized = JsonConvert.SerializeObject(obj, typeof(UserActionErrorEvent), settings);
                        eventBus.Publish(new DataSinkEvent(serialized));
                    }
 

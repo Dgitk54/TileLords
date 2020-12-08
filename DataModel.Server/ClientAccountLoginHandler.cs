@@ -48,8 +48,8 @@ namespace DataModel.Server
                 if(user == null)
                 {
 
-                    var obj = new UserLoginEventError() { ErrorMessage = "Account does not exist or password is wrong." };
-                    var serialized = JsonConvert.SerializeObject(obj, typeof(UserLoginEventError), settings);
+                    var obj = new UserActionErrorEvent() { UserAction = 2 };
+                    var serialized = JsonConvert.SerializeObject(obj, typeof(UserActionErrorEvent), settings);
                     eventBus.Publish(new DataSinkEvent(serialized));
 
 
@@ -67,10 +67,10 @@ namespace DataModel.Server
                     }
                     else
                     {
-                        var obj = new UserLoginEventError() { ErrorMessage = "Account does not exist or password is wrong." };
-                        var serialized = JsonConvert.SerializeObject(obj, typeof(UserLoginEventError), settings);
+                        var obj = new UserActionErrorEvent() { UserAction = 2 };
+                        var serialized = JsonConvert.SerializeObject(obj, typeof(UserActionErrorEvent), settings);
                         eventBus.Publish(new DataSinkEvent(serialized));
-                       
+
                     }
                 }
 
