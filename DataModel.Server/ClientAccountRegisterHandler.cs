@@ -22,11 +22,12 @@ namespace DataModel.Server
     {
         readonly IEventBus eventBus;
         readonly ILiteDatabase dataBase;
+        readonly JsonSerializerSettings settings;
         public ClientAccountRegisterHandler(IEventBus clientBus, ILiteDatabase dataBase, IEventBus serverBus)
         {
             eventBus = clientBus;
             this.dataBase = dataBase;
-           
+            settings = new JsonSerializerSettings { TypeNameHandling = TypeNameHandling.All };
 
         }
 
@@ -41,7 +42,6 @@ namespace DataModel.Server
                             where e != default
                             where !string.IsNullOrEmpty(e.Name)
                             where !string.IsNullOrEmpty(e.Password)
-                            where e.EventType == "UserRegister"
                             select e;
             
             var withCounter = hasValues.Scan(1, (counter, val) => counter++);
@@ -55,12 +55,15 @@ namespace DataModel.Server
                    if (CreateAccount(v.RegisterEvent))
                    {
                        var success = new UserActionSuccessEvent() { UserAction = 1 };
-                       eventBus.Publish(new DataSinkEvent(JsonConvert.SerializeObject(success)));
+                       var obj = JsonConvert.SerializeObject(success, typeof(UserActionSuccessEvent), settings);
+                       eventBus.Publish(new DataSinkEvent(obj));
 
                    }
                    else
                    {
-                       eventBus.Publish(new DataSinkEvent(JsonConvert.SerializeObject(new UserRegisterEventError() { ErrorMessage = "Could not create account, username taken?" })));
+                       var obj = new UserRegisterEventError() { ErrorMessage = "Could not create account, username taken?" };
+                       var serialized = JsonConvert.SerializeObject(obj, typeof(UserRegisterEventError), settings);
+                       eventBus.Publish(new DataSinkEvent(serialized));
                    }
 
                });

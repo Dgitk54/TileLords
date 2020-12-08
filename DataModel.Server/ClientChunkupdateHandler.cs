@@ -17,10 +17,12 @@ namespace DataModel.Server
     {
         readonly IEventBus cEventBus;
         readonly ILiteDatabase dataBase;
+        readonly JsonSerializerSettings settings;
         public ClientChunkupdateHandler(IEventBus clientBus, ILiteDatabase db)
         {
             cEventBus = clientBus;
             dataBase = db;
+            settings = new JsonSerializerSettings { TypeNameHandling = TypeNameHandling.All };
         }
         public IDisposable AttachToBus()
         {
@@ -30,8 +32,11 @@ namespace DataModel.Server
                                  where !e.GpsData.Equals(default)
                                  select e;
 
+            
+
             var createResponse = from v in TilesForPlusCode(TileHasChangedStream(GPSAsPluscode8(GpsFromClientGpsEvent(onlyNonDefault))))
-                                 select new DataSinkEvent(JsonConvert.SerializeObject(v.GetServerMapEvent()));
+                                 let e = v.GetServerMapEvent()
+                                 select new DataSinkEvent(JsonConvert.SerializeObject(e,typeof(ServerMapEvent),settings));
             return createResponse.Subscribe(v => cEventBus.Publish(v));
         }
 

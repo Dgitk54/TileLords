@@ -27,6 +27,10 @@ namespace DataModel.Client
         readonly MultithreadEventLoopGroup group = new MultithreadEventLoopGroup();
         readonly IEventBus eventBus;
         readonly List<IDisposable> disposables = new List<IDisposable>();
+        readonly JsonSerializerSettings settings = new JsonSerializerSettings
+        {
+            TypeNameHandling = TypeNameHandling.All
+        };
         public ClientInstance(IEventBus bus)
         {
             ServerHandler = new ServerHandler(bus);
@@ -42,7 +46,7 @@ namespace DataModel.Client
         public void SendRegisterRequest(string username, string password)
         {
             var e = new UserRegisterEvent() { Name = username, Password = password };
-            var debugRegisterEvent = new DataSinkEvent(JsonConvert.SerializeObject(e));
+            var debugRegisterEvent = new DataSinkEvent(JsonConvert.SerializeObject(e, typeof(UserRegisterEvent), settings));
 
             eventBus.Publish(debugRegisterEvent);
         }
@@ -50,7 +54,7 @@ namespace DataModel.Client
         {
             
             var e = new UserLoginEvent() { Name = username, Password = password };
-            var debugRegisterEvent = new DataSinkEvent(JsonConvert.SerializeObject(e));
+            var debugRegisterEvent = new DataSinkEvent(JsonConvert.SerializeObject(e, typeof(UserLoginEvent), settings));
 
             eventBus.Publish(debugRegisterEvent);
         }

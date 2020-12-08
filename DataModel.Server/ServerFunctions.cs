@@ -75,19 +75,21 @@ namespace DataModel.Server
         public static IObservable<T> ParseOnlyValidUsingErrorHandler<T>(IObservable<DataSourceEvent> observable, EventHandler<ErrorEventArgs> eventHandler) where T : IEvent
 
         {
+            var settings = new JsonSerializerSettings
+            {
+                TypeNameHandling = TypeNameHandling.Auto,
+                MissingMemberHandling = MissingMemberHandling.Error,
+                Error = eventHandler,
+                NullValueHandling = NullValueHandling.Ignore
+            };
             if (eventHandler == null)
                 throw new Exception("Eventhandler is null!");
 
             var rawData = from e in observable
                           select e.Data;
             var parseDataIgnoringErrors = from e in rawData
-                                          select JsonConvert.DeserializeObject<T>(e, new JsonSerializerSettings
-                                          {
-                                              Error = eventHandler,
-                                              MissingMemberHandling = MissingMemberHandling.Error,
-                                              NullValueHandling = NullValueHandling.Ignore
-                                              
-                                          }); ;
+                                          select JsonConvert.DeserializeObject<T>(e, settings);
+
             return from e in parseDataIgnoringErrors
                    where e != null
                    select e;
@@ -96,7 +98,7 @@ namespace DataModel.Server
         public static void PrintConsoleErrorHandler(object sender, ErrorEventArgs errorArgs)
         {
             var currentError = errorArgs.ErrorContext.Error.Message;
-            Console.WriteLine(currentError);
+            //Console.WriteLine(currentError);
             errorArgs.ErrorContext.Handled = true;
         }
 
