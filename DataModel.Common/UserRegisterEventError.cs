@@ -6,12 +6,11 @@ namespace DataModel.Common
 {
     public class UserRegisterEventError : IEvent
     {
-        public readonly string EventType = "UserRegisterError";
 
         public string ErrorMessage { get; set; }
         public override string ToString()
         {
-            return base.ToString() +"       " + ErrorMessage;
+            return base.ToString() + "       " + ErrorMessage;
         }
     }
 }

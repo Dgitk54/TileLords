@@ -47,13 +47,11 @@ namespace DataModel.Client
             if (byteBuffer != null)
             {
                 var data = byteBuffer.ToString(Encoding.UTF8);
-                Console.WriteLine(data);
                 eventBus.Publish(new DataSourceEvent(data));
             }
 
         }
 
-        // The Channel is closed hence the connection is closed
         public override void ChannelInactive(IChannelHandlerContext ctx)
         {
             eventBus.Publish(new ClientDisconnectedEvent("DC on " + DateTime.Now.ToString()));

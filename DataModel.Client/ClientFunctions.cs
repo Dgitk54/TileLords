@@ -40,10 +40,10 @@ namespace DataModel.Client
             var settings = new JsonSerializerSettings
             {
                 TypeNameHandling = TypeNameHandling.Auto,
-                MissingMemberHandling = MissingMemberHandling.Error,
                 Error = eventHandler,
                 NullValueHandling = NullValueHandling.Ignore
             };
+
             if (eventHandler == null)
                 throw new Exception("Eventhandler is null!");
 
@@ -60,7 +60,7 @@ namespace DataModel.Client
         public static void PrintConsoleErrorHandler(object sender, ErrorEventArgs errorArgs)
         {
             var currentError = errorArgs.ErrorContext.Error.Message;
-            Console.WriteLine(currentError);
+            //Console.WriteLine(currentError);
             errorArgs.ErrorContext.Handled = true;
         }
     }

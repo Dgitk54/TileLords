@@ -13,12 +13,14 @@ namespace DataModel.Server
     {
         readonly IEventBus eventBus;
         readonly ILiteDatabase dataBase;
-        readonly JsonSerializerSettings settings;
+        readonly JsonSerializerSettings settings = new JsonSerializerSettings
+        {
+            TypeNameHandling = TypeNameHandling.All
+        };
         public ClientAccountLoginHandler(IEventBus bus, ILiteDatabase database)
         {
             eventBus = bus;
             dataBase = database;
-            settings = new JsonSerializerSettings { TypeNameHandling = TypeNameHandling.All };
         }
 
 

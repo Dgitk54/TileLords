@@ -22,13 +22,16 @@ namespace DataModel.Server
     {
         readonly IEventBus eventBus;
         readonly ILiteDatabase dataBase;
-        readonly JsonSerializerSettings settings;
+        
+
+        readonly JsonSerializerSettings settings = new JsonSerializerSettings
+        {
+            TypeNameHandling = TypeNameHandling.All
+        };
         public ClientAccountRegisterHandler(IEventBus clientBus, ILiteDatabase dataBase, IEventBus serverBus)
         {
             eventBus = clientBus;
             this.dataBase = dataBase;
-            settings = new JsonSerializerSettings { TypeNameHandling = TypeNameHandling.All };
-
         }
 
         public IDisposable AttachToBus()

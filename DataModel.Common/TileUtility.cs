@@ -40,7 +40,8 @@ namespace DataModel.Common
         {
             var e = new ServerMapEvent();
             e.Tiles = new List<Tile> { tile };
-            e.UpdateSize = tile.MiniTiles.Count.ToString();
+            e.MiniTiles = null;
+            e.UpdateSize = tile.MiniTiles.Count;
             return e;
 
         }

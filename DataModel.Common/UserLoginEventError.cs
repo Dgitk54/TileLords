@@ -6,7 +6,6 @@ namespace DataModel.Common
 {
     public class UserLoginEventError : IEvent
     {
-        public readonly string EventType = "UserLoginError";
         public string ErrorMessage { get; set; }
     }
 }

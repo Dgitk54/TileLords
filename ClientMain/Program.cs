@@ -14,6 +14,25 @@ namespace ClientMain
             var instance = new ClientInstance(bus);
             var task = instance.RunClientAsync();
 
+
+
+            
+
+            //LoginTests(instance);
+            SendDebugGps(instance);
+
+
+
+
+
+
+
+
+            task.Wait();
+
+        }
+        static void SendDebugGps(ClientInstance instance)
+        {
             const int periodInSec = 2;
             var obs = Observable.Interval(TimeSpan.FromSeconds(periodInSec),
                                           Scheduler.Default);
@@ -21,18 +40,21 @@ namespace ClientMain
             double step = 0.000150;
             var list = DataModelFunctions.GPSNodesWithOffsets(start, 0.000350, 0.000150, 60);
             var counter = 0;
-           //     obs.Subscribe(v =>
-           //     {
-           //         instance.SendDebugGPS(list[counter]);
-           //         counter++;
-           //         if (counter == 10)
-           //             instance.SendFlawedData();
-           //     });
-
-
+            obs.Subscribe(v =>
+            {
+                instance.SendDebugGPS(list[counter]);
+                counter++;
+                if (counter == 10)
+                    instance.SendFlawedData();
+            });
+            Console.ReadLine();
+        }
+        static void LoginTests(ClientInstance instance)
+        {
+            Console.WriteLine("1: Create new User,  2: Log in");
             var mode = Console.ReadLine();
             int modeInt;
-            Console.WriteLine("1: Create new User,  2: Log in");
+            
             do
             {
                 mode = Console.ReadLine();
@@ -57,10 +79,10 @@ namespace ClientMain
                     instance.SendRegisterRequest(name, password);
 
                 }
-            } 
-            if(modeInt == 2)
+            }
+            if (modeInt == 2)
             {
-                for(; ; )
+                for (; ; )
                 {
                     Console.WriteLine("Enter your LoginUsername:");
                     var name = Console.ReadLine();
@@ -74,22 +96,9 @@ namespace ClientMain
                     instance.SendLoginRequest(name, password);
 
                 }
-               
+
 
             }
-
-
-
-
-
-
-
-
-
-
-
-            task.Wait();
-
         }
     }
 }

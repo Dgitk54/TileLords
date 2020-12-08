@@ -16,11 +16,12 @@ namespace DataModel.Client
 
         public IDisposable AttachToBus()
         {
-            var onlyValid = eventBus.GetEventStream<DataSourceEvent>().ParseOnlyValidUsingErrorHandler<ServerMapEvent>(ClientFunctions.PrintConsoleErrorHandler);
+            var onlyValid = eventBus.GetEventStream<DataSourceEvent>()
+                                    .ParseOnlyValidUsingErrorHandler<ServerMapEvent>(ClientFunctions.PrintConsoleErrorHandler);
+
+            
 
             var allTiles = from e in onlyValid
-                           where e.Tiles != null
-                           where e.Tiles.Count > 0
                            from v in e.Tiles
                            select v;
             var receivedLarge = BufferMiniTiles(AsMiniTiles(allTiles));
