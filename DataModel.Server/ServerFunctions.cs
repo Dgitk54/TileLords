@@ -15,6 +15,7 @@ using LiteDB;
 using Newtonsoft.Json.Serialization;
 using System.Security.Cryptography;
 
+
 namespace DataModel.Server
 {
     /// <summary>
@@ -39,8 +40,7 @@ namespace DataModel.Server
              () => Console.WriteLine("StreamSink Write Sequence Completed"));
 
 
-        //TODO: proper reactive stream?
-        public static Tile LookUp(PlusCode code, ILiteDatabase db)
+        public static Tile LookUpTile(PlusCode code, ILiteDatabase db)
         {
             var largeCode = code;
             if (largeCode.Precision == 10)
@@ -65,6 +65,8 @@ namespace DataModel.Server
                 throw new Exception("More than one object for same index!");
             return results.First();
         }
+
+       
 
         public static List<PlusCode> NeighborsIn8(PlusCode code)
         {
@@ -120,5 +122,121 @@ namespace DataModel.Server
             return result.SequenceEqual(originalPassword);
         }
 
+        public static MiniTile LookUpMiniTile(PlusCode code, ILiteDatabase db)
+        {
+            var tile = LookUpTile(code, db);
+            var miniTile = from e in tile.MiniTiles
+                           where e.MiniTileId.Code == code.Code
+                           select e;
+            return miniTile.First();
+        }
+
+        public static bool AddContent<T>(this MiniTile tile, T newtileContent, ILiteDatabase database) where T : ITileContent
+        {
+            if (newtileContent == null)
+                return false;
+            if (database == null)
+                return false;
+
+            var updated = tile.AddTileContent(newtileContent);
+            return UpdateMiniTile(updated, database);
+        }
+
+        public static bool RemoveContent<T>(this MiniTile tile, T contentToRemove, ILiteDatabase database) where T : ITileContent
+        {
+            if (contentToRemove == null)
+                return false;
+            if (database == null)
+                return false;
+
+            var updated = tile.RemoveTileContent(contentToRemove);
+            return UpdateMiniTile(updated, database);
+
+        }
+
+
+        static bool UpdateTile(Tile newTile, ILiteDatabase database)
+        {
+            var col = database.GetCollection<Tile>("tiles");
+            col.EnsureIndex(v => v.MiniTiles);
+            col.EnsureIndex(v => v.PlusCode);
+            col.EnsureIndex(v => v.Ttype);
+            var results = col.Find(v => v.PlusCode.Code == newTile.PlusCode.Code);
+            if (results.Count() > 1)
+                throw new Exception("More than one object for same index!");
+
+            return col.Update(newTile);
+        }
+
+        static bool UpdateMiniTile(MiniTile tileWithNewValues, ILiteDatabase database)
+        {
+            var old = LookUpMiniTile(tileWithNewValues.MiniTileId, database);
+            Debug.Assert(old.Id == tileWithNewValues.Id);
+            Debug.Assert(old.MiniTileId.Code == tileWithNewValues.MiniTileId.Code);
+
+            Tile t = LookUpTile(tileWithNewValues.MiniTileId, database);
+
+            var removed = t.MiniTiles.Remove(old);
+            Debug.Assert(removed);
+            t.MiniTiles.Add(tileWithNewValues);
+
+            return UpdateTile(t, database);
+        }
+
+
+
+        static T DeepClone<T>(this T obj)
+        {
+            using (var ms = new System.IO.MemoryStream())
+            {
+                var formatter = new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter();
+                formatter.Serialize(ms, obj);
+                ms.Position = 0;
+                return (T)formatter.Deserialize(ms);
+            }
+        }
+
+
+        /// <summary>
+        /// Creates a deep copy of the minitile with the added content.
+        /// </summary>
+        /// <param name="tile"></param>
+        /// <param name="content"></param>
+        /// <returns>Updated Minitile</returns>
+        static MiniTile AddTileContent(this MiniTile tile, ITileContent content)
+        {
+            IReadOnlyList<ITileContent> collection;
+            if (tile.Content != null)
+            {
+                collection = tile.Content.Concat(new[] { content }).ToList();
+            }
+            else
+            {
+                collection = new List<ITileContent>() { content };
+            }
+            var copy = tile.DeepClone();
+            copy.Content = collection;
+            return copy;
+        }
+
+        static MiniTile RemoveTileContent(this MiniTile tile, ITileContent content)
+        {
+            IReadOnlyList<ITileContent> collection;
+            if (tile.Content != null)
+            {
+                collection = tile.Content.Except(new[] { content }).ToList();
+            }
+            else
+            {
+                collection = new List<ITileContent>();
+            }
+            var copy = tile.DeepClone();
+            copy.Content = collection;
+            return copy;
+
+        }
+
+
+        
     }
 }

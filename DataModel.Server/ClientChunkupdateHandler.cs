@@ -62,7 +62,7 @@ namespace DataModel.Server
             var stream = from val in code
                          let neighbors = ServerFunctions.NeighborsIn8(val)
                          from n in neighbors
-                         select ServerFunctions.LookUp(n, dataBase);
+                         select ServerFunctions.LookUpTile(n, dataBase);
             return stream;
 
         }
