@@ -24,7 +24,7 @@ namespace DataModel.Server
             var closedChannels = from e in serverBus.GetEventStream<ServerClientDisconnectedEvent>()
                                  select e.Channel;
 
-            var combined = players.CombineLatest(closedChannels, (player, channel) => new { player, channel })
+            var playersOnline = players.CombineLatest(closedChannels, (player, channel) => new { player, channel })
                    .Scan(new List<ObservablePlayer>(), (list, merged) =>
             {
                 if (!list.Contains(merged.player))
@@ -38,21 +38,35 @@ namespace DataModel.Server
 
 
             //TODO: this wont scale well...
-            var playersClose = from list in combined
+            var playersClose = from list in playersOnline
                                from p1 in list
                                from p2 in list
                                where p1 != p2
-                               from pos1 in p1.CurrentPosition
-                               from pos2 in p2.CurrentPosition
+                               from pos1 in p1.PlayerObservableLocationStream
+                               from pos2 in p2.PlayerObservableLocationStream
                                where pos1.GetChebyshevDistance(pos2) < 50
-                               select new { p1, p2 };
-
-
-
+                               select new { p1, pos1, p2, pos2 };
 
             return playersClose.Subscribe(v =>
             {
+                var player1AsTileContent = new Player() { Name = v.p1.Name, Location = v.pos1 };
+                var player2AsTileContent = new Player() { Name = v.p2.Name, Location = v.pos2 };
 
+
+                var dictForP1 = new Dictionary<PlusCode, ITileContent>()
+                {
+                    {v.pos2, player2AsTileContent }
+                };
+                var dictForP2 = new Dictionary<PlusCode, ITileContent>()
+                {
+                    {v.pos1, player1AsTileContent }
+                };
+
+                var contentForPlayer1 = new ServerTileContentEvent() { VisibleContent = dictForP1 };
+                var contentForPlayer2 = new ServerTileContentEvent() { VisibleContent = dictForP2 };
+
+                v.p1.ClientBus.Publish(contentForPlayer1);
+                v.p2.ClientBus.Publish(contentForPlayer2);
             });
 
 

@@ -14,7 +14,7 @@ namespace DataModel.Server
 
         public IChannel ClientChannel { get; set; }
 
-        public IObservable<PlusCode> CurrentPosition { get; set; }
+        public IObservable<PlusCode> PlayerObservableLocationStream { get; set; }
 
 
     }
