@@ -18,8 +18,8 @@ namespace ClientMain
 
             
 
-            //LoginTests(instance);
-            SendDebugGps(instance);
+            LoginTests(instance);
+            //SendDebugGps(instance);
 
 
 

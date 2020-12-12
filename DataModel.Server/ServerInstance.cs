@@ -16,9 +16,11 @@ namespace DataModel.Server
     {
         readonly IEventBus bus = new ServerEventBus();
         readonly ILiteDatabase db = new LiteDatabase(@"MyData.db");
+        readonly List<IDisposable> disposables = new List<IDisposable>();
         public ServerInstance()
         {
             ServerFunctions.DebugEventToConsoleSink(bus.GetEventStream<IEvent>());
+            disposables.Add(new ClientToClientPositionUpdateHandler(bus).AttachToBus());
             
         }
         public async Task RunServerAsync()
