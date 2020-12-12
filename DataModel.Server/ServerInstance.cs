@@ -17,6 +17,10 @@ namespace DataModel.Server
         readonly IEventBus bus = new ServerEventBus();
         readonly ILiteDatabase db = new LiteDatabase(@"MyData.db");
         readonly List<IDisposable> disposables = new List<IDisposable>();
+        MultithreadEventLoopGroup bossGroup;//  accepts an incoming connection
+        MultithreadEventLoopGroup workerGroup;
+        ServerBootstrap bootstrap;
+        IChannel bootstrapChannel;
         public ServerInstance()
         {
             ServerFunctions.DebugEventToConsoleSink(bus.GetEventStream<IEvent>());
@@ -30,13 +34,18 @@ namespace DataModel.Server
 
             var serverPort = 8080;
 
-            var bossGroup = new MultithreadEventLoopGroup(1); //  accepts an incoming connection
-            var workerGroup = new MultithreadEventLoopGroup(); // handles the traffic of the accepted connection once the boss accepts the connection and registers the accepted connection to the worker
-
-
-            try
+            if (bootstrap != null)
             {
-                var bootstrap = new ServerBootstrap();
+                throw new Exception("Server already running!");
+            }
+
+
+            bossGroup = new MultithreadEventLoopGroup(1); //  accepts an incoming connection
+            workerGroup = new MultithreadEventLoopGroup(); // handles the traffic of the accepted connection once the boss accepts the connection and registers the accepted connection to the worker
+
+
+            
+                bootstrap = new ServerBootstrap();
 
                 bootstrap
                     .Group(bossGroup, workerGroup)
@@ -51,17 +60,15 @@ namespace DataModel.Server
                         pipeline.AddLast(new ClientHandler(bus, db));
                     }));
 
-                IChannel bootstrapChannel = await bootstrap.BindAsync(serverPort);
+                bootstrapChannel = await bootstrap.BindAsync(serverPort);
 
                 Console.WriteLine("Server Up");
-                Console.ReadLine();
+        }
 
-                await bootstrapChannel.CloseAsync();
-            }
-            finally
-            {
-                Task.WaitAll(bossGroup.ShutdownGracefullyAsync(), workerGroup.ShutdownGracefullyAsync());
-            }
+        public async Task ShutDownServer()
+        {
+            await bootstrapChannel.CloseAsync();
+            Task.WaitAll(bossGroup.ShutdownGracefullyAsync(), workerGroup.ShutdownGracefullyAsync());
         }
     }
 }

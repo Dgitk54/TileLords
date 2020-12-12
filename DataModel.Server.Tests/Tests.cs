@@ -2,7 +2,7 @@ using DataModel.Common;
 using DataModel.Server;
 using NUnit.Framework;
 
-namespace Tests
+namespace ClientIntegration
 {
     public class Tests
     {

@@ -12,6 +12,7 @@ using System.Net;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace DataModel.Client
@@ -19,18 +20,24 @@ namespace DataModel.Client
 
     public class ClientInstance
     {
+
+        public IEventBus EventBus { get => eventBus; }
         
+
         ServerHandler ServerHandler { get; }
         Bootstrap Bootstrap { get; set; }
         IChannel BootstrapChannel { get; set; }
 
+
         readonly MultithreadEventLoopGroup group = new MultithreadEventLoopGroup();
-        readonly IEventBus eventBus;
         readonly List<IDisposable> disposables = new List<IDisposable>();
         readonly JsonSerializerSettings settings = new JsonSerializerSettings
         {
             TypeNameHandling = TypeNameHandling.All
         };
+
+        readonly CancellationTokenSource cancelTokenSource = new CancellationTokenSource();
+        private readonly IEventBus eventBus;
         public ClientInstance(IEventBus bus)
         {
             ServerHandler = new ServerHandler(bus);
@@ -59,42 +66,55 @@ namespace DataModel.Client
             eventBus.Publish(debugRegisterEvent);
         }
 
-        public async Task DisconnectClient()
+        public void DisconnectClient()
         {
+            cancelTokenSource.Cancel();
             ServerHandler.ShutDown();
-            await BootstrapChannel.CloseAsync();
-            group.ShutdownGracefullyAsync().Wait();
         }
 
 
         public async Task RunClientAsync()
         {
-            if(Bootstrap != null)
+            try
             {
-                throw new Exception("Client already running!");
-            }
-            var serverIP = IPAddress.Parse("127.0.0.1");
-            int serverPort = 8080;
-
-
-            Bootstrap = new Bootstrap();
-            Bootstrap
-                .Group(group)
-                .Channel<TcpSocketChannel>()
-                .Option(ChannelOption.TcpNodelay, true) // Do not buffer and send packages right away
-                .Handler(new ActionChannelInitializer<ISocketChannel>(channel =>
+                do
                 {
-                    IChannelPipeline pipeline = channel.Pipeline;
-                    pipeline.AddLast("framing-enc", new LengthFieldPrepender(2));
-                    pipeline.AddLast("framing-dec", new LengthFieldBasedFrameDecoder(ushort.MaxValue, 0, 2, 0, 2));
-                    pipeline.AddLast(ServerHandler);
-                }));
+                    if (Bootstrap != null)
+                    {
+                        throw new Exception("Client already running!");
+                    }
+                    var serverIP = IPAddress.Parse("127.0.0.1");
+                    int serverPort = 8080;
 
-            IChannel bootstrapChannel = await Bootstrap.ConnectAsync(new IPEndPoint(serverIP, serverPort));
+
+                    Bootstrap = new Bootstrap();
+                    Bootstrap
+                        .Group(group)
+                        .Channel<TcpSocketChannel>()
+                        .Option(ChannelOption.TcpNodelay, true) // Do not buffer and send packages right away
+                        .Handler(new ActionChannelInitializer<ISocketChannel>(channel =>
+                        {
+                            IChannelPipeline pipeline = channel.Pipeline;
+                            pipeline.AddLast("framing-enc", new LengthFieldPrepender(2));
+                            pipeline.AddLast("framing-dec", new LengthFieldBasedFrameDecoder(ushort.MaxValue, 0, 2, 0, 2));
+                            pipeline.AddLast(ServerHandler);
+                        }));
+
+                    BootstrapChannel = await Bootstrap.ConnectAsync(new IPEndPoint(serverIP, serverPort));
 
 
-            Console.ReadLine();
 
+                } while (!cancelTokenSource.IsCancellationRequested);
+                
+
+            }
+            finally
+            {
+                Task.WaitAll(group.ShutdownGracefullyAsync());
+            }
+                
+            
+            
         }
 
 

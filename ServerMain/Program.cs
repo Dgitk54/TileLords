@@ -17,7 +17,9 @@ namespace ServerMain
         {
             var server = new ServerInstance();
             var task = server.RunServerAsync();
-            task.Wait();
+
+            Console.ReadLine();
+            //task.Wait();
         }
     }
 }

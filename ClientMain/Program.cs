@@ -27,7 +27,6 @@ namespace ClientMain
 
 
 
-
             task.Wait();
 
         }

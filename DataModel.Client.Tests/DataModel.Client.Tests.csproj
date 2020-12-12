@@ -12,4 +12,9 @@
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.8.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\DataModel.Client\DataModel.Client.csproj" />
+    <ProjectReference Include="..\DataModel.Server\DataModel.Server.csproj" />
+  </ItemGroup>
+
 </Project>
