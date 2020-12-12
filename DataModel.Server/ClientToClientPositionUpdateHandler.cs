@@ -18,7 +18,7 @@ namespace DataModel.Server
         public IDisposable AttachToBus()
         {
 
-           
+
 
             var players = from e in serverBus.GetEventStream<PlayerLoggedInEvent>()
                           select e.Player;
@@ -27,20 +27,21 @@ namespace DataModel.Server
 
             var closedChannels = from e in serverBus.GetEventStream<ServerClientDisconnectedEvent>().StartWith(new ServerClientDisconnectedEvent())
                                  select e.Channel;
-            
-            var eventsSelectMany = from player in players
-                                   from channel in closedChannels
-                                   select (player, channel);
 
 
-            var playersOnline = eventsSelectMany
+            var eventsLatestFrom = players.CombineLatest(closedChannels, (player, channel) => new { player, channel });
+
+
+            //TODO: after disconnecting scan stays at 1 player
+            var playersOnline = eventsLatestFrom
                                        .Scan(new List<ObservablePlayer>(), (list, merged) =>
             {
                 if (!list.Contains(merged.player))
                     list.Add(merged.player);
 
-                if(merged.channel != null)
-                    list.RemoveAll(v => v.ClientChannel.Id.CompareTo(merged.channel.Id) == 0);
+                if (merged.channel != null)
+                    list.RemoveAll(v => v.ClientChannel.Equals(merged.channel));
+                
                 Console.WriteLine("Players Online:" + list.Count);
 
                 return list;

@@ -51,9 +51,8 @@ namespace ClientMain
         static void LoginTests(ClientInstance instance)
         {
             Console.WriteLine("1: Create new User,  2: Log in");
-            var mode = Console.ReadLine();
+            string mode;
             int modeInt;
-            
             do
             {
                 mode = Console.ReadLine();
