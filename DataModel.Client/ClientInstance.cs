@@ -22,7 +22,7 @@ namespace DataModel.Client
     {
 
         public IEventBus EventBus { get => eventBus; }
-        
+
 
         ServerHandler ServerHandler { get; }
         Bootstrap Bootstrap { get; set; }
@@ -59,7 +59,7 @@ namespace DataModel.Client
         }
         public void SendLoginRequest(string username, string password)
         {
-            
+
             var e = new UserLoginEvent() { Name = username, Password = password };
             var debugRegisterEvent = new DataSinkEvent(JsonConvert.SerializeObject(e, typeof(UserLoginEvent), settings));
 
@@ -77,44 +77,40 @@ namespace DataModel.Client
         {
             try
             {
-                do
+
+                if (Bootstrap != null)
                 {
-                    if (Bootstrap != null)
+                    throw new Exception("Client already running!");
+                }
+                var serverIP = IPAddress.Parse("127.0.0.1");
+                int serverPort = 8080;
+
+
+                Bootstrap = new Bootstrap();
+                Bootstrap
+                    .Group(group)
+                    .Channel<TcpSocketChannel>()
+                    .Option(ChannelOption.TcpNodelay, true) // Do not buffer and send packages right away
+                    .Handler(new ActionChannelInitializer<ISocketChannel>(channel =>
                     {
-                        throw new Exception("Client already running!");
-                    }
-                    var serverIP = IPAddress.Parse("127.0.0.1");
-                    int serverPort = 8080;
+                        IChannelPipeline pipeline = channel.Pipeline;
+                        pipeline.AddLast("framing-enc", new LengthFieldPrepender(2));
+                        pipeline.AddLast("framing-dec", new LengthFieldBasedFrameDecoder(ushort.MaxValue, 0, 2, 0, 2));
+                        pipeline.AddLast(ServerHandler);
+                    }));
+
+                BootstrapChannel = await Bootstrap.ConnectAsync(new IPEndPoint(serverIP, serverPort));
 
 
-                    Bootstrap = new Bootstrap();
-                    Bootstrap
-                        .Group(group)
-                        .Channel<TcpSocketChannel>()
-                        .Option(ChannelOption.TcpNodelay, true) // Do not buffer and send packages right away
-                        .Handler(new ActionChannelInitializer<ISocketChannel>(channel =>
-                        {
-                            IChannelPipeline pipeline = channel.Pipeline;
-                            pipeline.AddLast("framing-enc", new LengthFieldPrepender(2));
-                            pipeline.AddLast("framing-dec", new LengthFieldBasedFrameDecoder(ushort.MaxValue, 0, 2, 0, 2));
-                            pipeline.AddLast(ServerHandler);
-                        }));
-
-                    BootstrapChannel = await Bootstrap.ConnectAsync(new IPEndPoint(serverIP, serverPort));
-
-
-
-                } while (!cancelTokenSource.IsCancellationRequested);
-                
 
             }
             finally
             {
                 Task.WaitAll(group.ShutdownGracefullyAsync());
             }
-                
-            
-            
+
+
+
         }
 
 

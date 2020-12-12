@@ -20,7 +20,7 @@ namespace DataModel.Server
 
 
 
-            var players = from e in serverBus.GetEventStream<PlayerLoggedInEvent>()
+            var players = from e in serverBus.GetEventStream<PlayerLoggedInEvent>().StartWith(new PlayerLoggedInEvent())
                           select e.Player;
 
 
@@ -29,15 +29,25 @@ namespace DataModel.Server
                                  select e.Channel;
 
 
-            var eventsLatestFrom = players.CombineLatest(closedChannels, (player, channel) => new { player, channel });
+            var eventsLatestFrom = from player in players
+                             from channel in closedChannels
+                             select (player, channel);
+
+
+
+            //var eventsLatestFrom = players.CombineLatest(closedChannels, (player, channel) => new { player, channel });
 
 
             //TODO: after disconnecting scan stays at 1 player
             var playersOnline = eventsLatestFrom
                                        .Scan(new List<ObservablePlayer>(), (list, merged) =>
             {
-                if (!list.Contains(merged.player))
-                    list.Add(merged.player);
+                if(merged.player != null)
+                {
+                    if (!list.Contains(merged.player) && merged.player.ClientChannel.Active)
+                        list.Add(merged.player);
+                }
+                
 
                 if (merged.channel != null)
                     list.RemoveAll(v => v.ClientChannel.Equals(merged.channel));
