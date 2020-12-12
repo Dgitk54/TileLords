@@ -93,8 +93,8 @@ namespace DataModel.Client
 
         IObservable<IList<MiniTile>> Accumulated(IObservable<IList<MiniTile>> bufferedMiniTileStream, IObservable<PlusCode> location, IObservable<Dictionary<PlusCode, ITileContent>> content)
         {
-            var output = location
-                .WithLatestFrom(bufferedMiniTileStream, (code, tiles) => new { code, tiles })
+            var output = bufferedMiniTileStream
+                .WithLatestFrom(location, (tiles, code) => new { tiles, code})
                 .WithLatestFrom(content, (locbuf, tcontent) => new { locbuf, tcontent })
                 .Scan(new List<MiniTile>(), (list, l1) =>
             {
