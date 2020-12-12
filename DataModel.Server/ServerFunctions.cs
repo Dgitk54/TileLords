@@ -40,6 +40,25 @@ namespace DataModel.Server
              () => Console.WriteLine("StreamSink Write Sequence Completed"));
 
 
+       
+
+
+        public static IObservable<PlusCode> ExtractPlusCodeLocationStream(IEventBus clientBus, int precision)
+        {
+            var onlyValid = ParseOnlyValidUsingErrorHandler<UserGpsEvent>(clientBus.GetEventStream<DataSourceEvent>(), PrintConsoleErrorHandler);
+
+            var onlyNonDefault = from e in onlyValid
+                                 where !e.GpsData.Equals(default)
+                                 select e;
+
+            var gpsExtracted = from e in onlyNonDefault
+                               select e.GpsData;
+
+            return from e in gpsExtracted
+                   select e.GetPlusCode(precision);
+        }
+
+
         public static Tile LookUpTile(PlusCode code, ILiteDatabase db)
         {
             var largeCode = code;
@@ -66,7 +85,7 @@ namespace DataModel.Server
             return results.First();
         }
 
-       
+
 
         public static List<PlusCode> NeighborsIn8(PlusCode code)
         {
@@ -104,7 +123,7 @@ namespace DataModel.Server
             errorArgs.ErrorContext.Handled = true;
         }
 
-       
+
 
         public static byte[] Hash(string value, byte[] salt) => Hash(Encoding.UTF8.GetBytes(value), salt);
 
@@ -237,6 +256,6 @@ namespace DataModel.Server
         }
 
 
-        
+
     }
 }

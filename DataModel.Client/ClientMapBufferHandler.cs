@@ -16,19 +16,68 @@ namespace DataModel.Client
 
         public IDisposable AttachToBus()
         {
+
+            //Tiles
             var onlyValid = eventBus.GetEventStream<DataSourceEvent>()
                                     .ParseOnlyValidUsingErrorHandler<ServerMapEvent>(ClientFunctions.PrintConsoleErrorHandler);
 
-            
+
+
 
             var allTiles = from e in onlyValid
-                           from v in e.Tiles
-                           select v;
-            var receivedLarge = BufferMiniTiles(AsMiniTiles(allTiles));
-            var receivedSmall = SmallUpdate(MiniTileUpdate(eventBus.GetEventStream<DataSourceEvent>()));
+                           where e.Tiles != null
+                           from tile in e.Tiles
+                           where tile != null
+                           from bigUpdates in tile.MiniTiles
+                           select bigUpdates;
+
+            var smallUpdates = from e in onlyValid
+                               where e.MiniTiles != null
+                               from mini in e.MiniTiles
+                               where mini != null
+                               select mini;
+
+
+
+            var merged = allTiles.Merge(smallUpdates).Where(v => v != null);
+
+
+            var receivedLarge = BufferMiniTiles(merged);
+
+            //Client
             var latestClient = ClientFunctions.LatestClientLocation(eventBus.GetEventStream<UserGpsEvent>());
 
-            return MapBufferChanged(receivedLarge, receivedSmall, latestClient)
+
+
+            //Content
+
+            var tileContent = eventBus.GetEventStream<DataSourceEvent>().ParseOnlyValidUsingErrorHandler<ServerTileContentEvent>(ClientFunctions.PrintConsoleErrorHandler);
+
+
+
+
+            var clientPositionPlusContent = latestClient.WithLatestFrom(tileContent, (position, content) => new { position, content });
+
+
+
+            var bufferedContent = clientPositionPlusContent.Scan(new Dictionary<PlusCode, ITileContent>(), (buffer, val) =>
+            {
+                //Remove values far away:
+                var currentClientLocation = val.position;
+                var farAway = from key in buffer.Keys
+                              where PlusCodeUtils.GetChebyshevDistance(key, currentClientLocation) > 50
+                              select key;
+
+
+                farAway.ToList().ForEach(v => buffer.Remove(v));
+
+                if (val.content.VisibleContent == null)
+                    return buffer;
+                return buffer.Concat(val.content.VisibleContent).GroupBy(v => v.Key).ToDictionary(v => v.Key, v => v.First().Value);
+            });
+
+
+            return MapBufferChanged(receivedLarge, latestClient, bufferedContent)
                 .Subscribe(v => eventBus.Publish(new ClientMapBufferChanged(v)));
         }
 
@@ -36,42 +85,35 @@ namespace DataModel.Client
 
 
 
-        IObservable<IList<MiniTile>> MapBufferChanged(IObservable<IList<MiniTile>> observable1, IObservable<MiniTile> observable2, IObservable<PlusCode> location)
-        => Accumulated(observable1, location);
+        IObservable<IList<MiniTile>> MapBufferChanged(IObservable<IList<MiniTile>> observable1, IObservable<PlusCode> location, IObservable<Dictionary<PlusCode, ITileContent>> content)
+        => Accumulated(observable1, location, content);
 
-        IObservable<IList<MiniTile>> BufferMiniTiles(IObservable<MiniTile> observable) => observable.Buffer(TimeSpan.FromSeconds(2));
+        IObservable<IList<MiniTile>> BufferMiniTiles(IObservable<MiniTile> observable) => observable.Buffer(TimeSpan.FromSeconds(1));
 
 
-        IObservable<IList<MiniTile>> Accumulated(IObservable<IList<MiniTile>> bufferedMiniTileStream, IObservable<PlusCode> location)
+        IObservable<IList<MiniTile>> Accumulated(IObservable<IList<MiniTile>> bufferedMiniTileStream, IObservable<PlusCode> location, IObservable<Dictionary<PlusCode, ITileContent>> content)
         {
-            var output = bufferedMiniTileStream.WithLatestFrom(location, (tiles, code) => new { tiles, code }).Scan(new List<MiniTile>(), (list, l1) =>
+            var output = location
+                .WithLatestFrom(bufferedMiniTileStream, (code, tiles) => new { code, tiles })
+                .WithLatestFrom(content, (locbuf, tcontent) => new { locbuf, tcontent })
+                .Scan(new List<MiniTile>(), (list, l1) =>
             {
+                list = TileGenerator.RegenerateArea(l1.locbuf.code, list, l1.locbuf.tiles, 40);
 
-                list = TileGenerator.RegenerateArea(l1.code,list, l1.tiles, 40);
-
+                l1.tcontent.Keys.ToList().ForEach(v =>
+                {
+                    var tile = TileUtility.GetMiniTile(v, list);
+                    ITileContent getOutDict;
+                    l1.tcontent.TryGetValue(v, out getOutDict);
+                    var contentToAdd = new List<ITileContent>() { getOutDict };
+                    tile.Content = contentToAdd;
+                });
                 return list;
             });
-            return output;
-            
+            return output.DistinctUntilChanged();
+
 
         }
-
-
-
-
-        IObservable<Tile> LargeTileUpdate(IObservable<DataSourceEvent> observable) => from e in observable
-                                                                                      select JsonConvert.DeserializeObject<Tile>(e.Data);
-
-        IObservable<MiniTile> AsMiniTiles(IObservable<Tile> observable) => from e in observable
-                                                                           from v in e.MiniTiles
-                                                                           select v;
-
-
-        IObservable<MiniTileUpdate> MiniTileUpdate(IObservable<DataSourceEvent> observable) => from e in observable
-                                                                                               select JsonConvert.DeserializeObject<MiniTileUpdate>(e.Data);
-
-        IObservable<MiniTile> SmallUpdate(IObservable<MiniTileUpdate> observable) => from e in observable
-                                                                                     select e.UpdatedTile;
 
 
 

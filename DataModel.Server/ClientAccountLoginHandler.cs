@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Reactive.Linq;
 using Newtonsoft.Json;
+using DotNetty.Transport.Channels;
 
 namespace DataModel.Server
 {
@@ -13,14 +14,20 @@ namespace DataModel.Server
     {
         readonly IEventBus eventBus;
         readonly ILiteDatabase dataBase;
+        readonly IEventBus serverBus;
+
+        readonly IChannel channel;
+
         readonly JsonSerializerSettings settings = new JsonSerializerSettings
         {
             TypeNameHandling = TypeNameHandling.All
         };
-        public ClientAccountLoginHandler(IEventBus bus, ILiteDatabase database)
+        public ClientAccountLoginHandler(IEventBus bus, ILiteDatabase database, IEventBus serverBus, IChannel channel)
         {
             eventBus = bus;
             dataBase = database;
+            this.channel = channel;
+            this.serverBus = serverBus;
         }
 
 
@@ -63,7 +70,15 @@ namespace DataModel.Server
                         var serialized = JsonConvert.SerializeObject(obj, typeof(UserActionSuccessEvent), settings);
                         eventBus.Publish(new DataSinkEvent(serialized));
 
-                        //TODO:Add handlers for GPS + Gamelogic here?
+                        var player = new ObservablePlayer()
+                        {
+                            ClientBus = eventBus,
+                            Name = user.UserName,
+                            CurrentPosition = ServerFunctions.ExtractPlusCodeLocationStream(eventBus, 10),
+                            ClientChannel = channel
+                        };
+
+                        serverBus.Publish(new PlayerLoggedInEvent() { Player = player });
                     }
                     else
                     {

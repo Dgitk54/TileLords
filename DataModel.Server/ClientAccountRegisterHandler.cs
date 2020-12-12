@@ -60,7 +60,6 @@ namespace DataModel.Server
                        var success = new UserActionSuccessEvent() { UserAction = 1 };
                        var obj = JsonConvert.SerializeObject(success, typeof(UserActionSuccessEvent), settings);
                        eventBus.Publish(new DataSinkEvent(obj));
-
                    }
                    else
                    {

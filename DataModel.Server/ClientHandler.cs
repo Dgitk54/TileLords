@@ -27,23 +27,27 @@ namespace DataModel.Server
         readonly IEventBus serverBus; // eventbus for serverwide messages
         readonly IEventBus clientBus; // eventbus for clientwide messages
 
-        readonly ClientChunkupdateHandler gpsClientLocationHandler;
+        readonly ClientChunkUpdateHandler gpsClientLocationHandler;
         readonly ClientAccountRegisterHandler registerHandler;
-        readonly ClientAccountLoginHandler loginHandler;
+        readonly ILiteDatabase database;
+
 
         public ClientHandler(IEventBus serverBus, ILiteDatabase dataBase)
         {
+            database = dataBase;
             this.serverBus = serverBus;
             clientBus = new ClientEventBus();
-            gpsClientLocationHandler = new ClientChunkupdateHandler(clientBus, dataBase);
+
+
+            gpsClientLocationHandler = new ClientChunkUpdateHandler(clientBus, dataBase);
             registerHandler = new ClientAccountRegisterHandler(clientBus, dataBase, serverBus);
-            loginHandler = new ClientAccountLoginHandler(clientBus, dataBase);
-           
+            
         }
 
         public override void ChannelActive(IChannelHandlerContext ctx)
         {
-            serverBus.Publish(new ClientConnectedEvent(ctx.Name));
+            var loginHandler = new ClientAccountLoginHandler(clientBus, database, serverBus, ctx.Channel);
+            serverBus.Publish(new ServerClientConnectedEvent() { Channel = ctx.Channel });
             disposables.Add(ServerFunctions.EventStreamSink(clientBus.GetEventStream<DataSinkEvent>(), ctx));
             disposables.Add(jsonClientSource.Subscribe(v => clientBus.Publish(new DataSourceEvent(v))));
             disposables.Add(gpsClientLocationHandler.AttachToBus());
@@ -59,15 +63,14 @@ namespace DataModel.Server
             {
                 Console.WriteLine("Received from client: " + byteBuffer.ToString(Encoding.UTF8));
                 jsonClientSource.OnNext(byteBuffer.ToString(Encoding.UTF8));
-
             }
-
         }
 
         // The Channel is closed hence the connection is closed
         public override void ChannelInactive(IChannelHandlerContext ctx)
         {
-            serverBus.Publish(new ClientDisconnectedEvent(ctx.Name));
+            serverBus.Publish(new ServerClientDisconnectedEvent() { Channel = ctx.Channel});
+
             disposables.ForEach(v => v.Dispose());
             Console.WriteLine("Cleaned up ClientHandler");
         }

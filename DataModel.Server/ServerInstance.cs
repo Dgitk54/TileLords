@@ -18,8 +18,7 @@ namespace DataModel.Server
         readonly ILiteDatabase db = new LiteDatabase(@"MyData.db");
         public ServerInstance()
         {
-            ServerFunctions.DebugEventToConsoleSink(bus.GetEventStream<ClientConnectedEvent>());
-            ServerFunctions.DebugEventToConsoleSink(bus.GetEventStream<ClientDisconnectedEvent>());
+            ServerFunctions.DebugEventToConsoleSink(bus.GetEventStream<IEvent>());
             
         }
         public async Task RunServerAsync()

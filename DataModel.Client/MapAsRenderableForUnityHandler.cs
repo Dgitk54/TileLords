@@ -16,22 +16,23 @@ namespace DataModel.Client
         }
         public IDisposable AttachToBus()
         {
-            var mapChangedStream = TransformToRenderable(eventBus.GetEventStream<MapForUnityChanged>());
-            return mapChangedStream.Subscribe(v => eventBus.Publish(v));
+            var latestClientLocation = ClientFunctions.LatestClientLocation(eventBus.GetEventStream<UserGpsEvent>());
+            var latestBuffer = eventBus.GetEventStream<ClientMapBufferChanged>();
+
+
+            return latestClientLocation.WithLatestFrom(latestBuffer, (loc, buffer) => new { loc, buffer })
+                                       .Subscribe(v => 
+                                       {
+                                           var neighbors = v.loc.Neighbors(10);
+                                           var dict = new Dictionary<PlusCode, MiniTile>();
+
+                                           neighbors.ForEach(c => dict.Add(c, c.GetMiniTile(v.buffer.TilesToRenderForUnity)));
+
+                                           var map = new MapAsRenderAbleChanged() { Location = v.loc, Map = dict };
+                                           eventBus.Publish(map);
+                                       });
         }
 
-        IObservable<MapAsRenderAbleChanged> TransformToRenderable(IObservable<MapForUnityChanged> observable) => from e in observable
-                                                                                                                 select TransformToRenderable(e);
-
-
-        MapAsRenderAbleChanged TransformToRenderable(MapForUnityChanged map)
-        {
-            var neighbors = map.ClientLocation.Neighbors(10);
-            var dict = new Dictionary<PlusCode, MiniTile>();
-
-            neighbors.ForEach(v => dict.Add(v, v.GetMiniTile(map.MiniTiles)));
-            return new MapAsRenderAbleChanged() { Location = map.ClientLocation, Map = dict };
-
-        }
+        
     }
 }
