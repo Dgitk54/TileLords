@@ -21,6 +21,9 @@ namespace DataModel.Common
         public MiniTile(PlusCode c, MiniTileType t, List<ITileContent> con) => (MiniTileId, TileType, Content) = (c, t, con);
 
         public MiniTile() { }
-        public override string ToString() { return "MiniTile:" + MiniTileId.Code; }
+        public override string ToString() {
+            WorldObject wobj = (WorldObject) Content[0];
+            return "MiniTile:" + MiniTileId.Code + " TileType: " + TileType + " WorldObject: " + wobj.Type; 
+        }
     }
 }

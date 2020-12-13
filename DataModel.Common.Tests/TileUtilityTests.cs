@@ -14,12 +14,14 @@ namespace DataModel.Common.Tests
 
         List<int> tileTypeList;
         List<int> miniTileTypeList;
+        List<int> worldObjectTypeList;
 
         [SetUp]
         public void SetUp()
         {
             tileTypeList = new List<int>() { 0, 1, 2, 3, 4, 5, 6, 7 };
             miniTileTypeList = new List<int>() { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
+            worldObjectTypeList = new List<int>() { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
         }
         [Test]
         public void GivenTileSectionTheChebyshevDistanceReturnsProperAmount()
@@ -66,7 +68,7 @@ namespace DataModel.Common.Tests
         public void TestGetTileByMiniTileList()
         {
 
-            List<MiniTile> miniTileList = TileGenerator.GenerateMiniTiles(new PlusCode("9F4MGC94+", 8), miniTileTypeList);
+            List<MiniTile> miniTileList = TileGenerator.GenerateMiniTiles(new PlusCode("9F4MGC94+", 8), miniTileTypeList, worldObjectTypeList);
             MiniTile miniTile = TileUtility.GetMiniTile(new PlusCode("9F4MGC94+MC", 10), miniTileList);
             Assert.AreEqual("9F4MGC94+MC", miniTile.MiniTileId.Code);
             MiniTile miniTile2 = TileUtility.GetMiniTile(new PlusCode("9F4MGC94+X2", 10), miniTileList);
@@ -192,8 +194,8 @@ namespace DataModel.Common.Tests
 
         public void TestRegenerateArea()
         {
-            List<MiniTile> miniTileList = TileGenerator.GenerateMiniTiles(new PlusCode("9F4MGC94+", 8), miniTileTypeList);
-            List<MiniTile> miniTileList2 = TileGenerator.GenerateMiniTiles(new PlusCode("9F4MGC94+", 8), miniTileTypeList);
+            List<MiniTile> miniTileList = TileGenerator.GenerateMiniTiles(new PlusCode("9F4MGC94+", 8), miniTileTypeList, worldObjectTypeList);
+            List<MiniTile> miniTileList2 = TileGenerator.GenerateMiniTiles(new PlusCode("9F4MGC94+", 8), miniTileTypeList, worldObjectTypeList);
             List<MiniTile> newList = TileGenerator.RegenerateArea(new PlusCode("9F4MGC94+X2", 10), miniTileList, miniTileList2, 10);
             Debug.WriteLine(newList.Count);
             foreach (MiniTile m in newList)

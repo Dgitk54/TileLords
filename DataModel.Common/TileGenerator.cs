@@ -14,7 +14,7 @@ namespace DataModel.Common
         /// </summary>
         /// <param name="tileCode">The Pluscode of the parent Tile</param>
         /// <returns>The MiniTile list</returns>
-        public static List<MiniTile> GenerateMiniTiles(PlusCode tileCode, List<int> miniTileTypeList)
+        public static List<MiniTile> GenerateMiniTiles(PlusCode tileCode, List<int> miniTileTypeList, List<int> worldObjectTypeList)
         {
             string code = tileCode.Code;
             if(code.Length > 9)
@@ -25,8 +25,10 @@ namespace DataModel.Common
             {
                 code += "+";
             }
+          
+            
             var tiles = from miniTileCodeString in LocationCodeTileUtility.GetAndCombineWithAllAfterPlus(code)
-                        select new MiniTile(new PlusCode(miniTileCodeString, 10), getRandomMiniTileType(miniTileTypeList), new List<ITileContent>());
+                        select new MiniTile(new PlusCode(miniTileCodeString, 10), getRandomMiniTileType(miniTileTypeList), new List<ITileContent>() { new WorldObject(getRandomWorldObject(worldObjectTypeList)) });
 
             return tiles.ToList();
 
@@ -105,9 +107,9 @@ namespace DataModel.Common
         /// </summary>
         /// <param name="code">The Pluscode of the Tile</param>
         /// <returns>The Tile</returns>
-        public static Tile GenerateTile(PlusCode code, List<int> tileTypeList, List<int> miniTileTypeList)
+        public static Tile GenerateTile(PlusCode code, List<int> tileTypeList, List<int> miniTileTypeList, List<int> worldObjectTypeList)
         {
-            return new Tile(code, getRandomTileType(tileTypeList), GenerateMiniTiles(code, miniTileTypeList));
+            return new Tile(code, getRandomTileType(tileTypeList), GenerateMiniTiles(code, miniTileTypeList, worldObjectTypeList));
         }
 
         /// <summary>
@@ -124,7 +126,7 @@ namespace DataModel.Common
                 c = c.Substring(0, 8);
             }
             var tiles = from miniTileCodeString in LocationCodeTileUtility.GetTileSection(c, radius, 8)
-                        select GenerateTile(new PlusCode(miniTileCodeString, 8), tileTypeList, miniTileTypeList);
+                        select GenerateTile(new PlusCode(miniTileCodeString, 8), tileTypeList, miniTileTypeList, null);
             return tiles.ToList();
         }
 
@@ -137,8 +139,22 @@ namespace DataModel.Common
             }
             List<int> tileTypeList = new List<int>() { 0,1,2,3,4,5,6,7};
             List<int> miniTileTypeList = new List<int>() { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
+            List<int> worldObjectTypeList = new List<int>();
+            
+            //@@@@@@@@@@@@@@@@@@
+            //somewhat useless code that adds index for each worldObjectType to a list to select one at random (adding empty object many times to balance it), should be adjusted for a real generator to only use the index of relevant worldObjects
+            //@@@@@@@@@@@@@@@@@@
+            for(int i = 0; i < Enum.GetNames(typeof(WorldObjectType)).Length; i++)
+            {
+                worldObjectTypeList.Add(i);
+            }
+            for (int i = 0; i < 60; i++)
+            {
+                worldObjectTypeList.Add(0);
+            }
+
             var tiles = from miniTileCodeString in LocationCodeTileUtility.GetTileSection(c, radius, 8)
-                        select GenerateTile(new PlusCode(miniTileCodeString, 8), tileTypeList, miniTileTypeList);
+                        select GenerateTile(new PlusCode(miniTileCodeString, 8), tileTypeList, miniTileTypeList, worldObjectTypeList);
             return tiles.ToList();
         }
 
@@ -157,6 +173,16 @@ namespace DataModel.Common
 
 
             return (TileType)tileTypeList[i];
+
+        }
+
+        public static WorldObjectType getRandomWorldObject(List<int> worldObjectTypeList)
+        {
+            Random r = new Random();
+            int i = r.Next(0, worldObjectTypeList.Count);
+
+
+            return (WorldObjectType)worldObjectTypeList[i];
 
         }
 

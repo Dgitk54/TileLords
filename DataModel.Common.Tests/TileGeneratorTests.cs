@@ -49,6 +49,24 @@ namespace DataModel.Common.Tests
 
 
         }
+        [Test]
+        public void PrintGeneratedAreaWithoutSpecifyingTypes()
+        {
+
+       
+            TileGenerator.GenerateArea(new PlusCode("8FX9WWV9+PR", 8), 1).ForEach(v =>
+            {
+                Debug.WriteLine(v.ToString() + "CONTENTS: \n ");
+                v.MiniTiles.ForEach(v2 =>
+                {
+                    Debug.WriteLine(v2.ToString());
+
+
+                });
+            });
+
+
+        }
 
 
         [Test]
@@ -115,17 +133,27 @@ namespace DataModel.Common.Tests
         {
             
             List<int> miniTileTypeGen = new List<int>() { 0, 1, 2, 3, 3, 3, 3 };
-            List<MiniTile> miniTileList = TileGenerator.GenerateMiniTiles(new PlusCode("8FX9XW2F",8), miniTileTypeGen);
-         
+            List<int> worldObjectTypeList = new List<int>() { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
+            List<MiniTile> miniTileList = TileGenerator.GenerateMiniTiles(new PlusCode("8FX9XW2F",8), miniTileTypeGen, worldObjectTypeList);
+           
             Assert.AreEqual(400, miniTileList.Count);
-            Debug.WriteLine(miniTileList[10].MiniTileId.Code);
 
+        
+
+            for (int i = 0; i < 10; i++)
+            {
+                WorldObject obj = (WorldObject)miniTileList[i].Content[0];
+                String objTypeName = obj.Type + "";
+                Debug.WriteLine(miniTileList[i].MiniTileId.Code + " " + miniTileList[i].TileType + " " + objTypeName);
+            }
             Assert.AreEqual("8FX9XW2F+X2", miniTileList[0].MiniTileId.Code);
             Assert.AreEqual("8FX9XW2F+X3", miniTileList[1].MiniTileId.Code);
             Assert.AreEqual("8FX9XW2F+XX", miniTileList[19].MiniTileId.Code);
             Assert.AreEqual("8FX9XW2F+W2", miniTileList[20].MiniTileId.Code);
             Assert.AreEqual("8FX9XW2F+W3", miniTileList[21].MiniTileId.Code);
             Assert.AreEqual("8FX9XW2F+2X", miniTileList[399].MiniTileId.Code);
+
+            
         }
 
 
