@@ -37,6 +37,7 @@ namespace DataModel.Client
         };
 
         readonly CancellationTokenSource cancelTokenSource = new CancellationTokenSource();
+        private static readonly AutoResetEvent closingEvent = new AutoResetEvent(false);
         private readonly IEventBus eventBus;
         public ClientInstance(IEventBus bus)
         {
@@ -50,26 +51,34 @@ namespace DataModel.Client
 
         public void SendFlawedData() => eventBus.Publish(new DataSinkEvent("TEST123ää²³"));
 
+        
+
         public void SendRegisterRequest(string username, string password)
         {
             var e = new UserRegisterEvent() { Name = username, Password = password };
-            var debugRegisterEvent = new DataSinkEvent(JsonConvert.SerializeObject(e, typeof(UserRegisterEvent), settings));
-
-            eventBus.Publish(debugRegisterEvent);
+            SendTyped(e);
         }
+
         public void SendLoginRequest(string username, string password)
         {
 
             var e = new UserLoginEvent() { Name = username, Password = password };
-            var debugRegisterEvent = new DataSinkEvent(JsonConvert.SerializeObject(e, typeof(UserLoginEvent), settings));
+            SendTyped(e);
+        }
 
-            eventBus.Publish(debugRegisterEvent);
+        public void SendTyped<T>(T data)
+        {
+            var toSend = new DataSinkEvent(JsonConvert.SerializeObject(data, typeof(T), settings));
+            eventBus.Publish(toSend);
+
         }
 
         public void DisconnectClient()
         {
-            cancelTokenSource.Cancel();
             ServerHandler.ShutDown();
+            closingEvent.Set();
+            if(BootstrapChannel != null)
+                BootstrapChannel.CloseAsync();
         }
 
 
@@ -100,9 +109,7 @@ namespace DataModel.Client
                     }));
 
                 BootstrapChannel = await Bootstrap.ConnectAsync(new IPEndPoint(serverIP, serverPort));
-
-                Console.ReadLine();
-
+                closingEvent.WaitOne();
             }
             finally
             {

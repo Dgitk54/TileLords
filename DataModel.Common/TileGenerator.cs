@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -44,32 +45,90 @@ namespace DataModel.Common
 
     
             List<string> allNewPlusCodes = LocationCodeTileUtility.GetTileSection(miniTileCode.Code, radius, miniTileCode.Precision);
-            List<MiniTile> oldArea = new List<MiniTile>();
-            List<MiniTile> newArea = new List<MiniTile>();
-            List<MiniTile> miniTileToAdd = new List<MiniTile>();
-   
-            foreach (MiniTile currentMiniTile in currentTiles)
+
+
+           
+
+            var oldArea = new ConcurrentBag<MiniTile>();
+            var newArea = new ConcurrentBag<MiniTile>();
+            var miniTileToAdd = new ConcurrentBag<MiniTile>();
+
+            currentTiles.AsParallel().ForAll(v =>
             {
-                foreach(string s in allNewPlusCodes)
-                {
-                    if (currentMiniTile.MiniTileId.Code.Equals(s))
-                    {
-                        oldArea.Add(currentMiniTile);
-                    }
-                }
-            }
-        
-            foreach (MiniTile newMiniTiles in newTiles)
+                allNewPlusCodes.AsParallel()
+                .Where(e => v.MiniTileId.Code.Equals(e))
+                .ForAll(e => oldArea.Add(v));
+
+            });
+
+            newTiles.AsParallel().ForAll(v =>
             {
-                foreach (string s in allNewPlusCodes)
+                allNewPlusCodes.AsParallel()
+                .Where(e => v.MiniTileId.Code.Equals(e))
+                .ForAll(e => newArea.Add(v));
+            });
+
+            oldArea.AsParallel()
+                .ForAll(oldTile =>
                 {
-                    if (newMiniTiles.MiniTileId.Code.Equals(s))
+                    bool allowedToAdd = false;
+
+                    foreach (MiniTile newA in newArea)
                     {
-                        newArea.Add(newMiniTiles);
+                        if (oldTile.MiniTileId.Code.Equals(newA.MiniTileId.Code))
+                        {
+                            allowedToAdd = false;
+                            break;
+                        }
+                        else
+                        {
+                            allowedToAdd = true;
+                        }
                     }
-                }
-            }
-       
+
+                    if (allowedToAdd)
+                    {
+                        miniTileToAdd.Add(oldTile);
+                    }
+
+                });
+
+            var toReturn = newArea.ToList();
+            toReturn.AddRange(miniTileToAdd.ToList());
+            return toReturn;
+
+            /*
+
+                List<MiniTile> oldArea = new List<MiniTile>();
+                List<MiniTile> newArea = new List<MiniTile>();
+                List<MiniTile> miniTileToAdd = new List<MiniTile>();
+
+               foreach (MiniTile currentMiniTile in currentTiles)
+               {
+                   foreach(string s in allNewPlusCodes)
+                   {
+                       if (currentMiniTile.MiniTileId.Code.Equals(s))
+                       {
+                           oldArea.Add(currentMiniTile);
+                       }
+                   }
+               }
+            
+            
+            
+            
+            
+               foreach (MiniTile newMiniTiles in newTiles)
+               {
+                   foreach (string s in allNewPlusCodes)
+                   {
+                       if (newMiniTiles.MiniTileId.Code.Equals(s))
+                       {
+                           newArea.Add(newMiniTiles);
+                       }
+                   }
+               }
+
             foreach (MiniTile old in oldArea)
             {
                 bool allowedToAdd = false;
@@ -93,12 +152,18 @@ namespace DataModel.Common
                 }
             }
 
-            foreach (MiniTile add in miniTileToAdd) 
+            foreach (MiniTile add in miniTileToAdd)
             {
                 newArea.Add(add);
             }
-      
-            return newArea;
+
+            return newArea.ToList();
+
+            */
+
+
+
+
         }
 
 

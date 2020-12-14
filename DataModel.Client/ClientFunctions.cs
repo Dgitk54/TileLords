@@ -30,7 +30,8 @@ namespace DataModel.Client
         public static IDisposable DebugEventToConsoleSink<T>(IObservable<T> events) where T : IEvent
             => events.Subscribe(v => Console.WriteLine("Event occured:" + v.ToString()));
 
-        
+        public static IDisposable DebugEventsToDebugSink<T>(IObservable<T> events) where T : IEvent
+            => events.Subscribe(v => Debug.WriteLine("Event:" + v.ToString()));
 
         public static IObservable<PlusCode> LatestClientLocation(IObservable<UserGpsEvent> observable) => from e in observable
                                                                                                                    select DataModelFunctions.GetPlusCode(e.GpsData, 10);

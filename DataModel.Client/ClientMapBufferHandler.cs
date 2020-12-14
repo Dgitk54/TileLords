@@ -16,12 +16,12 @@ namespace DataModel.Client
 
         public IDisposable AttachToBus()
         {
-
+           
             //Tiles
             var onlyValid = eventBus.GetEventStream<DataSourceEvent>()
                                     .ParseOnlyValidUsingErrorHandler<ServerMapEvent>(ClientFunctions.PrintConsoleErrorHandler);
 
-
+            
 
 
             var allTiles = from e in onlyValid
@@ -88,19 +88,19 @@ namespace DataModel.Client
         IObservable<IList<MiniTile>> MapBufferChanged(IObservable<IList<MiniTile>> observable1, IObservable<PlusCode> location, IObservable<Dictionary<PlusCode, ITileContent>> content)
         => Accumulated(observable1, location, content);
 
-        IObservable<IList<MiniTile>> BufferMiniTiles(IObservable<MiniTile> observable) => observable.Buffer(TimeSpan.FromSeconds(1));
+        IObservable<IList<MiniTile>> BufferMiniTiles(IObservable<MiniTile> observable) => observable.Buffer(TimeSpan.FromSeconds(2));
 
 
         IObservable<IList<MiniTile>> Accumulated(IObservable<IList<MiniTile>> bufferedMiniTileStream, IObservable<PlusCode> location, IObservable<Dictionary<PlusCode, ITileContent>> content)
         {
             var output = bufferedMiniTileStream
-                .WithLatestFrom(location, (tiles, code) => new { tiles, code})
-                .WithLatestFrom(content, (locbuf, tcontent) => new { locbuf, tcontent })
+                .CombineLatest(location, (tiles, code) => new { tiles, code})
+                .CombineLatest(content, (locbuf, tcontent) => new { locbuf, tcontent })
                 .Scan(new List<MiniTile>(), (list, l1) =>
             {
                 list = TileGenerator.RegenerateArea(l1.locbuf.code, list, l1.locbuf.tiles, 40);
 
-                l1.tcontent.Keys.ToList().ForEach(v =>
+                l1.tcontent.Keys.ToList().AsParallel().ForAll(v =>
                 {
                     var tile = TileUtility.GetMiniTile(v, list);
                     ITileContent getOutDict;

@@ -5,6 +5,9 @@ using NUnit.Framework;
 using System.Threading.Tasks;
 using System.Reactive.Linq;
 using System;
+using System.Threading;
+using System.Reactive.Concurrency;
+using System.Collections.Generic;
 
 namespace ClientIntegration
 {
@@ -18,36 +21,45 @@ namespace ClientIntegration
         {
             var bus = new ClientEventBus();
             var instance = new ClientInstance(bus);
+            var observeOn = Scheduler.CurrentThread;
+            //.ObserveOn(observeOn)
+            ClientFunctions.DebugEventsToDebugSink(instance.EventBus.GetEventStream<IEvent>());
 
-            var waitForConnection = Task<ClientConnectedEvent>.Factory.StartNew(() =>
+
+            var waitForConnection = Task.Run(() =>
             {
                 ClientConnectedEvent result = bus.GetEventStream<ClientConnectedEvent>().Take(1)
                             .Timeout(DateTime.Now.AddSeconds(5)).Wait();
                 return result;
             });
+            Thread.Sleep(300);
+            var startClient = Task.Run(instance.RunClientAsync);
 
-
-            var startServer = Task.Factory.StartNew(() => instance.RunClientAsync());
             await waitForConnection;
-            await startServer;
             
+
+
             Assert.IsTrue(waitForConnection.Result != null);
-            
-            return (bus, instance, startServer);
+            ;
+            return (bus, instance, startClient);
         }
+
 
         static async Task GetsEvent<T, T2>(ClientInstance instance, T2 input, int timeOutInSeconds) where T : IEvent where T2 : IEvent
         {
+            var observeOn = Scheduler.CurrentThread;
 
-            var received = Task<T>.Factory.StartNew(() =>
+            var received = Task.Run(() =>
             {
-                var result = instance.EventBus.GetEventStream<T>().Take(1).Wait();
+                var result = instance.EventBus.GetEventStream<T>().Take(1).Timeout(DateTime.Now.AddSeconds(timeOutInSeconds)).ObserveOn(observeOn).Wait();
                 return result;
             });
-
-            var send = Task.Factory.StartNew(() => { instance.EventBus.Publish(input); } );
-
-            Task.WaitAll(received, send);
+            Thread.Sleep(200);
+            
+            var publish = Task.Run(() => instance.SendTyped(input)); 
+            await received;
+            await publish;
+            ;
             Assert.IsTrue(received.Result != null);
         }
 
@@ -57,18 +69,16 @@ namespace ClientIntegration
         {
             server = new ServerInstance();
             serverRunning = server.RunServerAsync();
-
-
+            Thread.Sleep(100);
         }
 
         [Test]
         public void CanConnect()
         {
+            
             var result = StartClient();
-            result.Wait();
             var instance = result.Result.Item2;
             instance.DisconnectClient();
-            result.Result.Item3.Dispose();
         }
 
 
@@ -76,31 +86,44 @@ namespace ClientIntegration
         public void GetsNegativeResponseToRegisterAccount()
         {
             var result = StartClient();
+            result.Wait();
             var instance = result.Result.Item2;
-            var bus = result.Result.Item1;
-            var testLogin = GetsEvent<UserActionErrorEvent, UserRegisterEvent>(instance, new UserRegisterEvent() { Name = "a", Password = "a" }, 5);
+            GetsEvent<UserActionErrorEvent, UserRegisterEvent>(instance, new UserRegisterEvent() { Name = "a", Password = "a" }, 5).Wait();
+            instance.DisconnectClient();
+        }
+
+        [Test]
+        public void GetsMapBufferChangeAfterGPS()
+        {
+            var result = StartClient();
+            
+
+            result.Wait();
+            ;
+            var instance = result.Result.Item2;
+           
+            GetsEvent<ClientMapBufferChanged, UserGpsEvent>(instance, new UserGpsEvent(new GPS(49.000000, 7.900000)), 5).Wait();
 
             instance.DisconnectClient();
-
-
         }
 
 
+
+
         [Test]
-        public void GetsMapResponseToGpsSend()
+        public void GetsMapResponseToGpsSendAfterLogin()
         {
             var result = StartClient();
 
             result.Wait();
             var instance = result.Result.Item2;
-            var bus = result.Result.Item1;
+
 
             GetsEvent<UserActionSuccessEvent, UserLoginEvent>(instance, new UserLoginEvent() { Name = "a", Password = "a" }, 10).Wait();
-            GetsEvent<MapAsRenderAbleChanged, UserGpsEvent>(instance, new UserGpsEvent(new GPS(49.000, 30.000)), 10).Wait();
+            GetsEvent<MapAsRenderAbleChanged, UserGpsEvent>(instance, new UserGpsEvent(new GPS(49.000000, 7.900000)), 20).Wait();
 
 
             instance.DisconnectClient();
-            result.Result.Item3.Dispose();
         }
 
 
