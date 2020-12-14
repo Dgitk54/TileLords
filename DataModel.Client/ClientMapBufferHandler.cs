@@ -94,8 +94,8 @@ namespace DataModel.Client
         IObservable<IList<MiniTile>> Accumulated(IObservable<IList<MiniTile>> bufferedMiniTileStream, IObservable<PlusCode> location, IObservable<Dictionary<PlusCode, ITileContent>> content)
         {
             var output = bufferedMiniTileStream
-                .CombineLatest(location, (tiles, code) => new { tiles, code})
-                .CombineLatest(content, (locbuf, tcontent) => new { locbuf, tcontent })
+                .WithLatestFrom(location, (tiles, code) => new { tiles, code})
+                .WithLatestFrom(content, (locbuf, tcontent) => new { locbuf, tcontent })
                 .Scan(new List<MiniTile>(), (list, l1) =>
             {
                 list = TileGenerator.RegenerateArea(l1.locbuf.code, list, l1.locbuf.tiles, 40);

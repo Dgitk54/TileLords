@@ -62,7 +62,22 @@ namespace ClientIntegration
             ;
             Assert.IsTrue(received.Result != null);
         }
-
+        static void SendDebugGps(ClientInstance instance, CancellationToken ct)
+        {
+            
+            var start = new GPS(49.000000, 7.900000);
+            double step = 0.000150;
+            var list = DataModelFunctions.GPSNodesWithOffsets(start, step, step, 60);
+            
+            for(int i = 0; i<5; i++)
+            {
+                instance.SendDebugGPS(list[i]);
+                Thread.Sleep(1000);
+                if (ct.IsCancellationRequested)
+                 break;
+            }
+            
+        }
 
         [SetUp]
         public void StartServer()
@@ -101,9 +116,12 @@ namespace ClientIntegration
             result.Wait();
             ;
             var instance = result.Result.Item2;
-           
-            GetsEvent<ClientMapBufferChanged, UserGpsEvent>(instance, new UserGpsEvent(new GPS(49.000000, 7.900000)), 5).Wait();
+            CancellationTokenSource tokenSrc = new CancellationTokenSource();
 
+            var cleanUp = Task.Run(() => SendDebugGps(instance, tokenSrc.Token), tokenSrc.Token);
+            GetsEvent<ClientMapBufferChanged, UserGpsEvent>(instance, new UserGpsEvent(new GPS(49.000000, 7.900000)), 10).Wait();
+            tokenSrc.Cancel();
+            cleanUp.Wait();
             instance.DisconnectClient();
         }
 
