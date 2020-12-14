@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-
+using System.Reactive.Linq;
 namespace DataModel.Common
 {
 
@@ -22,8 +22,19 @@ namespace DataModel.Common
 
         public MiniTile() { }
         public override string ToString() {
-            WorldObject wobj = (WorldObject) Content[0];
-            return "MiniTile:" + MiniTileId.Code + " TileType: " + TileType + " WorldObject: " + wobj.Type; 
+
+
+            if (Content != null)
+            {
+                var ret = "MiniTile:" + MiniTileId.Code + " TileType: " + TileType + " WorldObject: ";
+                foreach (ITileContent content in Content)
+                {
+                    ret = ret + " " + content;
+                }
+                return ret;
+
+            }
+            return "MiniTile:" + MiniTileId.Code + " TileType: " + TileType; 
         }
     }
 }

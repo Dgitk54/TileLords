@@ -23,6 +23,7 @@ namespace DataModel.Client
             Debug.WriteLine("CLIENT PUSHING: DATA" + asByteMessage.GetLength(0));
             context.WriteAndFlushAsync(Unpooled.WrappedBuffer(asByteMessage));
         },
+
          e => Debug.WriteLine("Error occured writing" + objStream),
          () => Debug.WriteLine("StreamSink Write Sequence Completed"));
 

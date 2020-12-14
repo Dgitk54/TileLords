@@ -28,7 +28,7 @@ namespace DataModel.Client
                 }
             }
 
-            return "MapAsRenderAbleChanged, has null values:" + nullcount + "    NONNULL:" + nonnull;
+            return "MapAsRenderAbleChanged "  + "NONNULL:" + nonnull;
         }
     }
 }

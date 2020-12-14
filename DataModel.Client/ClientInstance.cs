@@ -101,7 +101,7 @@ namespace DataModel.Client
 
                 BootstrapChannel = await Bootstrap.ConnectAsync(new IPEndPoint(serverIP, serverPort));
 
-
+                Console.ReadLine();
 
             }
             finally

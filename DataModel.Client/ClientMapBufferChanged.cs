@@ -10,5 +10,10 @@ namespace DataModel.Client
         public IList<MiniTile> TilesToRenderForUnity { get; set; }
         public ClientMapBufferChanged(IList<MiniTile> tiles) => TilesToRenderForUnity = tiles;
 
+        public override string ToString()
+        {
+            return base.ToString() + "Buffercount: " + TilesToRenderForUnity.Count;
+        }
+
     }
 }

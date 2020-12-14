@@ -178,7 +178,11 @@ namespace DataModel.Common
 
         public static WorldObjectType getRandomWorldObject(List<int> worldObjectTypeList)
         {
+            if (worldObjectTypeList == null)
+                return WorldObjectType.Empty;
+
             Random r = new Random();
+            
             int i = r.Next(0, worldObjectTypeList.Count);
 
 

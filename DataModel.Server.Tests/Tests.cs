@@ -18,8 +18,8 @@ namespace ClientIntegration
             var code = new PlusCode("8FX9WWV9+", 8);
             var outcome = ServerFunctions.NeighborsIn8(code);
 
-            Assert.IsTrue(outcome.Count == 8);
-            Assert.IsFalse(outcome.Contains(code));
+            Assert.IsTrue(outcome.Count == 9);
+            Assert.IsTrue(outcome.Contains(code));
         }
     }
 }
