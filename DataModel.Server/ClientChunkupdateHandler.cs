@@ -16,15 +16,13 @@ namespace DataModel.Server
     public class ClientChunkUpdateHandler
     {
         readonly IEventBus cEventBus;
-        readonly ILiteDatabase dataBase;
         readonly JsonSerializerSettings settings = new JsonSerializerSettings
         {
             TypeNameHandling = TypeNameHandling.None
         };
-        public ClientChunkUpdateHandler(IEventBus clientBus, ILiteDatabase db)
+        public ClientChunkUpdateHandler(IEventBus clientBus)
         {
             cEventBus = clientBus;
-            dataBase = db;
         }
         public IDisposable AttachToBus()
         {
@@ -46,7 +44,7 @@ namespace DataModel.Server
             var stream = from val in code
                          let neighbors = ServerFunctions.NeighborsIn8(val)
                          from n in neighbors
-                         select ServerFunctions.LookUpTile(n, dataBase);
+                         select DataBaseFunctions.LookUpTile(n);
             return stream;
 
         }

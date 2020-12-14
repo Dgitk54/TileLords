@@ -21,17 +21,15 @@ namespace DataModel.Server
     public class ClientAccountRegisterHandler
     {
         readonly IEventBus eventBus;
-        readonly ILiteDatabase dataBase;
         
 
         readonly JsonSerializerSettings settings = new JsonSerializerSettings
         {
             TypeNameHandling = TypeNameHandling.All
         };
-        public ClientAccountRegisterHandler(IEventBus clientBus, ILiteDatabase dataBase, IEventBus serverBus)
+        public ClientAccountRegisterHandler(IEventBus clientBus, IEventBus serverBus)
         {
             eventBus = clientBus;
-            this.dataBase = dataBase;
         }
 
         public IDisposable AttachToBus()
@@ -53,9 +51,7 @@ namespace DataModel.Server
 
             return merged.Subscribe(v =>
                {
-
-                   Console.WriteLine("Firing RegisterHandler!");
-                   if (CreateAccount(v.RegisterEvent))
+                   if (v.RegisterEvent.CreateAccount())
                    {
                        var success = new UserActionSuccessEvent() { UserAction = 1 };
                        var obj = JsonConvert.SerializeObject(success, typeof(UserActionSuccessEvent), settings);
@@ -72,42 +68,7 @@ namespace DataModel.Server
         }
 
 
-        bool CreateAccount(UserRegisterEvent user)
-        {
-
-            var col = dataBase.GetCollection<User>("users");
-            col.EnsureIndex(v => v.AccountCreated);
-            col.EnsureIndex(v => v.Inventory);
-            col.EnsureIndex(v => v.LastOnline);
-            col.EnsureIndex(v => v.LastPostion);
-            col.EnsureIndex(v => v.UserName);
-            col.EnsureIndex(v => v.Salt);
-            col.EnsureIndex(v => v.SaltedHash);
-
-            if (NameTaken(user.Name, col))
-                return false;
-
-            byte[] salt;
-            new RNGCryptoServiceProvider().GetBytes(salt = new byte[16]);
-
-            var password = ServerFunctions.Hash(user.Password, salt);
-
-            var userForDb = new User
-            {
-                AccountCreated = DateTime.Now,
-                Salt = salt,
-                SaltedHash = password,
-                UserName = user.Name
-            };
-
-            col.Insert(userForDb);
-            return true;
-
-        }
-
-
-        static bool NameTaken(string name, ILiteCollection<User> col)
-            => col.Find(v => v.UserName == name).Any();
+       
 
 
 

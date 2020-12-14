@@ -13,7 +13,6 @@ namespace DataModel.Server
     public class ClientAccountLoginHandler
     {
         readonly IEventBus eventBus;
-        readonly ILiteDatabase dataBase;
         readonly IEventBus serverBus;
 
         readonly IChannel channel;
@@ -22,10 +21,9 @@ namespace DataModel.Server
         {
             TypeNameHandling = TypeNameHandling.All
         };
-        public ClientAccountLoginHandler(IEventBus bus, ILiteDatabase database, IEventBus serverBus, IChannel channel)
+        public ClientAccountLoginHandler(IEventBus bus, IEventBus serverBus, IChannel channel)
         {
             eventBus = bus;
-            dataBase = database;
             this.channel = channel;
             this.serverBus = serverBus;
         }
@@ -40,17 +38,9 @@ namespace DataModel.Server
 
             return onlyWithValues.Subscribe(e =>
             {
-                var col = dataBase.GetCollection<User>("users");
-               
-                col.EnsureIndex(v => v.AccountCreated);
-                col.EnsureIndex(v => v.Inventory);
-                col.EnsureIndex(v => v.LastOnline);
-                col.EnsureIndex(v => v.LastPostion);
-                col.EnsureIndex(v => v.UserName);
-                col.EnsureIndex(v => v.Salt);
-                col.EnsureIndex(v => v.SaltedHash);
+                
 
-                var user = InDataBase(e.Name, col);
+                var user = DataBaseFunctions.InDataBase(e.Name);
 
                 if(user == null)
                 {
@@ -58,8 +48,6 @@ namespace DataModel.Server
                     var obj = new UserActionErrorEvent() { UserAction = 2 };
                     var serialized = JsonConvert.SerializeObject(obj, typeof(UserActionErrorEvent), settings);
                     eventBus.Publish(new DataSinkEvent(serialized));
-
-
                 }
                 else
                 {
@@ -102,12 +90,7 @@ namespace DataModel.Server
 
 
 
-        static User InDataBase(string name, ILiteCollection<User> col)
-        {
-            if(col.Find(v => v.UserName == name).Any())
-                return col.Find(v => v.UserName == name).First();
-            return null;
-        }
+        
 
 
     }

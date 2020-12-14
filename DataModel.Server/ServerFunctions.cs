@@ -59,31 +59,7 @@ namespace DataModel.Server
         }
 
 
-        public static Tile LookUpTile(PlusCode code, ILiteDatabase db)
-        {
-            var largeCode = code;
-            if (largeCode.Precision == 10)
-                DataModelFunctions.ToLowerResolution(code, 8);
-
-            var col = db.GetCollection<Tile>("tiles");
-            col.EnsureIndex(v => v.MiniTiles);
-            col.EnsureIndex(v => v.PlusCode);
-            col.EnsureIndex(v => v.Ttype);
-            var results = col.Find(v => v.PlusCode.Code == code.Code);
-            if (results.Count() == 0)
-            {
-                ;
-                var created = TileGenerator.GenerateArea(largeCode, 0);
-                var tile = created[0];
-
-                var dbVal = col.Insert(tile);
-                tile.Id = dbVal.AsInt32;
-                return tile;
-            }
-            if (results.Count() > 1)
-                throw new Exception("More than one object for same index!");
-            return results.First();
-        }
+        
 
 
 
@@ -143,7 +119,7 @@ namespace DataModel.Server
 
         public static MiniTile LookUpMiniTile(PlusCode code, ILiteDatabase db)
         {
-            var tile = LookUpTile(code, db);
+            var tile = DataBaseFunctions.LookUpTile(code);
             var miniTile = from e in tile.MiniTiles
                            where e.MiniTileId.Code == code.Code
                            select e;
@@ -193,7 +169,7 @@ namespace DataModel.Server
             Debug.Assert(old.Id == tileWithNewValues.Id);
             Debug.Assert(old.MiniTileId.Code == tileWithNewValues.MiniTileId.Code);
 
-            Tile t = LookUpTile(tileWithNewValues.MiniTileId, database);
+            Tile t = DataBaseFunctions.LookUpTile(tileWithNewValues.MiniTileId);
 
             var removed = t.MiniTiles.Remove(old);
             Debug.Assert(removed);

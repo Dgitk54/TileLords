@@ -29,24 +29,22 @@ namespace DataModel.Server
 
         readonly ClientChunkUpdateHandler gpsClientLocationHandler;
         readonly ClientAccountRegisterHandler registerHandler;
-        readonly ILiteDatabase database;
 
 
-        public ClientHandler(IEventBus serverBus, ILiteDatabase dataBase)
+        public ClientHandler(IEventBus serverBus)
         {
-            database = dataBase;
             this.serverBus = serverBus;
             clientBus = new ClientEventBus();
 
 
-            gpsClientLocationHandler = new ClientChunkUpdateHandler(clientBus, dataBase);
-            registerHandler = new ClientAccountRegisterHandler(clientBus, dataBase, serverBus);
+            gpsClientLocationHandler = new ClientChunkUpdateHandler(clientBus);
+            registerHandler = new ClientAccountRegisterHandler(clientBus,serverBus);
             
         }
 
         public override void ChannelActive(IChannelHandlerContext ctx)
         {
-            var loginHandler = new ClientAccountLoginHandler(clientBus, database, serverBus, ctx.Channel);
+            var loginHandler = new ClientAccountLoginHandler(clientBus, serverBus, ctx.Channel);
             serverBus.Publish(new ServerClientConnectedEvent() { Channel = ctx.Channel });
             disposables.Add(ServerFunctions.EventStreamSink(clientBus.GetEventStream<DataSinkEvent>(), ctx));
             disposables.Add(jsonClientSource.Subscribe(v => clientBus.Publish(new DataSourceEvent(v))));

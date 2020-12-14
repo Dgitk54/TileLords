@@ -8,6 +8,7 @@ using System;
 using System.Threading;
 using System.Reactive.Concurrency;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace ClientIntegration
 {
@@ -45,7 +46,7 @@ namespace ClientIntegration
         }
 
 
-        static async Task GetsEvent<T, T2>(ClientInstance instance, T2 input, int timeOutInSeconds) where T : IEvent where T2 : IEvent
+        static async Task<T> GetsEvent<T, T2>(ClientInstance instance, T2 input, int timeOutInSeconds) where T : IEvent where T2 : IEvent
         {
             var observeOn = Scheduler.CurrentThread;
 
@@ -61,18 +62,19 @@ namespace ClientIntegration
             await publish;
             ;
             Assert.IsTrue(received.Result != null);
+            return received.Result;
         }
-        static void SendDebugGps(ClientInstance instance, CancellationToken ct)
+        static void SendDebugGps(ClientInstance instance, CancellationToken ct, int iterations, int sleeptime)
         {
             
             var start = new GPS(49.000000, 7.900000);
             double step = 0.000150;
             var list = DataModelFunctions.GPSNodesWithOffsets(start, step, step, 60);
             
-            for(int i = 0; i<5; i++)
+            for(int i = 0; i< iterations; i++)
             {
                 instance.SendDebugGPS(list[i]);
-                Thread.Sleep(1000);
+                Thread.Sleep(sleeptime);
                 if (ct.IsCancellationRequested)
                  break;
             }
@@ -118,7 +120,7 @@ namespace ClientIntegration
             var instance = result.Result.Item2;
             CancellationTokenSource tokenSrc = new CancellationTokenSource();
 
-            var cleanUp = Task.Run(() => SendDebugGps(instance, tokenSrc.Token), tokenSrc.Token);
+            var cleanUp = Task.Run(() => SendDebugGps(instance, tokenSrc.Token,5,1000), tokenSrc.Token);
             GetsEvent<ClientMapBufferChanged, UserGpsEvent>(instance, new UserGpsEvent(new GPS(49.000000, 7.900000)), 10).Wait();
             tokenSrc.Cancel();
             cleanUp.Wait();
@@ -136,12 +138,22 @@ namespace ClientIntegration
             result.Wait();
             var instance = result.Result.Item2;
 
-
+           
             GetsEvent<UserActionSuccessEvent, UserLoginEvent>(instance, new UserLoginEvent() { Name = "a", Password = "a" }, 10).Wait();
+
+            CancellationTokenSource tokenSrc = new CancellationTokenSource();
+            var cleanUp = Task.Run(() => SendDebugGps(instance, tokenSrc.Token,20,2000), tokenSrc.Token);
+
+           
+            
             GetsEvent<MapAsRenderAbleChanged, UserGpsEvent>(instance, new UserGpsEvent(new GPS(49.000000, 7.900000)), 20).Wait();
-
-
+            Stopwatch watch = Stopwatch.StartNew();
+            watch.Start();
+            tokenSrc.Cancel();
+            cleanUp.Wait();
             instance.DisconnectClient();
+            var shutdownDuration = watch.ElapsedMilliseconds;
+            ;
         }
 
 
@@ -156,8 +168,7 @@ namespace ClientIntegration
             var instance = result.Result.Item2;
             var bus = result.Result.Item1;
 
-
-            var testLogin = GetsEvent<UserActionSuccessEvent, UserLoginEvent>(instance, new UserLoginEvent() { Name = "a", Password = "a" }, 5);
+            GetsEvent<UserActionSuccessEvent, UserLoginEvent>(instance, new UserLoginEvent() { Name = "a", Password = "a" }, 5).Wait();
 
             instance.DisconnectClient();
         }

@@ -15,7 +15,7 @@ namespace DataModel.Server
     public class ServerInstance
     {
         readonly IEventBus bus = new ServerEventBus();
-        readonly ILiteDatabase db = new LiteDatabase(@"MyData.db");
+        
         readonly List<IDisposable> disposables = new List<IDisposable>();
         MultithreadEventLoopGroup bossGroup;//  accepts an incoming connection
         MultithreadEventLoopGroup workerGroup;
@@ -57,7 +57,7 @@ namespace DataModel.Server
                         IChannelPipeline pipeline = channel.Pipeline;
                         pipeline.AddLast("framing-enc", new LengthFieldPrepender(2));
                         pipeline.AddLast("framing-dec", new LengthFieldBasedFrameDecoder(ushort.MaxValue, 0, 2, 0, 2));
-                        pipeline.AddLast(new ClientHandler(bus, db));
+                        pipeline.AddLast(new ClientHandler(bus));
                     }));
 
                 bootstrapChannel = await bootstrap.BindAsync(serverPort);
@@ -68,7 +68,7 @@ namespace DataModel.Server
         public async Task ShutDownServer()
         {
             await bootstrapChannel.CloseAsync();
-            Task.WaitAll(bossGroup.ShutdownGracefullyAsync(), workerGroup.ShutdownGracefullyAsync());
+            Task.WaitAll(bossGroup.ShutdownGracefullyAsync(TimeSpan.FromMilliseconds(200), TimeSpan.FromMilliseconds(400)), workerGroup.ShutdownGracefullyAsync(TimeSpan.FromMilliseconds(200), TimeSpan.FromMilliseconds(400)));
         }
     }
 }

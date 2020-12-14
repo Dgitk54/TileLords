@@ -8,6 +8,7 @@ using DotNetty.Transport.Channels.Sockets;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Net;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
@@ -78,7 +79,8 @@ namespace DataModel.Client
             ServerHandler.ShutDown();
             closingEvent.Set();
             if(BootstrapChannel != null)
-                BootstrapChannel.CloseAsync();
+                BootstrapChannel.CloseAsync().Wait();
+            Task.WaitAll(group.ShutdownGracefullyAsync(TimeSpan.FromMilliseconds(200), TimeSpan.FromMilliseconds(400)));
         }
 
 
@@ -113,7 +115,8 @@ namespace DataModel.Client
             }
             finally
             {
-                Task.WaitAll(group.ShutdownGracefullyAsync());
+
+                //Task.WaitAll(group.ShutdownGracefullyAsync());
             }
 
 
