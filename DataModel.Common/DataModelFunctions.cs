@@ -63,6 +63,22 @@ namespace DataModel.Common
             return changeList;
         }
 
+
+        public static List<GPS> GPSNodesInCircle(GPS startPos, int points, double radius)
+        {
+            double angleStep = 360d / points;
+            Math.Floor(angleStep);
+            var nodes = new List<GPS>();
+            for (int i = 1; i < points+1; i++)
+            {
+                double lat = startPos.Lat + (radius * Math.Cos(angleStep * i));
+                double lon = startPos.Lon + (radius * Math.Sin(angleStep * i));
+                nodes.Add(new GPS(lat, lon));
+            }
+            return nodes;
+        }
+
+
         public static PlusCode ToLowerResolution(this PlusCode code, int target)
             => new PlusCode(string.Concat(code.Code.Take(target+1)), target);
 

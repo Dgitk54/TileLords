@@ -78,7 +78,22 @@ namespace ClientIntegration
                 if (ct.IsCancellationRequested)
                  break;
             }
-            
+        }
+
+        static void SendGpsPath(ClientInstance instance, CancellationToken ct, List<GPS> gps , int iterations, int sleeptime)
+        {
+            do
+            {
+                for (int i = 0; i < iterations; i++)
+                {
+                    instance.SendDebugGPS(gps[i % gps.Count]);
+                    Thread.Sleep(sleeptime);
+                    if (ct.IsCancellationRequested)
+                        break;
+                }
+            } while (!ct.IsCancellationRequested);
+           
+
         }
 
         [SetUp]
@@ -113,10 +128,8 @@ namespace ClientIntegration
         public void GetsMapBufferChangeAfterGPS()
         {
             var result = StartClient();
-            
-
             result.Wait();
-            ;
+            
             var instance = result.Result.Item2;
             CancellationTokenSource tokenSrc = new CancellationTokenSource();
 
@@ -148,12 +161,10 @@ namespace ClientIntegration
             
             GetsEvent<MapAsRenderAbleChanged, UserGpsEvent>(instance, new UserGpsEvent(new GPS(49.000000, 7.900000)), 20).Wait();
             Stopwatch watch = Stopwatch.StartNew();
-            watch.Start();
+           
             tokenSrc.Cancel();
             cleanUp.Wait();
             instance.DisconnectClient();
-            var shutdownDuration = watch.ElapsedMilliseconds;
-            ;
         }
 
 
@@ -172,6 +183,20 @@ namespace ClientIntegration
 
             instance.DisconnectClient();
         }
+
+        [Test]
+        public void GetsMapResponseForStandingStill()
+        {
+            var result = StartClient();
+            result.Wait();
+            var instance = result.Result.Item2;
+            GetsEvent<UserActionSuccessEvent, UserLoginEvent>(instance, new UserLoginEvent() { Name = "a", Password = "a" }, 10).Wait();
+
+
+        }
+
+
+
 
         [TearDown]
         public void ShutDown()
