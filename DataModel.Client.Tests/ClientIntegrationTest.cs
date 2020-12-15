@@ -37,7 +37,7 @@ namespace ClientIntegration
             var startClient = Task.Run(instance.RunClientAsync);
 
             await waitForConnection;
-            
+
 
 
             Assert.IsTrue(waitForConnection.Result != null);
@@ -56,44 +56,112 @@ namespace ClientIntegration
                 return result;
             });
             Thread.Sleep(200);
-            
-            var publish = Task.Run(() => instance.SendTyped(input)); 
+
+            var publish = Task.Run(() => instance.SendTyped(input));
             await received;
             await publish;
             ;
             Assert.IsTrue(received.Result != null);
             return received.Result;
         }
+
+
+        static async Task<T> GetsEvent<T>(ClientInstance instance, int timeOutInSeconds) where T : IEvent
+        {
+            var observeOn = Scheduler.CurrentThread;
+            var received = Task.Run(() =>
+            {
+                var result = instance.EventBus.GetEventStream<T>().Take(1).Timeout(DateTime.Now.AddSeconds(timeOutInSeconds)).ObserveOn(observeOn).Wait();
+                return result;
+            });
+            Thread.Sleep(200);
+            await received;
+
+            return received.Result;
+
+        }
         static void SendDebugGps(ClientInstance instance, CancellationToken ct, int iterations, int sleeptime)
         {
-            
+
             var start = new GPS(49.000000, 7.900000);
             double step = 0.000150;
             var list = DataModelFunctions.GPSNodesWithOffsets(start, step, step, 60);
-            
-            for(int i = 0; i< iterations; i++)
+
+            for (int i = 0; i < iterations; i++)
             {
                 instance.SendDebugGPS(list[i]);
                 Thread.Sleep(sleeptime);
                 if (ct.IsCancellationRequested)
-                 break;
+                    break;
             }
         }
 
-        static void SendGpsPath(ClientInstance instance, CancellationToken ct, List<GPS> gps , int iterations, int sleeptime)
+        static void SendGpsPath(ClientInstance instance, CancellationToken ct, List<GPS> gps, int sleeptime)
         {
+            int i = 0;
             do
             {
-                for (int i = 0; i < iterations; i++)
-                {
-                    instance.SendDebugGPS(gps[i % gps.Count]);
-                    Thread.Sleep(sleeptime);
-                    if (ct.IsCancellationRequested)
-                        break;
-                }
-            } while (!ct.IsCancellationRequested);
-           
+                instance.SendDebugGPS(gps[i % gps.Count]);
+                Thread.Sleep(sleeptime);
+                i++;
+                if (ct.IsCancellationRequested)
+                    break;
 
+            } while (!ct.IsCancellationRequested);
+
+
+        }
+
+        static void DebugLoginAndRunAroundClient(string name, string password, GPS circleCenter, CancellationToken cancellationToken)
+        {
+            var result = StartClient();
+            result.Wait();
+            var instance = result.Result.Item2;
+            var nodesAmount = 20;
+            var tokenSrc = new CancellationTokenSource();
+            var list = DataModelFunctions.GPSNodesInCircle(circleCenter, nodesAmount, 0.001);
+
+
+            //Try to log in, create account if cant log in:
+
+         //   Task tryLogin;
+         //   try
+         //   {
+         //       tryLogin = GetsEvent<UserActionSuccessEvent, UserLoginEvent>(instance, new UserLoginEvent() { Name = name, Password = password }, 5);
+         //       tryLogin.Wait();
+         //   }
+         //   catch (AggregateException exception)
+         //   {
+         //       var tryRegister = GetsEvent<UserActionSuccessEvent, UserRegisterEvent>(instance, new UserRegisterEvent() { Name = name, Password = password }, 5);
+         //       tryRegister.Wait();
+         //       if (tryRegister.IsFaulted)
+         //       {
+         //           throw new Exception("Can not log in nor register");
+         //       }
+         //
+         //       var tryLoginAfterRegister = GetsEvent<UserActionSuccessEvent, UserLoginEvent>(instance, new UserLoginEvent() { Name = name, Password = password }, 5);
+         //       tryLoginAfterRegister.Wait();
+         //       if (tryLoginAfterRegister.IsFaulted)
+         //           throw new Exception("Can not log in after register");
+         //   }
+            
+            
+              
+
+
+
+            var runCircle = Task.Run(() => SendGpsPath(instance, tokenSrc.Token, list, 1000), tokenSrc.Token);
+            do
+            {
+                if (cancellationToken.IsCancellationRequested)
+                    break;
+                Thread.Sleep(1000);
+
+            } while (!cancellationToken.IsCancellationRequested);
+
+            tokenSrc.Cancel();
+            runCircle.Wait();
+            instance.DisconnectClient();
         }
 
         [SetUp]
@@ -107,13 +175,25 @@ namespace ClientIntegration
         [Test]
         public void CanConnect()
         {
-            
+
             var result = StartClient();
             var instance = result.Result.Item2;
             instance.DisconnectClient();
         }
 
 
+        [Test]
+        public void TwoClientsCanConnectAndLogIn()
+        {
+            var token = new CancellationTokenSource();
+            var client1 = Task.Run(() => DebugLoginAndRunAroundClient("a", "a", new GPS(49.000000, 7.900000), token.Token));
+            var client2 = Task.Run(() => DebugLoginAndRunAroundClient("b", "b", new GPS(49.000005, 7.900005), token.Token));
+            Thread.Sleep(60 * 1000);
+            token.Cancel();
+            client1.Wait();
+            client2.Wait();
+
+        }
         [Test]
         public void GetsNegativeResponseToRegisterAccount()
         {
@@ -129,11 +209,11 @@ namespace ClientIntegration
         {
             var result = StartClient();
             result.Wait();
-            
+
             var instance = result.Result.Item2;
             CancellationTokenSource tokenSrc = new CancellationTokenSource();
 
-            var cleanUp = Task.Run(() => SendDebugGps(instance, tokenSrc.Token,5,1000), tokenSrc.Token);
+            var cleanUp = Task.Run(() => SendDebugGps(instance, tokenSrc.Token, 5, 1000), tokenSrc.Token);
             GetsEvent<ClientMapBufferChanged, UserGpsEvent>(instance, new UserGpsEvent(new GPS(49.000000, 7.900000)), 10).Wait();
             tokenSrc.Cancel();
             cleanUp.Wait();
@@ -151,17 +231,17 @@ namespace ClientIntegration
             result.Wait();
             var instance = result.Result.Item2;
 
-           
+
             GetsEvent<UserActionSuccessEvent, UserLoginEvent>(instance, new UserLoginEvent() { Name = "a", Password = "a" }, 10).Wait();
 
             CancellationTokenSource tokenSrc = new CancellationTokenSource();
-            var cleanUp = Task.Run(() => SendDebugGps(instance, tokenSrc.Token,20,2000), tokenSrc.Token);
+            var cleanUp = Task.Run(() => SendDebugGps(instance, tokenSrc.Token, 20, 2000), tokenSrc.Token);
 
-           
-            
+
+
             GetsEvent<MapAsRenderAbleChanged, UserGpsEvent>(instance, new UserGpsEvent(new GPS(49.000000, 7.900000)), 20).Wait();
             Stopwatch watch = Stopwatch.StartNew();
-           
+
             tokenSrc.Cancel();
             cleanUp.Wait();
             instance.DisconnectClient();

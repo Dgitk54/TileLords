@@ -10,11 +10,20 @@ namespace DataModel.Server
 {
     public static class DataBaseFunctions
     {
-
-
-        static public bool CreateAccount(this UserRegisterEvent user, string dataBasePath = @"MyData.db")
+        
+        static ConnectionString DataBasePath()
         {
-            using (var dataBase = new LiteDatabase(dataBasePath))
+            return new ConnectionString(@"MyData.db")
+            {
+                Connection = ConnectionType.Shared
+            };
+        }
+
+
+        static public bool CreateAccount(this UserRegisterEvent user)
+        {
+            
+            using (var dataBase = new LiteDatabase(DataBasePath()))
             {
                 var col = dataBase.GetCollection<User>("users");
                 col.EnsureIndex(v => v.AccountCreated);
@@ -49,9 +58,9 @@ namespace DataModel.Server
 
         }
 
-        public static Tile LookUpTile(PlusCode code, string dataBasePath = @"MyData.db")
+        public static Tile LookUpTile(PlusCode code)
         {
-            using (var db = new LiteDatabase(dataBasePath))
+            using (var db = new LiteDatabase(DataBasePath()))
             {
 
                 var largeCode = code;
@@ -85,9 +94,9 @@ namespace DataModel.Server
 
 
 
-        static public User InDataBase(string name, string dataBasePath = @"MyData.db")
+        static public User InDataBase(string name)
         {
-            using (var dataBase = new LiteDatabase(dataBasePath))
+            using (var dataBase = new LiteDatabase(DataBasePath()))
             {
                 var col = dataBase.GetCollection<User>("users");
 
