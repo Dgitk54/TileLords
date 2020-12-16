@@ -2,6 +2,7 @@
 using LiteDB;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
@@ -14,9 +15,9 @@ namespace DataModel.Server
         {
             return new ConnectionString(@"MyData.db")
             {
-                Connection = ConnectionType.Shared, 
+                Connection = ConnectionType.Shared,
                 ReadOnly = true
-                
+
             };
 
         }
@@ -31,7 +32,7 @@ namespace DataModel.Server
 
         static public bool CreateAccount(this UserRegisterEvent user)
         {
-            
+
             using (var dataBase = new LiteDatabase(DataBasePath()))
             {
                 var col = dataBase.GetCollection<User>("users");
@@ -63,7 +64,7 @@ namespace DataModel.Server
                 return true;
             }
 
-                
+
 
         }
 
@@ -76,14 +77,44 @@ namespace DataModel.Server
                 if (largeCode.Precision == 10)
                     DataModelFunctions.ToLowerResolution(code, 8);
 
-                var col = db.GetCollection<Tile>("tiles");
-                
-                var results = col.Find(v => v.PlusCode.Code == code.Code);
-                if (results.Count() == 0)
+                try
                 {
-                    using (var dbWrite = new LiteDatabase(DataBasePath())) 
+                    var col = db.GetCollection<Tile>("tiles");
+
+                    var results = col.Find(v => v.PlusCode.Code == code.Code);
+
+                    using (var dbWrite = new LiteDatabase(DataBasePath()))
                     {
-                        var col2 = db.GetCollection<Tile>("tiles");
+                        if (results == null || results.Count() == 0)
+                        {
+                            Debug.WriteLine("put " + code.Code + " in");
+                            var col2 = dbWrite.GetCollection<Tile>("tiles");
+
+                            col2.EnsureIndex(v => v.MiniTiles);
+                            col2.EnsureIndex(v => v.PlusCode);
+                            col2.EnsureIndex(v => v.Ttype);
+
+                            var created = TileGenerator.GenerateArea(largeCode, 0);
+                            var tile = created[0];
+                            var dbVal = col2.Insert(tile);
+                            tile.Id = dbVal.AsInt32;
+                            return tile;
+                        }
+                    }
+
+
+                    if (results.Count() > 1)
+                        throw new Exception("More than one object for same index!");
+                    return results.First();
+                }
+                catch (System.IO.FileNotFoundException)
+                {
+                    using (var dbwrite = new LiteDatabase(DataBasePath()))
+                    {
+
+                      
+                        Debug.WriteLine("test");
+                        var col2 = dbwrite.GetCollection<Tile>("tiles");
 
                         col2.EnsureIndex(v => v.MiniTiles);
                         col2.EnsureIndex(v => v.PlusCode);
@@ -95,10 +126,8 @@ namespace DataModel.Server
                         tile.Id = dbVal.AsInt32;
                         return tile;
                     }
+
                 }
-                if (results.Count() > 1)
-                    throw new Exception("More than one object for same index!");
-                return results.First();
 
 
 
@@ -128,7 +157,7 @@ namespace DataModel.Server
             }
 
 
-                
+
         }
 
 
