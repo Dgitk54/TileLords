@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
-
+using System.Threading.Tasks;
 
 namespace DataModel.Common
 {
@@ -44,29 +44,34 @@ namespace DataModel.Common
             }
 
     
-            List<string> allNewPlusCodes = LocationCodeTileUtility.GetTileSection(miniTileCode.Code, radius, miniTileCode.Precision);
-
-
-           
-
+            var allNewPlusCodes = LocationCodeTileUtility.GetTileSection(miniTileCode.Code, radius, miniTileCode.Precision);
             var oldArea = new ConcurrentBag<MiniTile>();
             var newArea = new ConcurrentBag<MiniTile>();
             var miniTileToAdd = new ConcurrentBag<MiniTile>();
 
-            currentTiles.AsParallel().ForAll(v =>
-            {
-                allNewPlusCodes.AsParallel()
-                .Where(e => v.MiniTileId.Code.Equals(e))
-                .ForAll(e => oldArea.Add(v));
+            var task1 = Task.Run(() => {
+                currentTiles.AsParallel().ForAll(v =>
+                {
+                    allNewPlusCodes.AsParallel()
+                    .Where(e => v.MiniTileId.Code.Equals(e))
+                    .ForAll(e => oldArea.Add(v));
 
+                });
             });
 
-            newTiles.AsParallel().ForAll(v =>
+            var task2 = Task.Run(() => 
             {
-                allNewPlusCodes.AsParallel()
-                .Where(e => v.MiniTileId.Code.Equals(e))
-                .ForAll(e => newArea.Add(v));
+                newTiles.AsParallel().ForAll(v =>
+                {
+                    allNewPlusCodes.AsParallel()
+                    .Where(e => v.MiniTileId.Code.Equals(e))
+                    .ForAll(e => newArea.Add(v));
+                });
             });
+
+            
+            Task.WhenAll(task1, task2).Wait();
+            
 
             oldArea.AsParallel()
                 .ForAll(oldTile =>
