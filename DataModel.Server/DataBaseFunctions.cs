@@ -10,7 +10,16 @@ namespace DataModel.Server
 {
     public static class DataBaseFunctions
     {
-        
+        static ConnectionString DataBaseRead()
+        {
+            return new ConnectionString(@"MyData.db")
+            {
+                Connection = ConnectionType.Shared, 
+                ReadOnly = true
+                
+            };
+
+        }
         static ConnectionString DataBasePath()
         {
             return new ConnectionString(@"MyData.db")
@@ -60,7 +69,7 @@ namespace DataModel.Server
 
         public static Tile LookUpTile(PlusCode code)
         {
-            using (var db = new LiteDatabase(DataBasePath()))
+            using (var db = new LiteDatabase(DataBaseRead()))
             {
 
                 var largeCode = code;
@@ -68,19 +77,24 @@ namespace DataModel.Server
                     DataModelFunctions.ToLowerResolution(code, 8);
 
                 var col = db.GetCollection<Tile>("tiles");
-                col.EnsureIndex(v => v.MiniTiles);
-                col.EnsureIndex(v => v.PlusCode);
-                col.EnsureIndex(v => v.Ttype);
+                
                 var results = col.Find(v => v.PlusCode.Code == code.Code);
                 if (results.Count() == 0)
                 {
-                    ;
-                    var created = TileGenerator.GenerateArea(largeCode, 0);
-                    var tile = created[0];
+                    using (var dbWrite = new LiteDatabase(DataBasePath())) 
+                    {
+                        var col2 = db.GetCollection<Tile>("tiles");
 
-                    var dbVal = col.Insert(tile);
-                    tile.Id = dbVal.AsInt32;
-                    return tile;
+                        col2.EnsureIndex(v => v.MiniTiles);
+                        col2.EnsureIndex(v => v.PlusCode);
+                        col2.EnsureIndex(v => v.Ttype);
+
+                        var created = TileGenerator.GenerateArea(largeCode, 0);
+                        var tile = created[0];
+                        var dbVal = col2.Insert(tile);
+                        tile.Id = dbVal.AsInt32;
+                        return tile;
+                    }
                 }
                 if (results.Count() > 1)
                     throw new Exception("More than one object for same index!");
@@ -96,7 +110,7 @@ namespace DataModel.Server
 
         static public User InDataBase(string name)
         {
-            using (var dataBase = new LiteDatabase(DataBasePath()))
+            using (var dataBase = new LiteDatabase(DataBaseRead()))
             {
                 var col = dataBase.GetCollection<User>("users");
 

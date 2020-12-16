@@ -41,7 +41,7 @@ namespace DataModel.Server
 
 
             bossGroup = new MultithreadEventLoopGroup(1); //  accepts an incoming connection
-            workerGroup = new MultithreadEventLoopGroup(2); // handles the traffic of the accepted connection once the boss accepts the connection and registers the accepted connection to the worker
+            workerGroup = new MultithreadEventLoopGroup(10); // handles the traffic of the accepted connection once the boss accepts the connection and registers the accepted connection to the worker
 
 
             
