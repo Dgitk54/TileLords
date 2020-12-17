@@ -1,4 +1,6 @@
-﻿using System;
+﻿using DataModel.Common.MiniTileTypes;
+using DataModel.Common.WorldObjectTypes;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -18,7 +20,7 @@ namespace DataModel.Common
         public static List<MiniTile> GenerateMiniTiles(PlusCode tileCode, List<int> miniTileTypeList, List<int> worldObjectTypeList)
         {
             string code = tileCode.Code;
-            if(code.Length > 9)
+            if (code.Length > 9)
             {
                 code = code.Substring(0, 9);
             }
@@ -26,10 +28,10 @@ namespace DataModel.Common
             {
                 code += "+";
             }
-          
-            
+
+
             var tiles = from miniTileCodeString in LocationCodeTileUtility.GetAndCombineWithAllAfterPlus(code)
-                        select new MiniTile(new PlusCode(miniTileCodeString, 10), getRandomMiniTileType(miniTileTypeList), new List<ITileContent>() { new WorldObject(getRandomWorldObject(worldObjectTypeList)) });
+                        select new MiniTile(new PlusCode(miniTileCodeString, 10), GetRandomMiniTileType(miniTileTypeList), new List<ITileContent>() { new WorldObject(GetRandomWorldObject(worldObjectTypeList)) });
 
             return tiles.ToList();
 
@@ -38,16 +40,16 @@ namespace DataModel.Common
 
         public static List<MiniTile> RegenerateArea(PlusCode miniTileCode, List<MiniTile> currentTiles, IList<MiniTile> newTiles, int radius)
         {
-            if(newTiles.Count == 0)
+            if (newTiles.Count == 0)
             {
                 return currentTiles;
             }
 
-    
+
             List<string> allNewPlusCodes = LocationCodeTileUtility.GetTileSection(miniTileCode.Code, radius, miniTileCode.Precision);
 
 
-           
+
 
             var oldArea = new ConcurrentBag<MiniTile>();
             var newArea = new ConcurrentBag<MiniTile>();
@@ -174,7 +176,7 @@ namespace DataModel.Common
         /// <returns>The Tile</returns>
         public static Tile GenerateTile(PlusCode code, List<int> tileTypeList, List<int> miniTileTypeList, List<int> worldObjectTypeList)
         {
-            return new Tile(code, getRandomTileType(tileTypeList), GenerateMiniTiles(code, miniTileTypeList, worldObjectTypeList));
+            return new Tile(code, GetRandomTileType(tileTypeList), GenerateMiniTiles(code, miniTileTypeList, worldObjectTypeList));
         }
 
         /// <summary>
@@ -186,7 +188,7 @@ namespace DataModel.Common
         public static List<Tile> GenerateArea(PlusCode code, int radius, List<int> tileTypeList, List<int> miniTileTypeList)
         {
             string c = code.Code;
-            if(c.Length > 8)
+            if (c.Length > 8)
             {
                 c = c.Substring(0, 8);
             }
@@ -202,14 +204,14 @@ namespace DataModel.Common
             {
                 c = c.Substring(0, 8);
             }
-            List<int> tileTypeList = new List<int>() { 0,1,2,3,4,5,6,7};
+            List<int> tileTypeList = new List<int>() { 0, 1, 2, 3, 4, 5, 6, 7 };
             List<int> miniTileTypeList = new List<int>() { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
             List<int> worldObjectTypeList = new List<int>();
-            
+
             //@@@@@@@@@@@@@@@@@@
             //somewhat useless code that adds index for each worldObjectType to a list to select one at random (adding empty object many times to balance it), should be adjusted for a real generator to only use the index of relevant worldObjects
             //@@@@@@@@@@@@@@@@@@
-            for(int i = 0; i < Enum.GetNames(typeof(WorldObjectType)).Length; i++)
+            for (int i = 0; i < Enum.GetNames(typeof(WorldObjectType)).Length; i++)
             {
                 worldObjectTypeList.Add(i);
             }
@@ -218,12 +220,14 @@ namespace DataModel.Common
                 worldObjectTypeList.Add(0);
             }
 
+
+
             var tiles = from miniTileCodeString in LocationCodeTileUtility.GetTileSection(c, radius, 8)
                         select GenerateTile(new PlusCode(miniTileCodeString, 8), tileTypeList, miniTileTypeList, worldObjectTypeList);
             return tiles.ToList();
         }
 
-        public static MiniTileType getRandomMiniTileType(List<int> tileTypeList)
+        public static MiniTileType GetRandomMiniTileType(List<int> tileTypeList)
         {
             Random r = new Random();
             int i = r.Next(0, tileTypeList.Count);
@@ -231,7 +235,7 @@ namespace DataModel.Common
         }
 
 
-        public static TileType getRandomTileType(List<int> tileTypeList)
+        public static TileType GetRandomTileType(List<int> tileTypeList)
         {
             Random r = new Random();
             int i = r.Next(0, tileTypeList.Count);
@@ -241,17 +245,149 @@ namespace DataModel.Common
 
         }
 
-        public static WorldObjectType getRandomWorldObject(List<int> worldObjectTypeList)
+        public static WorldObjectType GetRandomWorldObject(List<int> worldObjectTypeList)
         {
             if (worldObjectTypeList == null)
                 return WorldObjectType.Empty;
 
             Random r = new Random();
-            
+
             int i = r.Next(0, worldObjectTypeList.Count);
 
 
             return (WorldObjectType)worldObjectTypeList[i];
+
+        }
+
+        public static Enum GetSpecificTileType(Tile parentTile)
+        {
+
+            int length;
+            Random r;
+            int i;
+
+
+            
+            switch (parentTile.Ttype)
+            {
+                case TileType.Desert:
+                    {
+                        length = Enum.GetNames(typeof(MiniTileType_Desert)).Length;
+                        r = new Random();
+                        i = r.Next(0, length);
+                        return (MiniTileType_Desert)i;
+                    }
+                case TileType.Grassland:
+                    {
+                        length = Enum.GetNames(typeof(MiniTileType_Grassland)).Length;
+                        r = new Random();
+                        i = r.Next(0, length);
+                        return (MiniTileType_Grassland)i;
+                    }
+                case TileType.Swamp:
+                    {
+                        length = Enum.GetNames(typeof(MiniTileType_Swamp)).Length;
+                        r = new Random();
+                        i = r.Next(0, length);
+                        return (MiniTileType_Swamp)i;
+                    }
+                case TileType.Jungle:
+                    {
+                        length = Enum.GetNames(typeof(MiniTileType_Jungle)).Length;
+                        r = new Random();
+                        i = r.Next(0, length);
+                        return (MiniTileType_Jungle)i;
+                    }
+                case TileType.Mountains:
+                    {
+                        length = Enum.GetNames(typeof(MiniTileType_Mountains)).Length;
+                        r = new Random();
+                        i = r.Next(0, length);
+                        return (MiniTileType_Mountains)i;
+                    }
+                case TileType.Snow:
+                    {
+                        length = Enum.GetNames(typeof(MiniTileType_Snow)).Length;
+                        r = new Random();
+                        i = r.Next(0, length);
+                        return (MiniTileType_Snow)i;
+                    }
+                case TileType.Savannah:
+                    {
+                        length = Enum.GetNames(typeof(MiniTileType_Savannah)).Length;
+                        r = new Random();
+                        i = r.Next(0, length);
+                        return (MiniTileType_Savannah)i;
+                    }
+
+            }
+            return MiniTileType.Unknown_Tile;
+
+        }
+
+        public static Enum GetSpecificWorldObject(Tile parentTile)
+        {
+
+            int length;
+            Random r;
+            int i;
+
+
+            
+            switch (parentTile.Ttype)
+            {
+                case TileType.Desert:
+                    {
+                        length = Enum.GetNames(typeof(WorldObjectType_Desert)).Length;
+                        r = new Random();
+                        i = r.Next(0, length);
+                        return (WorldObjectType_Desert)i;
+                    }
+                case TileType.Grassland:
+                    {
+                        length = Enum.GetNames(typeof(WorldObjectType_Grassland)).Length;
+                        r = new Random();
+                        i = r.Next(0, length);
+                        return (WorldObjectType_Grassland)i;
+                    }
+                case TileType.Swamp:
+                    {
+                        length = Enum.GetNames(typeof(WorldObjectType_Swamp)).Length;
+                        r = new Random();
+                        i = r.Next(0, length);
+                        return (WorldObjectType_Swamp)i;
+                    }
+                case TileType.Jungle:
+                    {
+                        length = Enum.GetNames(typeof(WorldObjectType_Jungle)).Length;
+                        r = new Random();
+                        i = r.Next(0, length);
+                        return (WorldObjectType_Jungle)i;
+                    }
+                case TileType.Mountains:
+                    {
+                        length = Enum.GetNames(typeof(WorldObjectType_Mountains)).Length;
+                        r = new Random();
+                        i = r.Next(0, length);
+                        return (WorldObjectType_Mountains)i;
+                    }
+                case TileType.Snow:
+                    {
+                        length = Enum.GetNames(typeof(WorldObjectType_Snow)).Length;
+                        r = new Random();
+                        i = r.Next(0, length);
+                        return (WorldObjectType_Snow)i;
+                    }
+                case TileType.Savannah:
+                    {
+                        length = Enum.GetNames(typeof(WorldObjectType_Savannah)).Length;
+                        r = new Random();
+                        i = r.Next(0, length);
+                        return (WorldObjectType_Savannah)i;
+                    }
+
+            }
+            return WorldObjectType.Empty;
 
         }
 
