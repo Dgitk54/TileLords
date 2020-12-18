@@ -4,16 +4,20 @@ using System.Text;
 
 namespace DataModel.Common
 {
-    public enum TileType
+    //the biome of this tile
+    public enum TileType 
     {
         Grassland,
         WaterBody,
-        River,
-        Mountain,
         Desert,
         Snow,
-        Stone,
-        Mud
+        Swamp,
+        Jungle,
+        Mountains,
+        Savannah,
+
+
+     
 
     }
 }

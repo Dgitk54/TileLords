@@ -27,7 +27,7 @@ namespace DataModel.Common.Tests
             tileGen = new TileGenerator();
         }
 
-      
+
 
 
         [Test]
@@ -53,7 +53,7 @@ namespace DataModel.Common.Tests
         public void PrintGeneratedAreaWithoutSpecifyingTypes()
         {
 
-       
+
             TileGenerator.GenerateArea(new PlusCode("8FX9WWV9+PR", 8), 1).ForEach(v =>
             {
                 Debug.WriteLine(v.ToString() + "CONTENTS: \n ");
@@ -129,16 +129,16 @@ namespace DataModel.Common.Tests
 
         [Test]
 
-        public void TestGenerateMiniTiles()
+        public void GenerateMiniTilesTest()
         {
-            
+
             List<int> miniTileTypeGen = new List<int>() { 0, 1, 2, 3, 3, 3, 3 };
             List<int> worldObjectTypeList = new List<int>() { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
-            List<MiniTile> miniTileList = TileGenerator.GenerateMiniTiles(new PlusCode("8FX9XW2F",8), miniTileTypeGen, worldObjectTypeList);
-           
+            List<MiniTile> miniTileList = TileGenerator.GenerateMiniTiles(new PlusCode("8FX9XW2F", 8), miniTileTypeGen, worldObjectTypeList);
+
             Assert.AreEqual(400, miniTileList.Count);
 
-        
+
 
             for (int i = 0; i < 10; i++)
             {
@@ -153,9 +153,59 @@ namespace DataModel.Common.Tests
             Assert.AreEqual("8FX9XW2F+W3", miniTileList[21].MiniTileId.Code);
             Assert.AreEqual("8FX9XW2F+2X", miniTileList[399].MiniTileId.Code);
 
-            
+
         }
 
+        [Test]
 
+        public void GetSpecificTileTypeTest()
+        {
+            Tile parent = new Tile();
+            parent.Ttype = TileType.Snow;
+      
+            String type = TileGenerator.GetSpecificTileType(parent) + "";
+            Debug.WriteLine(type);
+            Assert.IsTrue(type == "Snow_Tile" || type == "Snow_River" || type == "Unknown_Type" || type == "Snow_PatchyGrass" || type == "Snow_River2");
+
+    
+            parent.Ttype = TileType.Swamp;
+            type = TileGenerator.GetSpecificTileType(parent) + "";
+            Debug.WriteLine(type);
+            Assert.IsTrue(type == "Mud_Marsh" || type == "Mud_Grass" || type == "Mud_Tile" || type == "Unknown_Tile");
+
+        }
+        [Test]
+        public void GetSpecificWorldObjectPrintTest()
+        {
+            Tile parent = new Tile();
+            parent.Ttype = TileType.Snow;
+
+            String type = TileGenerator.GetSpecificWorldObject(parent) + "";
+            Debug.WriteLine(type);
+            type = TileGenerator.GetSpecificWorldObject(parent) + "";
+            Debug.WriteLine(type);
+            type = TileGenerator.GetSpecificWorldObject(parent) + "";
+            Debug.WriteLine(type);
+
+
+
+            parent.Ttype = TileType.Swamp;
+            type = TileGenerator.GetSpecificWorldObject(parent) + "";
+            Debug.WriteLine(type);
+            type = TileGenerator.GetSpecificWorldObject(parent) + "";
+            Debug.WriteLine(type);
+            type = TileGenerator.GetSpecificWorldObject(parent) + "";
+            Debug.WriteLine(type);
+
+            parent.Ttype = TileType.WaterBody;
+            type = TileGenerator.GetSpecificWorldObject(parent) + "";
+            Debug.WriteLine(type);
+            type = TileGenerator.GetSpecificWorldObject(parent) + "";
+            Debug.WriteLine(type);
+            type = TileGenerator.GetSpecificWorldObject(parent) + "";
+            Debug.WriteLine(type);
+
+
+        }
     }
 }
