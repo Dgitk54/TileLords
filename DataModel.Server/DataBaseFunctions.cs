@@ -142,15 +142,6 @@ namespace DataModel.Server
             using (var dataBase = new LiteDatabase(DataBaseRead()))
             {
                 var col = dataBase.GetCollection<User>("users");
-
-                col.EnsureIndex(v => v.AccountCreated);
-                col.EnsureIndex(v => v.Inventory);
-                col.EnsureIndex(v => v.LastOnline);
-                col.EnsureIndex(v => v.LastPostion);
-                col.EnsureIndex(v => v.UserName);
-                col.EnsureIndex(v => v.Salt);
-                col.EnsureIndex(v => v.SaltedHash);
-
                 if (col.Find(v => v.UserName == name).Any())
                     return col.Find(v => v.UserName == name).First();
                 return null;

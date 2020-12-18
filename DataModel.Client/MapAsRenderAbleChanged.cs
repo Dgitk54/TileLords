@@ -16,6 +16,7 @@ namespace DataModel.Client
             var nullval = Map.Values;
             var nullcount = 0;
             var nonnull = 0;
+            var hasContent = 0;
             foreach (var v in nullval)
             {
                 if (v == null)
@@ -24,11 +25,19 @@ namespace DataModel.Client
                 }
                 else
                 {
+                    if(v.Content != null)
+                    {
+                        if(v.Content.Count > 0)
+                        {
+                            hasContent++;
+                        }
+                    }
+                    
                     nonnull++;
                 }
             }
 
-            return "MapAsRenderAbleChanged "  + "NONNULL:" + nonnull;
+            return "MapAsRenderAbleChanged "  + "NONNULL:" + nonnull + "TILECONTENT" + hasContent;
         }
     }
 }

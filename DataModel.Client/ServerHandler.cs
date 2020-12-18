@@ -48,6 +48,13 @@ namespace DataModel.Client
             if (byteBuffer != null)
             {
                 var data = byteBuffer.ToString(Encoding.UTF8);
+            //   if (data.Length > 500)
+            //   {
+            //       Console.WriteLine("Received large" + data.Length);
+            //   } else
+            //   {
+            //       Console.WriteLine(data);
+            //   }
                 eventBus.Publish(new DataSourceEvent(data));
             }
 

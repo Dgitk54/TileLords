@@ -31,7 +31,6 @@ namespace DataModel.Server
         {
             var logLevel = LogLevel.INFO;
 
-
             var serverPort = 8080;
 
             if (bootstrap != null)

@@ -18,7 +18,7 @@ namespace DataModel.Common
         public static List<MiniTile> GenerateMiniTiles(PlusCode tileCode, List<int> miniTileTypeList, List<int> worldObjectTypeList)
         {
             string code = tileCode.Code;
-            if(code.Length > 9)
+            if (code.Length > 9)
             {
                 code = code.Substring(0, 9);
             }
@@ -26,8 +26,8 @@ namespace DataModel.Common
             {
                 code += "+";
             }
-          
-            
+
+
             var tiles = from miniTileCodeString in LocationCodeTileUtility.GetAndCombineWithAllAfterPlus(code)
                         select new MiniTile(new PlusCode(miniTileCodeString, 10), getRandomMiniTileType(miniTileTypeList), new List<ITileContent>() { new WorldObject(getRandomWorldObject(worldObjectTypeList)) });
 
@@ -38,40 +38,35 @@ namespace DataModel.Common
 
         public static List<MiniTile> RegenerateArea(PlusCode miniTileCode, List<MiniTile> currentTiles, IList<MiniTile> newTiles, int radius)
         {
-            if(newTiles.Count == 0)
+            if (newTiles.Count == 0)
             {
                 return currentTiles;
             }
 
-    
+
             var allNewPlusCodes = LocationCodeTileUtility.GetTileSection(miniTileCode.Code, radius, miniTileCode.Precision);
             var oldArea = new ConcurrentBag<MiniTile>();
             var newArea = new ConcurrentBag<MiniTile>();
             var miniTileToAdd = new ConcurrentBag<MiniTile>();
 
-            var task1 = Task.Run(() => {
-                currentTiles.AsParallel().ForAll(v =>
-                {
-                    allNewPlusCodes.AsParallel()
-                    .Where(e => v.MiniTileId.Code.Equals(e))
-                    .ForAll(e => oldArea.Add(v));
 
-                });
-            });
-
-            var task2 = Task.Run(() => 
+            currentTiles.AsParallel().ForAll(v =>
             {
-                newTiles.AsParallel().ForAll(v =>
-                {
-                    allNewPlusCodes.AsParallel()
-                    .Where(e => v.MiniTileId.Code.Equals(e))
-                    .ForAll(e => newArea.Add(v));
-                });
+                allNewPlusCodes.AsParallel()
+                .Where(e => v.MiniTileId.Code.Equals(e))
+                .ForAll(e => oldArea.Add(v));
+
             });
 
-            
-            Task.WhenAll(task1, task2).Wait();
-            
+
+
+            newTiles.AsParallel().ForAll(v =>
+            {
+                allNewPlusCodes.AsParallel()
+                .Where(e => v.MiniTileId.Code.Equals(e))
+                .ForAll(e => newArea.Add(v));
+            });
+
 
             oldArea.AsParallel()
                 .ForAll(oldTile =>
@@ -191,7 +186,7 @@ namespace DataModel.Common
         public static List<Tile> GenerateArea(PlusCode code, int radius, List<int> tileTypeList, List<int> miniTileTypeList)
         {
             string c = code.Code;
-            if(c.Length > 8)
+            if (c.Length > 8)
             {
                 c = c.Substring(0, 8);
             }
@@ -207,14 +202,14 @@ namespace DataModel.Common
             {
                 c = c.Substring(0, 8);
             }
-            List<int> tileTypeList = new List<int>() { 0,1,2,3,4,5,6,7};
+            List<int> tileTypeList = new List<int>() { 0, 1, 2, 3, 4, 5, 6, 7 };
             List<int> miniTileTypeList = new List<int>() { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
             List<int> worldObjectTypeList = new List<int>();
-            
+
             //@@@@@@@@@@@@@@@@@@
             //somewhat useless code that adds index for each worldObjectType to a list to select one at random (adding empty object many times to balance it), should be adjusted for a real generator to only use the index of relevant worldObjects
             //@@@@@@@@@@@@@@@@@@
-            for(int i = 0; i < Enum.GetNames(typeof(WorldObjectType)).Length; i++)
+            for (int i = 0; i < Enum.GetNames(typeof(WorldObjectType)).Length; i++)
             {
                 worldObjectTypeList.Add(i);
             }
@@ -252,7 +247,7 @@ namespace DataModel.Common
                 return WorldObjectType.Empty;
 
             Random r = new Random();
-            
+
             int i = r.Next(0, worldObjectTypeList.Count);
 
 

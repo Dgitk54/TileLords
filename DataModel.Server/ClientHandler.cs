@@ -29,7 +29,7 @@ namespace DataModel.Server
 
         readonly ClientChunkUpdateHandler gpsClientLocationHandler;
         readonly ClientAccountRegisterHandler registerHandler;
-
+        readonly ClientTileContentHandler clientTileContentHandler;
 
         public ClientHandler(IEventBus serverBus)
         {
@@ -39,7 +39,7 @@ namespace DataModel.Server
 
             gpsClientLocationHandler = new ClientChunkUpdateHandler(clientBus);
             registerHandler = new ClientAccountRegisterHandler(clientBus,serverBus);
-            
+            clientTileContentHandler = new ClientTileContentHandler(clientBus);
         }
 
         public override void ChannelActive(IChannelHandlerContext ctx)
@@ -51,6 +51,7 @@ namespace DataModel.Server
             disposables.Add(gpsClientLocationHandler.AttachToBus());
             disposables.Add(registerHandler.AttachToBus());
             disposables.Add(loginHandler.AttachToBus());
+            disposables.Add(clientTileContentHandler.AttachToBus());
             ctx.Channel.CloseCompletion.ContinueWith((x) => Console.WriteLine("Channel Closed"));
         }
 
