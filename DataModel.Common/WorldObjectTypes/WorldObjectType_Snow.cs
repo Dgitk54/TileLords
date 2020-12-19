@@ -22,7 +22,8 @@ namespace DataModel.Common.WorldObjectTypes
         Waterfall,
         Wheatfield,
         Wintertree,
-        Wintertree2
+        Wintertree2,
+        Treetrunk
 
 
     }

@@ -25,6 +25,8 @@ namespace DataModel.Common.WorldObjectTypes
         Volcano,
         Waterfall,
         Wheatfield,
+        Stork,
+        Treetrunk
     
 
 

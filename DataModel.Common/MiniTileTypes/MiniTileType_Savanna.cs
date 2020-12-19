@@ -4,7 +4,7 @@ using System.Text;
 
 namespace DataModel.Common.MiniTileTypes
 {
-    public enum MiniTileType_Savannah
+    public enum MiniTileType_Savanna
     {
   
         Unknown_Tile

@@ -24,7 +24,15 @@ namespace DataModel.Common.WorldObjectTypes
         Waterfall,
         Wheatfield,
         Wintertree,
-        Wintertree2
+        Wintertree2,
+        Treeroots,
+        Treeroots2,
+        Swamptree,
+        Mangrove,
+        Treetrunk,
+        Fantree,
+        Palmtree,
+        SmallPalmtree
 
 
     }

@@ -36,8 +36,14 @@ namespace DataModel.Common
         Waterfall,
         Wheatfield,
         Wintertree,
-        Wintertree2
-        
+        Wintertree2,
+        Treeroots,
+        Treeroots2,
+        Swamptree,
+        Mangrove,
+        Stork,
+        Flamingo
+
 
     }
 }

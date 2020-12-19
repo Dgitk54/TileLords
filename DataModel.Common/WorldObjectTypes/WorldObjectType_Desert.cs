@@ -21,6 +21,7 @@ namespace DataModel.Common.WorldObjectTypes
         Tree2,
         Volcano,
         Wheatfield,
+        Fantree
 
     }
 }

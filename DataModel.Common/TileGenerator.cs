@@ -1,4 +1,6 @@
-﻿using System;
+﻿using DataModel.Common.MiniTileTypes;
+using DataModel.Common.WorldObjectTypes;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -257,6 +259,138 @@ namespace DataModel.Common
 
 
             return (WorldObjectType)worldObjectTypeList[i];
+
+        }
+
+        public static Enum GetSpecificTileType(Tile parentTile)
+        {
+
+            int length;
+            Random r;
+            int i;
+
+
+
+            switch (parentTile.Ttype)
+            {
+                case TileType.Desert:
+                    {
+                        length = Enum.GetNames(typeof(MiniTileType_Desert)).Length;
+                        r = new Random();
+                        i = r.Next(0, length);
+                        return (MiniTileType_Desert)i;
+                    }
+                case TileType.Grassland:
+                    {
+                        length = Enum.GetNames(typeof(MiniTileType_Grassland)).Length;
+                        r = new Random();
+                        i = r.Next(0, length);
+                        return (MiniTileType_Grassland)i;
+                    }
+                case TileType.Swamp:
+                    {
+                        length = Enum.GetNames(typeof(MiniTileType_Swamp)).Length;
+                        r = new Random();
+                        i = r.Next(0, length);
+                        return (MiniTileType_Swamp)i;
+                    }
+                case TileType.Jungle:
+                    {
+                        length = Enum.GetNames(typeof(MiniTileType_Jungle)).Length;
+                        r = new Random();
+                        i = r.Next(0, length);
+                        return (MiniTileType_Jungle)i;
+                    }
+                case TileType.Mountains:
+                    {
+                        length = Enum.GetNames(typeof(MiniTileType_Mountains)).Length;
+                        r = new Random();
+                        i = r.Next(0, length);
+                        return (MiniTileType_Mountains)i;
+                    }
+                case TileType.Snow:
+                    {
+                        length = Enum.GetNames(typeof(MiniTileType_Snow)).Length;
+                        r = new Random();
+                        i = r.Next(0, length);
+                        return (MiniTileType_Snow)i;
+                    }
+                case TileType.Savannah:
+                    {
+                        length = Enum.GetNames(typeof(MiniTileType_Savanna)).Length;
+                        r = new Random();
+                        i = r.Next(0, length);
+                        return (MiniTileType_Savanna)i;
+                    }
+
+            }
+            return MiniTileType.Unknown_Tile;
+
+        }
+
+        public static Enum GetSpecificWorldObject(Tile parentTile)
+        {
+
+            int length;
+            Random r;
+            int i;
+
+
+
+            switch (parentTile.Ttype)
+            {
+                case TileType.Desert:
+                    {
+                        length = Enum.GetNames(typeof(WorldObjectType_Desert)).Length;
+                        r = new Random();
+                        i = r.Next(0, length);
+                        return (WorldObjectType_Desert)i;
+                    }
+                case TileType.Grassland:
+                    {
+                        length = Enum.GetNames(typeof(WorldObjectType_Grassland)).Length;
+                        r = new Random();
+                        i = r.Next(0, length);
+                        return (WorldObjectType_Grassland)i;
+                    }
+                case TileType.Swamp:
+                    {
+                        length = Enum.GetNames(typeof(WorldObjectType_Swamp)).Length;
+                        r = new Random();
+                        i = r.Next(0, length);
+                        return (WorldObjectType_Swamp)i;
+                    }
+                case TileType.Jungle:
+                    {
+                        length = Enum.GetNames(typeof(WorldObjectType_Jungle)).Length;
+                        r = new Random();
+                        i = r.Next(0, length);
+                        return (WorldObjectType_Jungle)i;
+                    }
+                case TileType.Mountains:
+                    {
+                        length = Enum.GetNames(typeof(WorldObjectType_Mountains)).Length;
+                        r = new Random();
+                        i = r.Next(0, length);
+                        return (WorldObjectType_Mountains)i;
+                    }
+                case TileType.Snow:
+                    {
+                        length = Enum.GetNames(typeof(WorldObjectType_Snow)).Length;
+                        r = new Random();
+                        i = r.Next(0, length);
+                        return (WorldObjectType_Snow)i;
+                    }
+                case TileType.Savannah:
+                    {
+                        length = Enum.GetNames(typeof(WorldObjectType_Savannah)).Length;
+                        r = new Random();
+                        i = r.Next(0, length);
+                        return (WorldObjectType_Savannah)i;
+                    }
+
+            }
+            return WorldObjectType.Empty;
 
         }
 

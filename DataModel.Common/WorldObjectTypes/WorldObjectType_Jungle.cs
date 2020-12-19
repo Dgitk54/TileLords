@@ -23,6 +23,9 @@ namespace DataModel.Common.WorldObjectTypes
         Volcano,
         Waterfall,
         Wheatfield,
+        Flamingo,
+        Treetrunk,
+        Fantree
      
 
 

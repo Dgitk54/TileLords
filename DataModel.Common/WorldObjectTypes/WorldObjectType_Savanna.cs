@@ -4,7 +4,7 @@ using System.Text;
 
 namespace DataModel.Common.WorldObjectTypes
 {
-    public enum WorldObjectType_Savannah
+    public enum WorldObjectType_Savanna
     {
         Empty,
         Bush,
@@ -23,6 +23,8 @@ namespace DataModel.Common.WorldObjectTypes
         Volcano,
         Waterfall,
         Wheatfield,
+        Stork,
+        Zebra
   
 
 
