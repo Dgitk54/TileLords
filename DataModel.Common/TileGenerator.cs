@@ -378,10 +378,10 @@ namespace DataModel.Common
                     }
                 case TileType.Savannah:
                     {
-                        length = Enum.GetNames(typeof(WorldObjectType_Savannah)).Length;
+                        length = Enum.GetNames(typeof(WorldObjectType_Savanna)).Length;
                         r = new Random();
                         i = r.Next(0, length);
-                        return (WorldObjectType_Savannah)i;
+                        return (WorldObjectType_Savanna)i;
                     }
 
             }
