@@ -112,6 +112,57 @@ namespace ClientIntegration
 
         }
 
+
+        static void DebugLoginSendSameGps(string name, string password, GPS gpsToSend, CancellationToken cancellationToken)
+        {
+            var result = StartClient();
+            result.Wait();
+            var instance = result.Result.Item2;
+            var nodesAmount = 20;
+            var tokenSrc = new CancellationTokenSource();
+            var list = DataModelFunctions.GPSNodesInCircle(gpsToSend, nodesAmount, 0.001);
+
+
+            //Try to log in, create account if cant log in:
+
+            Task tryLogin;
+            try
+            {
+                tryLogin = GetsEvent<UserActionSuccessEvent, UserLoginEvent>(instance, new UserLoginEvent() { Name = name, Password = password }, 5);
+                tryLogin.Wait();
+            }
+            catch (AggregateException exception)
+            {
+                var tryRegister = GetsEvent<UserActionSuccessEvent, UserRegisterEvent>(instance, new UserRegisterEvent() { Name = name, Password = password }, 5);
+                tryRegister.Wait();
+                if (tryRegister.IsFaulted)
+                {
+                    throw new Exception("Can not log in nor register");
+                }
+
+                var tryLoginAfterRegister = GetsEvent<UserActionSuccessEvent, UserLoginEvent>(instance, new UserLoginEvent() { Name = name, Password = password }, 5);
+                tryLoginAfterRegister.Wait();
+                if (tryLoginAfterRegister.IsFaulted)
+                    throw new Exception("Can not log in after register");
+            }
+
+            //var runCircle = Task.Run(() => SendGpsPath(instance, tokenSrc.Token, list, 4000), tokenSrc.Token);
+
+            var sendSame = Task.Run(() => SendSameGps(instance, tokenSrc.Token, gpsToSend, 4000));
+
+            do
+            {
+                if (cancellationToken.IsCancellationRequested)
+                    break;
+                Thread.Sleep(1000);
+
+            } while (!cancellationToken.IsCancellationRequested);
+
+            tokenSrc.Cancel();
+            sendSame.Wait();
+            instance.DisconnectClient();
+        }
+
         static void DebugLoginAndRunAroundClient(string name, string password, GPS circleCenter, CancellationToken cancellationToken)
         {
             var result = StartClient();
@@ -124,33 +175,28 @@ namespace ClientIntegration
 
             //Try to log in, create account if cant log in:
 
-         //   Task tryLogin;
-         //   try
-         //   {
-         //       tryLogin = GetsEvent<UserActionSuccessEvent, UserLoginEvent>(instance, new UserLoginEvent() { Name = name, Password = password }, 5);
-         //       tryLogin.Wait();
-         //   }
-         //   catch (AggregateException exception)
-         //   {
-         //       var tryRegister = GetsEvent<UserActionSuccessEvent, UserRegisterEvent>(instance, new UserRegisterEvent() { Name = name, Password = password }, 5);
-         //       tryRegister.Wait();
-         //       if (tryRegister.IsFaulted)
-         //       {
-         //           throw new Exception("Can not log in nor register");
-         //       }
-         //
-         //       var tryLoginAfterRegister = GetsEvent<UserActionSuccessEvent, UserLoginEvent>(instance, new UserLoginEvent() { Name = name, Password = password }, 5);
-         //       tryLoginAfterRegister.Wait();
-         //       if (tryLoginAfterRegister.IsFaulted)
-         //           throw new Exception("Can not log in after register");
-         //   }
+            Task tryLogin;
+            try
+            {
+                tryLogin = GetsEvent<UserActionSuccessEvent, UserLoginEvent>(instance, new UserLoginEvent() { Name = name, Password = password }, 5);
+                tryLogin.Wait();
+            }
+            catch (AggregateException exception)
+            {
+                var tryRegister = GetsEvent<UserActionSuccessEvent, UserRegisterEvent>(instance, new UserRegisterEvent() { Name = name, Password = password }, 5);
+                tryRegister.Wait();
+                if (tryRegister.IsFaulted)
+                {
+                    throw new Exception("Can not log in nor register");
+                }
+         
+                var tryLoginAfterRegister = GetsEvent<UserActionSuccessEvent, UserLoginEvent>(instance, new UserLoginEvent() { Name = name, Password = password }, 5);
+                tryLoginAfterRegister.Wait();
+                if (tryLoginAfterRegister.IsFaulted)
+                    throw new Exception("Can not log in after register");
+            }
             
-            
-              
-
-
-
-            var runCircle = Task.Run(() => SendGpsPath(instance, tokenSrc.Token, list, 1000), tokenSrc.Token);
+            var runCircle = Task.Run(() => SendGpsPath(instance, tokenSrc.Token, list, 4000), tokenSrc.Token);
             do
             {
                 if (cancellationToken.IsCancellationRequested)
@@ -169,7 +215,6 @@ namespace ClientIntegration
         {
             server = new ServerInstance();
             serverRunning = server.RunServerAsync();
-            Thread.Sleep(100);
         }
 
         [Test]
@@ -186,12 +231,12 @@ namespace ClientIntegration
         public void TwoClientsCanConnectAndLogIn()
         {
             var token = new CancellationTokenSource();
-            var client1 = Task.Run(() => DebugLoginAndRunAroundClient("a", "a", new GPS(49.000000, 7.900000), token.Token));
-            var client2 = Task.Run(() => DebugLoginAndRunAroundClient("b", "b", new GPS(49.000005, 7.900005), token.Token));
+            var client1 = Task.Run(() => DebugLoginSendSameGps("a", "a", new GPS(49.000000, 7.900000), token.Token));
+            var client2 = Task.Run(() => DebugLoginSendSameGps("b", "b", new GPS(49.000005, 7.900005), token.Token));
             Thread.Sleep(60 * 1000);
             token.Cancel();
             client1.Wait();
-            client2.Wait();
+            //client2.Wait();
 
         }
         [Test]
@@ -274,7 +319,19 @@ namespace ClientIntegration
 
 
         }
+        static void SendSameGps(ClientInstance instance, CancellationToken ct, GPS gps, int sleeptime)
+        {
 
+            do
+            {
+                instance.SendDebugGPS(gps);
+                Thread.Sleep(sleeptime);
+                if (ct.IsCancellationRequested)
+                    break;
+
+            } while (!ct.IsCancellationRequested);
+
+        }
 
 
 

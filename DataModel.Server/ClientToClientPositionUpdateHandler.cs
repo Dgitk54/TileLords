@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Reactive.Linq;
+using System.Linq;
 
 namespace DataModel.Server
 {
@@ -38,7 +39,6 @@ namespace DataModel.Server
             //var eventsLatestFrom = players.CombineLatest(closedChannels, (player, channel) => new { player, channel });
 
 
-            //TODO: after disconnecting scan stays at 1 player
             var playersOnline = eventsLatestFrom
                                        .Scan(new List<ObservablePlayer>(), (list, merged) =>
             {
@@ -65,28 +65,35 @@ namespace DataModel.Server
                                from p1 in list
                                from p2 in list
                                where p1 != p2
-                               from pos1 in p1.PlayerObservableLocationStream
-                               from pos2 in p2.PlayerObservableLocationStream
+                               from pos1 in p1.PlayerObservableLocationStream.DistinctUntilChanged()
+                               from pos2 in p2.PlayerObservableLocationStream.DistinctUntilChanged()
                                where pos1.GetChebyshevDistance(pos2) < 50
                                select new { p1, pos1, p2, pos2 };
 
-            return playersClose.Subscribe(v =>
+
+            return playersClose.DistinctUntilChanged().Subscribe(v =>
             {
+
+
+                Console.WriteLine("Seeing each other:" + v.p1.Name + "   and    " + v.p2.Name);
+
                 var player1AsTileContent = new Player() { Name = v.p1.Name, Location = v.pos1 };
                 var player2AsTileContent = new Player() { Name = v.p2.Name, Location = v.pos2 };
 
 
-                var dictForP1 = new Dictionary<PlusCode, ITileContent>()
+                var dictForP1 = new Dictionary<PlusCode, List<ITileContent>>()
                 {
-                    {v.pos2, player2AsTileContent }
+                    {v.pos2, new List<ITileContent>() { player2AsTileContent } }
                 };
-                var dictForP2 = new Dictionary<PlusCode, ITileContent>()
+                var dictForP2 = new Dictionary<PlusCode, List<ITileContent>>()
                 {
-                    {v.pos1, player1AsTileContent }
+                    {v.pos1, new List<ITileContent>() { player1AsTileContent } }
                 };
 
-                var contentForPlayer1 = new ServerTileContentEvent() { VisibleContent = dictForP1 };
-                var contentForPlayer2 = new ServerTileContentEvent() { VisibleContent = dictForP2 };
+               
+
+                var contentForPlayer1 = new ServerTileContentEvent() { VisibleContent = dictForP1.ToList() };
+                var contentForPlayer2 = new ServerTileContentEvent() { VisibleContent = dictForP2.ToList() };
 
                 v.p1.ClientBus.Publish(contentForPlayer1);
                 v.p2.ClientBus.Publish(contentForPlayer2);

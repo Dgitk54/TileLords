@@ -16,68 +16,102 @@ namespace DataModel.Client
 
         public IDisposable AttachToBus()
         {
-           
+
             //Tiles
             var onlyValid = eventBus.GetEventStream<DataSourceEvent>()
                                     .ParseOnlyValidUsingErrorHandler<ServerMapEvent>(ClientFunctions.PrintConsoleErrorHandler);
 
-            
 
 
-            var allTiles = from e in onlyValid
+
+            var BigTiles = from e in onlyValid
                            where e.Tiles != null
                            from tile in e.Tiles
-                           where tile != null
-                           from bigUpdates in tile.MiniTiles
-                           select bigUpdates;
+                           select tile.MiniTiles;
 
-            var smallUpdates = from e in onlyValid
-                               where e.MiniTiles != null
-                               from mini in e.MiniTiles
-                               where mini != null
-                               select mini;
+            var smallTiles = from e in onlyValid
+                             where e.MiniTiles != null
+                             select e.MiniTiles;
 
 
+            var concat = from e in BigTiles.Merge(smallTiles).Where(v => v != null).Buffer(TimeSpan.FromSeconds(4))
+                         select e.SelectMany(v => v).ToList();
 
-            var merged = allTiles.Merge(smallUpdates).Where(v => v != null);
 
-
-            var receivedLarge = BufferMiniTiles(merged);
 
             //Client
             var latestClient = ClientFunctions.LatestClientLocation(eventBus.GetEventStream<UserGpsEvent>());
 
-
+            var debug = eventBus.GetEventStream<DataSourceEvent>()
+                                      .ParseOnlyValidUsingErrorHandler<ServerTileContentEvent>(ClientFunctions.PrintConsoleErrorHandler);
+            debug.Subscribe(v =>
+            {
+                if (v.VisibleContent == null)
+                {
+                    Console.WriteLine("DEBUG PRINT WITH NULL");
+                }
+                if(v.VisibleContent != null)
+                {
+                   Debug.WriteLine("DEBUG PRINT COUNT:"+ v.VisibleContent);
+                }
+            });
 
             //Content
+            var tileContent = eventBus.GetEventStream<DataSourceEvent>()
+                                      .ParseOnlyValidUsingErrorHandler<ServerTileContentEvent>(ClientFunctions.PrintConsoleErrorHandler)
+                                      .Where(v => v.VisibleContent != null)
+                                      .StartWith(new ServerTileContentEvent());
 
-            var tileContent = eventBus.GetEventStream<DataSourceEvent>().ParseOnlyValidUsingErrorHandler<ServerTileContentEvent>(ClientFunctions.PrintConsoleErrorHandler);
 
-
-
+        //    tileContent.Subscribe(v =>
+        //    {
+        //        int count = 0;
+        //        if (v.VisibleContent != null)
+        //            count = v.VisibleContent.Values.Count;
+        //
+        //        Console.WriteLine("Values received" + count);  //0
+        //
+        //
+        //    });
 
             var clientPositionPlusContent = latestClient.WithLatestFrom(tileContent, (position, content) => new { position, content });
 
 
 
-            var bufferedContent = clientPositionPlusContent.Scan(new Dictionary<PlusCode, ITileContent>(), (buffer, val) =>
+
+            var bufferedContent = clientPositionPlusContent.Scan(new List<KeyValuePair<PlusCode, List<ITileContent>>>(), (buffer, val) =>
             {
+
                 //Remove values far away:
                 var currentClientLocation = val.position;
-                var farAway = from key in buffer.Keys
+
+                
+
+
+                var farAway = from keyValue in buffer
+                              let key = keyValue.Key
                               where PlusCodeUtils.GetChebyshevDistance(key, currentClientLocation) > 50
                               select key;
 
 
-                farAway.ToList().ForEach(v => buffer.Remove(v));
-
+                //farAway.ToList().ForEach(v => buffer.Remove(v));
+                //return buffer.Concat(val.content.VisibleContent).GroupBy(v => v.Key).ToDictionary(v => v.Key, v => v.First().Value);
                 if (val.content.VisibleContent == null)
                     return buffer;
-                return buffer.Concat(val.content.VisibleContent).GroupBy(v => v.Key).ToDictionary(v => v.Key, v => v.First().Value);
+
+
+                buffer.AddRange(val.content.VisibleContent);
+
+
+                return buffer;
+                
             });
 
 
-            return MapBufferChanged(receivedLarge, latestClient, bufferedContent)
+
+
+
+            return MapBufferChanged(concat, latestClient, bufferedContent)
                 .Subscribe(v => eventBus.Publish(new ClientMapBufferChanged(v)));
         }
 
@@ -85,29 +119,21 @@ namespace DataModel.Client
 
 
 
-        IObservable<IList<MiniTile>> MapBufferChanged(IObservable<IList<MiniTile>> observable1, IObservable<PlusCode> location, IObservable<Dictionary<PlusCode, ITileContent>> content)
+        IObservable<IList<MiniTile>> MapBufferChanged(IObservable<IList<MiniTile>> observable1, IObservable<PlusCode> location, IObservable<List<KeyValuePair<PlusCode, List<ITileContent>>>> content)
         => Accumulated(observable1, location, content);
 
-        IObservable<IList<MiniTile>> BufferMiniTiles(IObservable<MiniTile> observable) => observable.Buffer(TimeSpan.FromSeconds(4));
 
 
-        IObservable<IList<MiniTile>> Accumulated(IObservable<IList<MiniTile>> bufferedMiniTileStream, IObservable<PlusCode> location, IObservable<Dictionary<PlusCode, ITileContent>> content)
+        IObservable<IList<MiniTile>> Accumulated(IObservable<IList<MiniTile>> bufferedMiniTileStream, IObservable<PlusCode> location, IObservable<List<KeyValuePair<PlusCode, List<ITileContent>>>> content)
         {
             var output = bufferedMiniTileStream
-                .WithLatestFrom(location, (tiles, code) => new { tiles, code})
-                .WithLatestFrom(content, (locbuf, tcontent) => new { locbuf, tcontent })
+                .CombineLatest(location, (tiles, code) => new { tiles, code })
+                .CombineLatest(content, (locbuf, tcontent) => new { locbuf, tcontent })
                 .Scan(new List<MiniTile>(), (list, l1) =>
             {
                 list = TileGenerator.RegenerateArea(l1.locbuf.code, list, l1.locbuf.tiles, 40);
 
-                l1.tcontent.Keys.ToList().AsParallel().ForAll(v =>
-                {
-                    var tile = TileUtility.GetMiniTile(v, list);
-                    ITileContent getOutDict;
-                    l1.tcontent.TryGetValue(v, out getOutDict);
-                    var contentToAdd = new List<ITileContent>() { getOutDict };
-                    tile.Content = contentToAdd;
-                });
+                SetMinitileContent(list, l1.tcontent);
                 return list;
             });
             return output.DistinctUntilChanged();
@@ -115,6 +141,14 @@ namespace DataModel.Client
 
         }
 
+        void SetMinitileContent(List<MiniTile> map, List<KeyValuePair<PlusCode, List<ITileContent>>> content)
+        {
+            content.ForEach(v =>
+            {
+                var tile = TileUtility.GetMiniTile(v.Key, map);
+                tile.Content = v.Value;
+            });
+        }
 
 
     }
