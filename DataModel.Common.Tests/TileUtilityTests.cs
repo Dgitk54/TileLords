@@ -109,13 +109,13 @@ namespace DataModel.Common.Tests
 
 
 
-  
+
         [Test]
         public void SortList()
         {
 
             List<MiniTile> unsorted = new List<MiniTile>();
-            unsorted.Add(new MiniTile(new PlusCode("8FX9WWVC+W2",10), MiniTileType.Grass_River, null));
+            unsorted.Add(new MiniTile(new PlusCode("8FX9WWVC+W2", 10), MiniTileType.Grass_River, null));
             unsorted.Add(new MiniTile(new PlusCode("8FX9WWV9+XW", 10), MiniTileType.Grass_River, null));
             unsorted.Add(new MiniTile(new PlusCode("8FX9WWVC+X2", 10), MiniTileType.Grass_River, null));
             unsorted.Add(new MiniTile(new PlusCode("8FX9WWV9+WW", 10), MiniTileType.Grass_River, null));
@@ -136,15 +136,15 @@ namespace DataModel.Common.Tests
             sorted.Add(new MiniTile(new PlusCode("8FX9WWV9+WW", 10), MiniTileType.Grass_River, null));
             sorted.Add(new MiniTile(new PlusCode("8FX9WWV9+WX", 10), MiniTileType.Grass_River, null));
             sorted.Add(new MiniTile(new PlusCode("8FX9WWVC+W2", 10), MiniTileType.Grass_River, null));
-         
-            
 
-           for(int i = 0; i < unsorted.Count; i++)
+
+
+            for (int i = 0; i < unsorted.Count; i++)
             {
                 Debug.WriteLine(sorted[i].MiniTileId.Code + " " + unsorted[i].MiniTileId.Code);
                 Assert.AreEqual(sorted[i].MiniTileId.Code, unsorted[i].MiniTileId.Code);
             }
-     
+
 
         }
 
@@ -273,6 +273,23 @@ namespace DataModel.Common.Tests
             }
 
 
+        }
+
+        [Test]
+        public void GetRandomMiniTileByTileCodeTest()
+        {
+            PlusCode code = TileUtility.GetRandomMiniTileByTileCode(new Tile(new PlusCode("8FXW92W", 8), TileType.Desert, null));
+            Assert.IsTrue(code.Code.Contains("8FXW92W"));
+            Assert.AreEqual("8FXW92W", code.Code.Substring(0, 7));
+            Debug.WriteLine(code.Code);
+            code = TileUtility.GetRandomMiniTileByTileCode(new Tile(new PlusCode("8FXW92W", 8), TileType.Desert, null));
+            Assert.IsTrue(code.Code.Contains("8FXW92W"));
+            Assert.AreEqual("8FXW92W", code.Code.Substring(0, 7));
+            Debug.WriteLine(code.Code);
+            code = TileUtility.GetRandomMiniTileByTileCode(new Tile(new PlusCode("8FXW92W", 8), TileType.Desert, null));
+            Assert.IsTrue(code.Code.Contains("8FXW92W"));
+            Assert.AreEqual("8FXW92W", code.Code.Substring(0, 7));
+            Debug.WriteLine(code.Code);
         }
     }
 }

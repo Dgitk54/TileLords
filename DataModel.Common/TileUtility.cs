@@ -98,6 +98,31 @@ namespace DataModel.Common
         }
 
 
+        public static PlusCode GetRandomMiniTileByTileCode(Tile parentTile)
+        {
+            String parentCode = parentTile.PlusCode.Code;
+            String afterPlus = "23456789CFGHJMPQRVWX";
+            parentCode += "+";
+            Random r  = new Random();
+            int i = r.Next(0, afterPlus.Length);
+            parentCode += (afterPlus[i] + "");
+  
+         
+            i = r.Next(0, afterPlus.Length);
+            parentCode += (afterPlus[i] + "");
+          
+            return new PlusCode(parentCode, 10);
+        }
 
+
+        public static MiniTile GetRandomMiniTileByList(List<MiniTile> miniTileList)
+        {
+           
+            Random r = new Random();
+            int i = r.Next(0, miniTileList.Count);
+            
+
+            return miniTileList[i];
+        }
     }
 }
