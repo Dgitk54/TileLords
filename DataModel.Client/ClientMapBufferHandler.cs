@@ -42,19 +42,8 @@ namespace DataModel.Client
             //Client
             var latestClient = ClientFunctions.LatestClientLocation(eventBus.GetEventStream<UserGpsEvent>());
 
-            var debug = eventBus.GetEventStream<DataSourceEvent>()
-                                      .ParseOnlyValidUsingErrorHandler<ServerTileContentEvent>(ClientFunctions.PrintConsoleErrorHandler);
-            debug.Subscribe(v =>
-            {
-                if (v.VisibleContent == null)
-                {
-                    Console.WriteLine("DEBUG PRINT WITH NULL");
-                }
-                if(v.VisibleContent != null)
-                {
-                   Debug.WriteLine("DEBUG PRINT COUNT:"+ v.VisibleContent);
-                }
-            });
+           
+           
 
             //Content
             var tileContent = eventBus.GetEventStream<DataSourceEvent>()
@@ -63,17 +52,7 @@ namespace DataModel.Client
                                       .StartWith(new ServerTileContentEvent());
 
 
-        //    tileContent.Subscribe(v =>
-        //    {
-        //        int count = 0;
-        //        if (v.VisibleContent != null)
-        //            count = v.VisibleContent.Values.Count;
-        //
-        //        Console.WriteLine("Values received" + count);  //0
-        //
-        //
-        //    });
-
+      
             var clientPositionPlusContent = latestClient.WithLatestFrom(tileContent, (position, content) => new { position, content });
 
 
@@ -132,8 +111,8 @@ namespace DataModel.Client
                 .Scan(new List<MiniTile>(), (list, l1) =>
             {
                 list = TileGenerator.RegenerateArea(l1.locbuf.code, list, l1.locbuf.tiles, 40);
-
-                SetMinitileContent(list, l1.tcontent);
+                var copy = new List<KeyValuePair<PlusCode, List<ITileContent>>>(l1.tcontent);
+                SetMinitileContent(list, copy);
                 return list;
             });
             return output.DistinctUntilChanged();

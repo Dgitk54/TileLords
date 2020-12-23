@@ -20,7 +20,7 @@ namespace DataModel.Client
             var latestBuffer = eventBus.GetEventStream<ClientMapBufferChanged>();
 
 
-            return latestClientLocation.WithLatestFrom(latestBuffer, (loc, buffer) => new { loc, buffer })
+            return latestClientLocation.WithLatestFrom(latestBuffer, (loc, buffer) => new { loc, buffer }).DistinctUntilChanged()
                                        .Subscribe(v => 
                                        {
                                            var neighbors = v.loc.Neighbors(10);
