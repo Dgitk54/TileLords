@@ -13,7 +13,9 @@ namespace DataModel.Common
         Food,
         Iron,
         Copper,
-        Water
+        Water,
+        Coal,
+        
 
     }
 }

@@ -13,7 +13,7 @@ namespace DataModel.Server
 
         readonly JsonSerializerSettings settings = new JsonSerializerSettings
         {
-            TypeNameHandling = TypeNameHandling.All
+            TypeNameHandling = TypeNameHandling.Auto
         };
         readonly IEventBus eventBus;
         public ClientTileContentHandler(IEventBus clientBus)

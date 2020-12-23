@@ -13,9 +13,9 @@ namespace ClientMain
     {
         static void Main(string[] args)
         {
-            var bus = new ClientEventBus();
+           /* var bus = new ClientEventBus();
             var instance = new ClientInstance(bus);
-            var task = instance.RunClientAsync();
+            var task = instance.RunClientAsync(); */
 
 
 
@@ -50,7 +50,7 @@ namespace ClientMain
 
 
 
-            task.Wait();
+           // task.Wait();
 
         }
 

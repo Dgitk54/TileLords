@@ -42,7 +42,10 @@ namespace DataModel.Common
         Swamptree,
         Mangrove,
         Stork,
-        Flamingo
+        Flamingo,
+        Treetrunk,
+        Fantree,
+        Zebra
 
 
     }
