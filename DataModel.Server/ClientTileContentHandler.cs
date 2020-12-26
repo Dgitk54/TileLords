@@ -28,9 +28,6 @@ namespace DataModel.Server
             {
                
                 var serialized = JsonConvert.SerializeObject(v, typeof(ServerTileContentEvent), settings);
-
-                Console.WriteLine("Servertilecontentevent:" + serialized);
-
                 var sink = new DataSinkEvent(serialized);
                 eventBus.Publish(sink);
             });

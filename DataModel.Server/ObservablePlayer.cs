@@ -16,6 +16,8 @@ namespace DataModel.Server
 
         public IObservable<PlusCode> PlayerObservableLocationStream { get; set; }
 
+        public IObservable<bool> ConnectionStatus { get; set; }
+
 
     }
 }

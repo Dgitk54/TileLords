@@ -24,7 +24,17 @@ namespace DataModel.Server
         public ServerInstance()
         {
             ServerFunctions.DebugEventToConsoleSink(bus.GetEventStream<IEvent>());
-            disposables.Add(new ClientToClientPositionUpdateHandler(bus).AttachToBus());
+
+
+            //disposables.Add(new ClientToClientPositionUpdateHandler(bus).AttachToBus());
+
+            disposables.Add(new PlayersOnlineHandler(bus).AttachToBus());
+
+            var movementUpdater = new PlayerMovementTileUpdater(bus);
+            disposables.Add(movementUpdater.AttachToBus());
+            disposables.Add(movementUpdater.AttachCleanup());
+
+            disposables.Add(new PlayerTileContentHandler(bus).AttachToBus());
             
         }
         public async Task RunServerAsync()

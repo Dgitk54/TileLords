@@ -36,9 +36,6 @@ namespace DataModel.Server
 
 
 
-            //var eventsLatestFrom = players.CombineLatest(closedChannels, (player, channel) => new { player, channel });
-
-
             var playersOnline = eventsLatestFrom
                                        .Scan(new List<ObservablePlayer>(), (list, merged) =>
             {

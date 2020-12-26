@@ -14,6 +14,7 @@ namespace DataModel.Server
     {
         readonly IEventBus eventBus;
         readonly IEventBus serverBus;
+        readonly IObservable<bool> isActive;
 
         readonly IChannel channel;
 
@@ -21,11 +22,12 @@ namespace DataModel.Server
         {
             TypeNameHandling = TypeNameHandling.All
         };
-        public ClientAccountLoginHandler(IEventBus bus, IEventBus serverBus, IChannel channel)
+        public ClientAccountLoginHandler(IEventBus bus, IEventBus serverBus, IChannel channel, IObservable<bool> connectionActive)
         {
             eventBus = bus;
             this.channel = channel;
             this.serverBus = serverBus;
+            isActive = connectionActive;
         }
 
 
@@ -63,7 +65,8 @@ namespace DataModel.Server
                             ClientBus = eventBus,
                             Name = user.UserName,
                             PlayerObservableLocationStream = ServerFunctions.ExtractPlusCodeLocationStream(eventBus, 10),
-                            ClientChannel = channel
+                            ClientChannel = channel,
+                            ConnectionStatus = isActive
                         };
 
                         serverBus.Publish(new PlayerLoggedInEvent() { Player = player });

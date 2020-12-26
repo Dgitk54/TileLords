@@ -68,6 +68,19 @@ namespace DataModel.Server
 
         }
 
+        public static void UpdateTile(MiniTile miniTile)
+        {
+
+        }
+
+
+        public static MiniTile LookupMiniTile(PlusCode code)
+        {
+            var tile = LookUpTile(code);
+            return TileUtility.GetMiniTile(code, tile.MiniTiles);
+        }
+
+
         public static Tile LookUpTile(PlusCode code)
         {
             using (var db = new LiteDatabase(DataBaseRead()))
@@ -87,7 +100,6 @@ namespace DataModel.Server
                     {
                         if (results == null || results.Count() == 0)
                         {
-                            Debug.WriteLine("put " + code.Code + " in");
                             var col2 = dbWrite.GetCollection<Tile>("tiles");
 
                             col2.EnsureIndex(v => v.MiniTiles);

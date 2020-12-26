@@ -21,7 +21,8 @@ namespace DataModel.Server
         static readonly IInternalLogger Logger = InternalLoggerFactory.GetInstance<ClientHandler>();
 
         readonly Subject<string> jsonClientSource = new Subject<string>();
-
+        readonly Subject<bool> connectionActive = new Subject<bool>();
+        
         readonly List<IDisposable> disposables = new List<IDisposable>();
 
         readonly IEventBus serverBus; // eventbus for serverwide messages
@@ -44,7 +45,7 @@ namespace DataModel.Server
 
         public override void ChannelActive(IChannelHandlerContext ctx)
         {
-            var loginHandler = new ClientAccountLoginHandler(clientBus, serverBus, ctx.Channel);
+            var loginHandler = new ClientAccountLoginHandler(clientBus, serverBus, ctx.Channel, connectionActive);
             serverBus.Publish(new ServerClientConnectedEvent() { Channel = ctx.Channel });
             disposables.Add(ServerFunctions.EventStreamSink(clientBus.GetEventStream<DataSinkEvent>(), ctx));
             disposables.Add(jsonClientSource.Subscribe(v => clientBus.Publish(new DataSourceEvent(v))));
@@ -69,7 +70,7 @@ namespace DataModel.Server
         public override void ChannelInactive(IChannelHandlerContext ctx)
         {
             serverBus.Publish(new ServerClientDisconnectedEvent() { Channel = ctx.Channel});
-
+            connectionActive.OnNext(false);
             disposables.ForEach(v => v.Dispose());
             Console.WriteLine("Cleaned up ClientHandler");
         }
