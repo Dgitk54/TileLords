@@ -26,7 +26,12 @@ namespace DataModel.Common.WorldObjectTypes
         Waterfall,
         Wheatfield,
         Stork,
-        Treetrunk
+        Treetrunk,
+        CowWhite,
+        CowBrown,
+        CowBlack,
+        OrangeTree,
+        AppleTree
     
 
 

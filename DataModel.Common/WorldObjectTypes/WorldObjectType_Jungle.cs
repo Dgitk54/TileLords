@@ -25,7 +25,10 @@ namespace DataModel.Common.WorldObjectTypes
         Wheatfield,
         Flamingo,
         Treetrunk,
-        Fantree
+        Fantree,
+        CowWhite,
+        AppleTree,
+        OrangeTree
      
 
 

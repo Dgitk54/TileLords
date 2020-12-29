@@ -45,7 +45,12 @@ namespace DataModel.Common
         Flamingo,
         Treetrunk,
         Fantree,
-        Zebra
+        Zebra,
+        CowBlack,
+        CowBrown,
+        CowWhite,
+        AppleTree,
+        OrangeTree
 
 
     }

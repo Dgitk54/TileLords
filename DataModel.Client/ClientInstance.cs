@@ -121,9 +121,50 @@ namespace DataModel.Client
 
 
 
+
+
         }
 
+        public async Task RunClientAsyncWithIP(string ipAdress, int port)
+        {
+            try
+            {
 
+                if (Bootstrap != null)
+                {
+                    throw new Exception("Client already running!");
+                }
+                var serverIP = IPAddress.Parse(ipAdress);
+                int serverPort = port;
+
+
+                Bootstrap = new Bootstrap();
+                Bootstrap
+                    .Group(group)
+                    .Channel<TcpSocketChannel>()
+                    .Option(ChannelOption.TcpNodelay, true) // Do not buffer and send packages right away
+                    .Handler(new ActionChannelInitializer<ISocketChannel>(channel =>
+                    {
+                        IChannelPipeline pipeline = channel.Pipeline;
+                        pipeline.AddLast("framing-enc", new LengthFieldPrepender(2));
+                        pipeline.AddLast("framing-dec", new LengthFieldBasedFrameDecoder(ushort.MaxValue, 0, 2, 0, 2));
+                        pipeline.AddLast(ServerHandler);
+                    }));
+
+                BootstrapChannel = await Bootstrap.ConnectAsync(new IPEndPoint(serverIP, serverPort));
+                closingEvent.WaitOne();
+            }
+            finally
+            {
+
+                //Task.WaitAll(group.ShutdownGracefullyAsync());
+            }
+
+
+
+
+
+        }
 
     }
 }
