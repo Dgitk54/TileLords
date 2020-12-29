@@ -6,11 +6,14 @@ using System.Diagnostics;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
+using System.Threading;
 
 namespace DataModel.Server
 {
     public static class DataBaseFunctions
     {
+        private static Mutex mut = new Mutex();
+
         static ConnectionString DataBaseRead()
         {
             return new ConnectionString(@"MyData.db")
@@ -81,75 +84,107 @@ namespace DataModel.Server
         }
 
 
+
+        public static Tile CreateTile(PlusCode code)
+        {
+
+            using (var dbWrite = new LiteDatabase(DataBasePath()))
+            {
+                var colWrite = dbWrite.GetCollection<Tile>("tiles");
+                colWrite.EnsureIndex(v => v.MiniTiles);
+                colWrite.EnsureIndex(v => v.PlusCode);
+                colWrite.EnsureIndex(v => v.Ttype);
+
+                //Ensure in lock no tiles have been added.
+                var resultInLock = colWrite.Find(v => v.PlusCode.Code == code.Code);
+                if (resultInLock == null || resultInLock.Count() == 0)
+                {
+                    var created = TileGenerator.GenerateArea(code, 0);
+                    var tile = created[0];
+                    var dbVal = colWrite.Insert(tile);
+                    tile.Id = dbVal.AsInt32;
+                    return tile;
+                }
+                if (resultInLock.Count() > 1)
+                    throw new Exception("More than one object for same index!");
+                return resultInLock.First();
+            }
+        }
+
+
         public static Tile LookUpTile(PlusCode code)
         {
-            using (var db = new LiteDatabase(DataBaseRead()))
+            var largeCode = code;
+            if (largeCode.Precision == 10)
+                largeCode = code.ToLowerResolution(8);
+            try
             {
-
-                var largeCode = code;
-                if (largeCode.Precision == 10)
-                    DataModelFunctions.ToLowerResolution(code, 8);
-
-                try
+                mut.WaitOne();
+                using (var db = new LiteDatabase(DataBaseRead()))
                 {
                     var col = db.GetCollection<Tile>("tiles");
-
                     var results = col.Find(v => v.PlusCode.Code == code.Code);
 
-                    using (var dbWrite = new LiteDatabase(DataBasePath()))
+
+                    if (results == null || results.Count() == 0)
                     {
-                        if (results == null || results.Count() == 0)
+                        IEnumerable<Tile> resultInLock;
+                        using (var dbWrite = new LiteDatabase(DataBasePath()))
                         {
-                            var col2 = dbWrite.GetCollection<Tile>("tiles");
+                            var colWrite = dbWrite.GetCollection<Tile>("tiles");
+                            colWrite.EnsureIndex(v => v.MiniTiles);
+                            colWrite.EnsureIndex(v => v.PlusCode);
+                            colWrite.EnsureIndex(v => v.Ttype);
 
-                            col2.EnsureIndex(v => v.MiniTiles);
-                            col2.EnsureIndex(v => v.PlusCode);
-                            col2.EnsureIndex(v => v.Ttype);
+                            //Ensure in lock no tiles have been added.
+                            resultInLock = colWrite.Find(v => v.PlusCode.Code == code.Code);
+                            if (resultInLock == null || resultInLock.Count() == 0)
+                            {
+                                var created = TileGenerator.GenerateArea(largeCode, 0);
+                                var tile = created[0];
+                                var dbVal = colWrite.Insert(tile);
+                                tile.Id = dbVal.AsInt32;
+                                mut.ReleaseMutex();
+                                return tile;
+                            }
+                            if (resultInLock.Count() > 1)
+                                throw new Exception("More than one object for same index!");
 
-                            var created = TileGenerator.GenerateArea(largeCode, 0);
-                            var tile = created[0];
-                            var dbVal = col2.Insert(tile);
-                            tile.Id = dbVal.AsInt32;
-                            return tile;
+
                         }
+                        mut.ReleaseMutex();
+                        return resultInLock.First();
                     }
 
-
+                    var count = results.Count();
+                    var asList = results.ToList();
                     if (results.Count() > 1)
                         throw new Exception("More than one object for same index!");
+                    mut.ReleaseMutex();
                     return results.First();
-                }
-                catch (System.IO.FileNotFoundException)
-                {
-                    using (var dbwrite = new LiteDatabase(DataBasePath()))
-                    {
-
-                      
-                        Debug.WriteLine("test");
-                        var col2 = dbwrite.GetCollection<Tile>("tiles");
-
-                        col2.EnsureIndex(v => v.MiniTiles);
-                        col2.EnsureIndex(v => v.PlusCode);
-                        col2.EnsureIndex(v => v.Ttype);
-
-                        var created = TileGenerator.GenerateArea(largeCode, 0);
-                        var tile = created[0];
-                        var dbVal = col2.Insert(tile);
-                        tile.Id = dbVal.AsInt32;
-                        return tile;
-                    }
 
                 }
-
-
-
             }
+            catch (System.IO.FileNotFoundException)
+            {
+                using (var dbwrite = new LiteDatabase(DataBasePath()))
+                {
+                    var writeCol = dbwrite.GetCollection<Tile>("tiles");
 
+                    writeCol.EnsureIndex(v => v.MiniTiles);
+                    writeCol.EnsureIndex(v => v.PlusCode);
+                    writeCol.EnsureIndex(v => v.Ttype);
+
+                    return LookUpTile(code);
+                }
+            }
         }
 
 
 
-        static public User InDataBase(string name)
+
+
+        public static User InDataBase(string name)
         {
             using (var dataBase = new LiteDatabase(DataBaseRead()))
             {
@@ -161,7 +196,8 @@ namespace DataModel.Server
                     return null;
 
 
-                } catch(System.IO.FileNotFoundException e)
+                }
+                catch (System.IO.FileNotFoundException e)
                 {
                     using (var dbwrite = new LiteDatabase(DataBasePath()))
                     {
@@ -177,7 +213,7 @@ namespace DataModel.Server
                         return null;
                     }
                 }
-               
+
             }
 
 
