@@ -33,7 +33,7 @@ namespace DataModel.Server
                                       where v == false
                                       select (e.Player, lastPosition);
 
-            return disconnectedPlayers.Subscribe(v =>
+            return disconnectedPlayers.DistinctUntilChanged().Subscribe(v =>
             {
                 var tile = DataBaseFunctions.LookupMiniTile(v.lastPosition);
                 var player = new Player { Location = v.lastPosition, Name = v.Player.Name };
@@ -42,6 +42,7 @@ namespace DataModel.Server
                 eventBus.Publish(toPublish);
             });
         }
+
         public IDisposable AttachToBus()
         {
             var allOnlinePlayers = eventBus.GetEventStream<PlayersOnlineEvent>();
@@ -60,11 +61,11 @@ namespace DataModel.Server
             return movementOnly.Subscribe(v =>
              {
                  //Client just logged in, and hasn't moved yet
-                 if (v.posChange.Item2.Equals(default(PlusCode)))
+                 if (v.posChange.Item1.Equals(default(PlusCode)))
                  {
                      //Only fire content event
 
-                     var tile = DataBaseFunctions.LookupMiniTile(v.posChange.Item1);
+                     var tile = DataBaseFunctions.LookupMiniTile(v.posChange.Item2);
                      var player = new Player { Location = tile.MiniTileId, Name = v.player.Name };
                      AddPlayer(tile, player);
                      var toPublish = new ServerMapEvent() { MiniTiles = new List<MiniTile>() { tile } };
@@ -72,8 +73,8 @@ namespace DataModel.Server
                  }
                  else
                  {
-                     var tileOld = DataBaseFunctions.LookupMiniTile(v.posChange.Item2);
-                     var tileNew = DataBaseFunctions.LookupMiniTile(v.posChange.Item1);
+                     var tileOld = DataBaseFunctions.LookupMiniTile(v.posChange.Item1);
+                     var tileNew = DataBaseFunctions.LookupMiniTile(v.posChange.Item2);
 
                      var playerOld = new Player { Location = tileOld.MiniTileId, Name = v.player.Name };
                      var playerNew = new Player { Location = tileNew.MiniTileId, Name = v.player.Name };
@@ -90,7 +91,6 @@ namespace DataModel.Server
         {
             var newContent = new List<ITileContent>(tile.Content);
             var removed = newContent.Remove(player);
-            Debug.Assert(removed);
             tile.Content = newContent;
 
         }

@@ -31,10 +31,10 @@ namespace DataModel.Server
             disposables.Add(new PlayersOnlineHandler(bus).AttachToBus());
 
             var movementUpdater = new PlayerMovementTileUpdater(bus);
-            disposables.Add(movementUpdater.AttachToBus());
-            disposables.Add(movementUpdater.AttachCleanup());
+            //disposables.Add(movementUpdater.AttachToBus());
+            //disposables.Add(movementUpdater.AttachCleanup());
 
-            disposables.Add(new PlayerTileContentHandler(bus).AttachToBus());
+            //disposables.Add(new PlayerTileContentHandler(bus).AttachToBus());
             
         }
         public async Task RunServerAsync()
