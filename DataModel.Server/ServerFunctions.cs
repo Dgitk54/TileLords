@@ -119,7 +119,7 @@ namespace DataModel.Server
 
         public static MiniTile LookUpMiniTile(PlusCode code, ILiteDatabase db)
         {
-            var tile = DataBaseFunctions.LookUpTile(code);
+            var tile = DataBaseFunctions.LookUpWithGenerateTile(code);
             var miniTile = from e in tile.MiniTiles
                            where e.MiniTileId.Code == code.Code
                            select e;
@@ -169,7 +169,7 @@ namespace DataModel.Server
             Debug.Assert(old.Id == tileWithNewValues.Id);
             Debug.Assert(old.MiniTileId.Code == tileWithNewValues.MiniTileId.Code);
 
-            Tile t = DataBaseFunctions.LookUpTile(tileWithNewValues.MiniTileId);
+            Tile t = DataBaseFunctions.LookUpWithGenerateTile(tileWithNewValues.MiniTileId);
 
             var removed = t.MiniTiles.Remove(old);
             Debug.Assert(removed);

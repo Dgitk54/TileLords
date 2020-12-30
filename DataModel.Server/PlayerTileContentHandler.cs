@@ -11,6 +11,9 @@ using System.Text;
 
 namespace DataModel.Server
 {
+    /// <summary>
+    /// Serverwide handler responsible for delivering content updates to the clients.
+    /// </summary>
     public class PlayerTileContentHandler
     {
 

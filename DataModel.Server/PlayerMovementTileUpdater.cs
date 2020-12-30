@@ -7,11 +7,16 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Text;
+using System.Threading;
 
 namespace DataModel.Server
 {
+    /// <summary>
+    /// Serverwide handler responsible for updating the tiles players are standing on / moving to.
+    /// </summary>
     public class PlayerMovementTileUpdater
     {
         readonly IEventBus eventBus;
@@ -27,20 +32,24 @@ namespace DataModel.Server
 
 
 
-            var disconnectedPlayers = from e in playerLogInStream
-                                      from lastPosition in e.Player.PlayerObservableLocationStream
-                                      from v in e.Player.ConnectionStatus
-                                      where v == false
-                                      select (e.Player, lastPosition);
+            var playerDisconnectedWithLocation = from e in playerLogInStream
+                           from merged in e.Player.ConnectionStatus.WithLatestFrom(e.Player.PlayerObservableLocationStream, (val1, lastPosition) => new { val1, lastPosition })
+                           where merged.val1 == false
+                           select (e.Player, merged);
 
-            return disconnectedPlayers.DistinctUntilChanged().Subscribe(v =>
+            return playerDisconnectedWithLocation.Subscribe(v => 
             {
-                var tile = DataBaseFunctions.LookupMiniTile(v.lastPosition);
-                var player = new Player { Location = v.lastPosition, Name = v.Player.Name };
-                RemovePlayer(tile, player);
-                var toPublish = new ServerMapEvent() { MiniTiles = new List<MiniTile>() { tile } };
-                eventBus.Publish(toPublish);
+                GetWithRetries(v.merged.lastPosition)
+                .Subscribe(tile =>
+                {
+                    var player = new Player { Location = v.merged.lastPosition, Name = v.Player.Name };
+                    RemovePlayer(tile, player);
+                    var toPublish = new ServerMapEvent() { MiniTiles = new List<MiniTile>() { tile } };
+                    eventBus.Publish(toPublish);
+                });
             });
+
+       
         }
 
         public IDisposable AttachToBus()
@@ -56,7 +65,7 @@ namespace DataModel.Server
                                select (touple.player, posChange);
 
 
-            
+
 
             return movementOnly.Subscribe(v =>
              {
@@ -64,25 +73,37 @@ namespace DataModel.Server
                  if (v.posChange.Item1.Equals(default(PlusCode)))
                  {
                      //Only fire content event
-
-                     var tile = DataBaseFunctions.LookupMiniTile(v.posChange.Item2);
-                     var player = new Player { Location = tile.MiniTileId, Name = v.player.Name };
-                     AddPlayer(tile, player);
-                     var toPublish = new ServerMapEvent() { MiniTiles = new List<MiniTile>() { tile } };
-                     eventBus.Publish(toPublish);
+                     GetWithRetries(v.posChange.Item2)
+                     .Where(tile => tile != null)
+                     .Subscribe(t =>
+                     {
+                         var player = new Player { Location = t.MiniTileId, Name = v.player.Name };
+                         AddPlayer(t, player);
+                         var toPublish = new ServerMapEvent() { MiniTiles = new List<MiniTile>() { t } };
+                         eventBus.Publish(toPublish);
+                     }, e =>
+                     {
+                         Console.WriteLine("Could not get single tile for" + v.posChange.Item2.Code);
+                     });
                  }
                  else
                  {
-                     var tileOld = DataBaseFunctions.LookupMiniTile(v.posChange.Item1);
-                     var tileNew = DataBaseFunctions.LookupMiniTile(v.posChange.Item2);
 
-                     var playerOld = new Player { Location = tileOld.MiniTileId, Name = v.player.Name };
-                     var playerNew = new Player { Location = tileNew.MiniTileId, Name = v.player.Name };
-                     RemovePlayer(tileOld, playerOld);
-                     AddPlayer(tileNew, playerNew);
+                     GetWithRetries(v.posChange.Item1)
+                     .WithLatestFrom(GetWithRetries(v.posChange.Item2), (tileOld, tileNew) => new { tileOld, tileNew })
+                     .Subscribe(t =>
+                     {
+                         var playerOld = new Player { Location = t.tileOld.MiniTileId, Name = v.player.Name };
+                         var playerNew = new Player { Location = t.tileNew.MiniTileId, Name = v.player.Name };
+                         RemovePlayer(t.tileOld, playerOld);
+                         AddPlayer(t.tileNew, playerNew);
 
-                     var toPublish = new ServerMapEvent() { MiniTiles = new List<MiniTile>() { tileOld, tileNew } };
-                     eventBus.Publish(toPublish);
+                         var toPublish = new ServerMapEvent() { MiniTiles = new List<MiniTile>() { t.tileOld, t.tileNew } };
+                         eventBus.Publish(toPublish);
+                     }, e =>
+                     {
+                         Console.WriteLine("Could not get double tile for" + v.posChange.Item2.Code + "  " + v.posChange.Item1.Code);
+                     });
 
                  }
              });
@@ -96,6 +117,8 @@ namespace DataModel.Server
         }
 
 
+
+
         static void AddPlayer(MiniTile tile, Player player)
         {
             var newContent = new List<ITileContent>(tile.Content);
@@ -104,11 +127,41 @@ namespace DataModel.Server
 
         }
 
-        public static IObservable<Tuple<TSource, TSource>> PairWithPrevious<TSource>(IObservable<TSource> source)
+        static IObservable<Tuple<TSource, TSource>> PairWithPrevious<TSource>(IObservable<TSource> source)
         {
             return source.Scan(
                 Tuple.Create(default(TSource), default(TSource)),
                 (acc, current) => Tuple.Create(acc.Item2, current));
+        }
+
+
+        static IObservable<MiniTile> GetWithRetries(PlusCode tileCode)
+        {
+            var source = Observable.Defer(() => LookupObservable(tileCode));
+
+            int attempt = 0;
+            return Observable.Defer(() =>
+            {
+                return ((++attempt == 1) ? source : source.DelaySubscription(TimeSpan.FromMilliseconds(3000)));
+            })
+                .Retry(4);
+
+        }
+
+
+        static IObservable<MiniTile> LookupObservable(PlusCode tile)
+        {
+            return Observable.Create<MiniTile>(v =>
+            {
+                var lookUp = DataBaseFunctions.LookupOnlyMiniTile(tile);
+                if (lookUp == null)
+                    v.OnError(new Exception("Tile not found"));
+
+                v.OnNext(DataBaseFunctions.LookupOnlyMiniTile(tile));
+                v.OnCompleted();
+                return Disposable.Empty;
+            });
+
         }
     }
 }

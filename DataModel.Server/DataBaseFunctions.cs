@@ -12,7 +12,7 @@ namespace DataModel.Server
 {
     public static class DataBaseFunctions
     {
-        private static Mutex mut = new Mutex();
+        private static Mutex mut = new Mutex(false);
 
         static ConnectionString DataBaseRead()
         {
@@ -79,15 +79,24 @@ namespace DataModel.Server
 
         public static MiniTile LookupMiniTile(PlusCode code)
         {
-            var tile = LookUpTile(code);
+            var tile = LookUpWithGenerateTile(code);
+            return TileUtility.GetMiniTile(code, tile.MiniTiles);
+        }
+
+        public static MiniTile LookupOnlyMiniTile(PlusCode code)
+        {
+            var largeCode = code;
+            if (largeCode.Precision == 10)
+                largeCode = code.ToLowerResolution(8);
+            var tile = LookupOnly(largeCode);
+            if (tile == null)
+                return null;
             return TileUtility.GetMiniTile(code, tile.MiniTiles);
         }
 
 
-
         public static Tile CreateTile(PlusCode code)
         {
-
             using (var dbWrite = new LiteDatabase(DataBasePath()))
             {
                 var colWrite = dbWrite.GetCollection<Tile>("tiles");
@@ -111,8 +120,25 @@ namespace DataModel.Server
             }
         }
 
+        public static Tile LookupOnly(PlusCode code)
+        {
+            var largeCode = code;
+            if (largeCode.Precision == 10)
+                largeCode = code.ToLowerResolution(8);
+            using (var db = new LiteDatabase(DataBaseRead()))
+            {
+                var col = db.GetCollection<Tile>("tiles");
+                var results = col.Find(v => v.PlusCode.Code == code.Code);
+                if (results.Count() > 1)
+                    throw new Exception("More than one object for same index!");
 
-        public static Tile LookUpTile(PlusCode code)
+                if (!results.Any())
+                    return null;
+                return results.First();
+            }
+        }
+
+        public static Tile LookUpWithGenerateTile(PlusCode code)
         {
             var largeCode = code;
             if (largeCode.Precision == 10)
@@ -128,7 +154,7 @@ namespace DataModel.Server
 
                     if (results == null || results.Count() == 0)
                     {
-                        IEnumerable<Tile> resultInLock;
+                        Tile resultInLock = null;
                         using (var dbWrite = new LiteDatabase(DataBasePath()))
                         {
                             var colWrite = dbWrite.GetCollection<Tile>("tiles");
@@ -137,23 +163,18 @@ namespace DataModel.Server
                             colWrite.EnsureIndex(v => v.Ttype);
 
                             //Ensure in lock no tiles have been added.
-                            resultInLock = colWrite.Find(v => v.PlusCode.Code == code.Code);
-                            if (resultInLock == null || resultInLock.Count() == 0)
+                            var tiles = colWrite.Find(v => v.PlusCode.Code == code.Code);
+                            if (tiles == null || tiles.Count() == 0)
                             {
                                 var created = TileGenerator.GenerateArea(largeCode, 0);
                                 var tile = created[0];
                                 var dbVal = colWrite.Insert(tile);
                                 tile.Id = dbVal.AsInt32;
-                                mut.ReleaseMutex();
-                                return tile;
+                                resultInLock = tile;
                             }
-                            if (resultInLock.Count() > 1)
-                                throw new Exception("More than one object for same index!");
-
-
                         }
                         mut.ReleaseMutex();
-                        return resultInLock.First();
+                        return resultInLock;
                     }
 
                     var count = results.Count();
@@ -175,7 +196,7 @@ namespace DataModel.Server
                     writeCol.EnsureIndex(v => v.PlusCode);
                     writeCol.EnsureIndex(v => v.Ttype);
 
-                    return LookUpTile(code);
+                    return LookUpWithGenerateTile(code);
                 }
             }
         }
