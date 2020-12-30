@@ -32,7 +32,7 @@ namespace DataModel.Server
 
             var movementUpdater = new PlayerMovementTileUpdater(bus);
             disposables.Add(movementUpdater.AttachToBus());
-            //disposables.Add(movementUpdater.AttachCleanup());
+            disposables.Add(movementUpdater.AttachCleanup());
 
             disposables.Add(new PlayerTileContentHandler(bus).AttachToBus());
             
