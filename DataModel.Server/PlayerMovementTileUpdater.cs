@@ -67,7 +67,8 @@ namespace DataModel.Server
 
 
 
-            return movementOnly.Subscribe(v =>
+
+            return movementOnly.DistinctUntilChanged().Subscribe(v =>
              {
                  //Client just logged in, and hasn't moved yet
                  if (v.posChange.Item1.Equals(default(PlusCode)))

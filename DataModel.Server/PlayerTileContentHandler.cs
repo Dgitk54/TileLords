@@ -30,16 +30,19 @@ namespace DataModel.Server
             var allMapEvents = eventBus.GetEventStream<ServerMapEvent>();
 
 
-            var updateOccured = from playerEvent in allOnlinePlayers
-                                from player in playerEvent.PlayersOnline
-                                from playerLocation in player.PlayerObservableLocationStream
-                                from mapEvent in allMapEvents
-                                from changedMiniTile in mapEvent.MiniTiles
-                                where playerLocation.GetChebyshevDistance(changedMiniTile.MiniTileId) < 50
-                                select (player, changedMiniTile);
+            var mergedUpdate = from eventsWithPlayers in allMapEvents.WithLatestFrom(allOnlinePlayers, (map, players) => new { map, players })
+                                   from player in eventsWithPlayers.players.PlayersOnline
+                                   from playerLocation in player.PlayerObservableLocationStream.DistinctUntilChanged()
+                                   from changedMiniTile in eventsWithPlayers.map.MiniTiles
+                                   where playerLocation.GetChebyshevDistance(changedMiniTile.MiniTileId) < 50
+                                   select (player, changedMiniTile);
 
-            return updateOccured.Subscribe(v =>
+
+
+
+            return mergedUpdate.DistinctUntilChanged().Subscribe(v =>
             {
+                ;
                 var bus = v.player.ClientBus;
                 var tile = v.changedMiniTile;
 
