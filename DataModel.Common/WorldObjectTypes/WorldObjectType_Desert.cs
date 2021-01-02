@@ -11,17 +11,18 @@ namespace DataModel.Common.WorldObjectTypes
         Cactus2,
         Camel,
         CopperRock,
-        Deserttree,
+        DesertTree,
         GoldRock,
-        Palmtree,
+        PalmTree,
         Rock,  
         Skeleton,
-        SmallPalmtree,
+        SmallPalmTree,
         Tree1,
         Tree2,
         Volcano,
-        Wheatfield,
-        Fantree
+        WheatField,
+        FanTree,
+        Pyramid
 
     }
 }

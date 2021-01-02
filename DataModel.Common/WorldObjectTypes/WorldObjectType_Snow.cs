@@ -11,19 +11,22 @@ namespace DataModel.Common.WorldObjectTypes
         CopperRock,
         Glacier,
         Penguin,
-        Pinetree,
+        PineTree,
         Pond,
         Rock,
-        Sheep,
+        SheepBrown,
         SheepBlack,
         SheepWhite,
-        Snowman,
-        Snowtree,
-        Waterfall,
-        Wheatfield,
-        Wintertree,
-        Wintertree2,
-        Treetrunk
+        SnowMan,
+        SnowTree,
+        WaterFall,
+        WheatField,
+        WinterTree,
+        WinterTree2,
+        TreeTrunk,
+        CowBrown,
+        CowBlack,
+        CowWhite
 
 
     }
