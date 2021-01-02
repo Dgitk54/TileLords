@@ -15,10 +15,10 @@ namespace DataModel.Common
         /// <summary>
         /// Given the List of possible tiles, this code returns all tiles within a chebyshev distance.
         /// </summary>
-        /// <param name="locationCode"></param>
-        /// <param name="tileList"></param>
-        /// <param name="precision"></param>
-        /// <returns></returns>
+        /// <param name="locationCode">The center tile</param>
+        /// <param name="tileList">The surrounding tiles</param>
+        /// <param name="distance">The distance from the center tile</param>
+        /// <returns>A list with tiles within the chebyshev distance</returns>
         public static List<MiniTile> GetTileSectionWithinChebyshevDistance(PlusCode locationCode, List<Tile> tileList, int distance)
         {
             var minitile =
@@ -29,6 +29,14 @@ namespace DataModel.Common
 
             return minitile.ToList();
         }
+
+        /// <summary>
+        /// Given the List of possible miniTiles, this code returns all miniTiles within a chebyshev distance.
+        /// </summary>
+        /// <param name="locationCode">The center miniTile</param>
+        /// <param name="tileList">The surrounding miniTiles</param>
+        /// <param name="distance">The distance from the center miniTile</param>
+        /// <returns>A list with miniTiles within the chebyshev distance</returns>
         public static List<MiniTile> GetMiniTileSectionWithinChebyshevDistance(PlusCode locationCode, IList<MiniTile> tileList, int distance)
         {
             var minitile = from miniTile in tileList
@@ -73,7 +81,7 @@ namespace DataModel.Common
 
         }
 
-
+    
         public static MiniTile GetMiniTile(PlusCode locationCode, List<Tile> tileList)
         {
             var minitile =
@@ -97,7 +105,10 @@ namespace DataModel.Common
             return minitile.First();
         }
 
-
+        /// <summary>
+        /// Function which returns a random miniTile code that belong to the parent 
+        /// </summary>
+        /// <returns>The pluscode of a random miniTile</returns>
         public static PlusCode GetRandomMiniTileByTileCode(Tile parentTile)
         {
             String parentCode = parentTile.PlusCode.Code;
@@ -114,7 +125,10 @@ namespace DataModel.Common
             return new PlusCode(parentCode, 10);
         }
 
-
+        /// <summary>
+        /// Function which returns a random miniTile chosen from the list of miniTiles
+        /// </summary>
+        /// <returns>The pluscode of a random miniTile</returns>
         public static MiniTile GetRandomMiniTileByList(List<MiniTile> miniTileList)
         {
            

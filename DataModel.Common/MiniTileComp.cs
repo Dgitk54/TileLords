@@ -23,6 +23,13 @@ namespace DataModel.Common
 
         }
 
+
+        /// <summary>
+        /// Function to determine which plusCode is bigger than the other (order: top right (NW) to bottom left (SE))
+        /// </summary>
+        /// <param name="plusCode"></param>
+        /// <param name="plusCode2"></param>
+        /// <returns>True or False depending on plusCode < plusCode2 </returns>
         public static bool IsTileCodeBigger(PlusCode plusCode, PlusCode plusCode2)
         {
             Dictionary<String, int> codeToInt;
