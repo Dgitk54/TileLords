@@ -42,8 +42,8 @@ namespace DataModel.Client
             //Client
             var latestClient = ClientFunctions.LatestClientLocation(eventBus.GetEventStream<UserGpsEvent>());
 
-           
-           
+
+
 
             //Content
             var tileContent = eventBus.GetEventStream<DataSourceEvent>()
@@ -52,7 +52,7 @@ namespace DataModel.Client
                                       .StartWith(new ServerTileContentEvent());
 
 
-      
+
             var clientPositionPlusContent = latestClient.WithLatestFrom(tileContent, (position, content) => new { position, content });
 
 
@@ -64,7 +64,7 @@ namespace DataModel.Client
                 //Remove values far away:
                 var currentClientLocation = val.position;
 
-                
+
 
 
                 var farAway = from keyValue in buffer
@@ -83,40 +83,36 @@ namespace DataModel.Client
 
 
                 return buffer;
-                
+
             });
 
 
-
-
-
-            return MapBufferChanged(concat, latestClient, bufferedContent)
-                .Subscribe(v => eventBus.Publish(new ClientMapBufferChanged(v)));
+            return Accumulated(concat, latestClient, tileContent).Subscribe(v => eventBus.Publish(new ClientMapBufferChanged(v)));
         }
 
 
 
 
 
-        IObservable<IList<MiniTile>> MapBufferChanged(IObservable<IList<MiniTile>> observable1, IObservable<PlusCode> location, IObservable<List<KeyValuePair<PlusCode, List<ITileContent>>>> content)
-        => Accumulated(observable1, location, content);
 
-
-
-        IObservable<IList<MiniTile>> Accumulated(IObservable<IList<MiniTile>> bufferedMiniTileStream, IObservable<PlusCode> location, IObservable<List<KeyValuePair<PlusCode, List<ITileContent>>>> content)
+        IObservable<IList<MiniTile>> Accumulated(IObservable<IList<MiniTile>> bufferedMiniTileStream, IObservable<PlusCode> location, IObservable<ServerTileContentEvent> content)
         {
-            var output = bufferedMiniTileStream
-                .CombineLatest(location, (tiles, code) => new { tiles, code })
-                .CombineLatest(content, (locbuf, tcontent) => new { locbuf, tcontent })
-                .Scan(new List<MiniTile>(), (list, l1) =>
-            {
-                list = TileGenerator.RegenerateArea(l1.locbuf.code, list, l1.locbuf.tiles, 40);
-                var copy = new List<KeyValuePair<PlusCode, List<ITileContent>>>(l1.tcontent);
-                SetMinitileContent(list, copy);
-                return list;
-            });
-            return output.DistinctUntilChanged();
+            var output = location.WithLatestFrom(bufferedMiniTileStream, (loc, tiles) => new { loc, tiles })
+                                 .WithLatestFrom(content, (locTiles, serverTileContent) => new { locTiles, serverTileContent })
+                                 .Scan(new List<MiniTile>(), (list, val) => 
+                                 {
+                                     list = TileGenerator.RegenerateArea(val.locTiles.loc, list, val.locTiles.tiles, 40);
+                                     if(val.serverTileContent != null)
+                                     {
+                                         var copy = new List<KeyValuePair<PlusCode, List<ITileContent>>>(val.serverTileContent.VisibleContent);
+                                         SetMinitileContent(list, copy);
 
+                                     }
+                                       
+                                     return list;
+                                 });
+
+            return output.DistinctUntilChanged();
 
         }
 
