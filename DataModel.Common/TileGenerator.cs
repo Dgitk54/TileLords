@@ -16,6 +16,8 @@ namespace DataModel.Common
         /// Function which generates a list of MiniTiles 
         /// </summary>
         /// <param name="tileCode">The Pluscode of the parent Tile</param>
+        /// <param name="miniTileTypeList">An integer list of possible types the miniTile can have (see MiniTileType enum)</param>
+        /// <param name="worldObjectTypeList">An integer list of possible worldObject types the miniTile can have (see WorldObjectType enum)</param>
         /// <returns>The MiniTile list</returns>
         public static List<MiniTile> GenerateMiniTiles(PlusCode tileCode, List<int> miniTileTypeList, List<int> worldObjectTypeList)
         {
@@ -37,7 +39,14 @@ namespace DataModel.Common
 
         }
 
-
+        /// <summary>
+        /// Function which regenerates an area around a miniTile. Changes the old state of the area to the new one (keep duplicates and new tiles, remove old tiles)
+        /// </summary>
+        /// <param name="miniTileCode">The Pluscode of the miniTile to regenerate from</param>
+        /// <param name="currentTiles">A list of the "old state" miniTiles</param>
+        /// <param name="newTiles">A list of the "new state" miniTiles</param>
+        /// <param name="radius">The radius of the regenerated area</param>
+        /// <returns>The MiniTile list of all tiles in the regenerated area</returns>
         public static List<MiniTile> RegenerateArea(PlusCode miniTileCode, List<MiniTile> currentTiles, IList<MiniTile> newTiles, int radius)
         {
             if (newTiles.Count == 0)
@@ -168,11 +177,13 @@ namespace DataModel.Common
 
         }
 
-
         /// <summary>
         /// Function which generates a Tile and the MiniTile children of it
         /// </summary>
         /// <param name="code">The Pluscode of the Tile</param>
+        /// <param name="tileTypeList">An integer list of possible types the tile can have (see TileType enum)</param>
+        /// <param name="miniTileTypeList">An integer list of possible types the miniTiles can have (see MiniTileType enum)</param>
+        /// <param name="worldObjectTypeList">An integer list of possible worldObject types the miniTiles can have (see WorldObjectType enum)</param>
         /// <returns>The Tile</returns>
         public static Tile GenerateTile(PlusCode code, List<int> tileTypeList, List<int> miniTileTypeList, List<int> worldObjectTypeList)
         {
@@ -184,6 +195,8 @@ namespace DataModel.Common
         /// </summary>
         /// <param name="code">The Pluscode of the Tile to generate from</param>
         /// <param name="radius">The radius to generate the Tiles</param>
+        /// <param name="tileTypeList">An integer list of possible types the tile can have (see TileType enum)</param>
+        /// <param name="miniTileTypeList">An integer list of possible types the miniTiles can have (see MiniTileType enum)</param>
         /// <returns>The generated area as a list of Tiles</returns>
         public static List<Tile> GenerateArea(PlusCode code, int radius, List<int> tileTypeList, List<int> miniTileTypeList)
         {
@@ -197,6 +210,13 @@ namespace DataModel.Common
             return tiles.ToList();
         }
 
+
+        /// <summary>
+        /// Function which generates an area consisting of Tiles and Minitiles (with predefined types)
+        /// </summary>
+        /// <param name="code">The Pluscode of the Tile to generate from</param>
+        /// <param name="radius">The radius to generate the Tiles</param>
+        /// <returns>The generated area as a list of Tiles</returns>
         public static List<Tile> GenerateArea(PlusCode code, int radius)
         {
             string c = code.Code;
@@ -257,7 +277,12 @@ namespace DataModel.Common
 
         }
 
-        public static Enum GetSpecificTileType(Tile parentTile)
+
+        /// <summary>
+        /// Function which returns a specific miniTileType given the parent tile (type / biome)
+        /// </summary>
+        /// <returns>A random type from the biome enums (see folder MiniTileTypes)</returns>
+        public static Enum GetSpecificMiniTileType(Tile parentTile)
         {
 
             int length;
@@ -323,6 +348,10 @@ namespace DataModel.Common
 
         }
 
+        /// <summary>
+        /// Function which returns a specific worldObjectType given the parent tile (type / biome)
+        /// </summary>
+        /// <returns>A random worldObjectType from the biome enums (see folder WorldObjectTypes)</returns>
         public static Enum GetSpecificWorldObject(Tile parentTile)
         {
 

@@ -163,13 +163,13 @@ namespace DataModel.Common.Tests
             Tile parent = new Tile();
             parent.Ttype = TileType.Snow;
       
-            String type = TileGenerator.GetSpecificTileType(parent) + "";
+            String type = TileGenerator.GetSpecificMiniTileType(parent) + "";
             Debug.WriteLine(type);
             Assert.IsTrue(type == "Snow_Tile" || type == "Snow_River" || type == "Unknown_Type" || type == "Snow_PatchyGrass" || type == "Snow_River2");
 
     
             parent.Ttype = TileType.Swamp;
-            type = TileGenerator.GetSpecificTileType(parent) + "";
+            type = TileGenerator.GetSpecificMiniTileType(parent) + "";
             Debug.WriteLine(type);
             Assert.IsTrue(type == "Mud_Marsh" || type == "Mud_Grass" || type == "Mud_Tile" || type == "Unknown_Tile");
 

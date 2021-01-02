@@ -11,9 +11,8 @@ namespace DataModel.Common
     {
 
         /// <summary>
-        /// Function which determines the two PlusCodes signs that come after the "+" and combines it with a given parent PlusCode string
+        /// Function which sorts the list in the order from top left tile (north west) to bottom right (south east)
         /// </summary>
-        /// <returns>The List of complete PlusCodes (8 signs "+" 2 signs)</returns>
         public static List<MiniTile> SortList(this List<MiniTile> miniTileList)
         {
 
@@ -25,6 +24,9 @@ namespace DataModel.Common
             return sortedList;
         }
 
+        /// <summary>
+        /// Function which sorts the list in the order from top left tile (north west) to bottom right (south east)
+        /// </summary>
         public static IList<MiniTile> SortList<T>(this T miniTileList) where T : IEnumerable<MiniTile>
         {
 
@@ -63,7 +65,9 @@ namespace DataModel.Common
             return codeToInt;
         }
 
-
+        /// <summary>
+        /// Function which adds all PlusCodes signs after the plus to the given plusCode of a tile 
+        /// </summary>
         public static List<String> GetAndCombineWithAllAfterPlus(String plusCode)
         {
 
@@ -412,9 +416,7 @@ namespace DataModel.Common
 
 
 
-        /// <summary>
-        /// Function which creates the dictionary to convert PlusCodes to int and back
-        /// </summary>
+  
 
 
         /// <summary>
