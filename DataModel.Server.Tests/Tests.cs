@@ -295,6 +295,219 @@ namespace ClientIntegration
 
         }
 
+        [Test]
+        public void PlayerReceivesContentOnFirstMove()
+        {
+            //Setup Player
+            var p1State = new Subject<bool>();
+            var p1Gps = new Subject<PlusCode>();
+            var p1Bus = new ClientEventBus();
+            var player1 = new ObservablePlayer()
+            {
+                Name = "Player1",
+                ConnectionStatus = p1State,
+                PlayerObservableLocationStream = p1Gps.AsObservable(),
+                ClientBus = p1Bus
+            };
+
+            //Setup Bus & Handlers
+            var cleanUp = new List<IDisposable>();
+            var eventBus = new ServerEventBus();
+
+            var movementHandler = new PlayerMovementTileUpdater(eventBus);
+            var tileConentHandler = new PlayerTileContentHandler(eventBus);
+            var playersOnlineHandler = new PlayersOnlineHandler(eventBus);
+
+            cleanUp.Add(movementHandler.AttachToBus());
+            cleanUp.Add(movementHandler.AttachCleanup());
+            cleanUp.Add(tileConentHandler.AttachToBus());
+            cleanUp.Add(playersOnlineHandler.AttachToBus());
+
+
+            var p1Login = new PlayerLoggedInEvent() { Player = player1 };
+
+            var mapEvents = new List<ServerMapEvent>();
+            var p1ContentEvents = new List<ServerTileContentEvent>();
+
+            eventBus.GetEventStream<ServerMapEvent>().Subscribe(v =>
+            {
+                mapEvents.Add(v);
+
+            });
+
+            p1Bus.GetEventStream<ServerTileContentEvent>().Subscribe(v =>
+            {
+                p1ContentEvents.Add(v);
+            });
+
+            eventBus.Publish(p1Login);
+
+
+            var plus1 = new PlusCode("8FX9XW2F+2X", 10);
+            var plus2 = new PlusCode("8FX9XW2F+3X", 10);
+
+            //Spawn player on tile
+            p1Gps.OnNext(plus1);
+
+            Assert.IsTrue(mapEvents.Count == 1);
+            p1Gps.OnNext(plus1);
+            Assert.IsTrue(p1ContentEvents.Count == 1);  // Same position => same only 1 changed tile => only 1 event
+
+            p1Gps.OnNext(plus2);
+            Assert.IsTrue(mapEvents.Count == 2);
+            Assert.IsTrue(p1ContentEvents.Count == 3); // step on new tile -> delete old, add new => 2 events => 3 as sum
+
+            p1Gps.OnNext(plus2);
+            Assert.IsTrue(mapEvents.Count == 2);
+            Assert.IsTrue(p1ContentEvents.Count == 3);
+
+
+            p1Gps.OnNext(plus2);
+            Assert.IsTrue(mapEvents.Count == 2);
+            Assert.IsTrue(p1ContentEvents.Count == 3);
+
+
+
+
+        }
+
+
+
+
+        [Test]
+        public void TwoStandingPlayersSeeEachOther()
+        {
+            //Setup Players:
+
+            var p1State = new Subject<bool>();
+            var p1Gps = new Subject<PlusCode>();
+            var p1Bus = new ClientEventBus();
+            var player1 = new ObservablePlayer()
+            {
+                Name = "Player1",
+                ConnectionStatus = p1State,
+                PlayerObservableLocationStream = p1Gps.AsObservable(),
+                ClientBus = p1Bus
+            };
+
+
+            var p2State = new Subject<bool>();
+            var p2Gps = new Subject<PlusCode>();
+            var p2Bus = new ClientEventBus();
+            var player2 = new ObservablePlayer()
+            {
+                Name = "Player2",
+                ConnectionStatus = p2State,
+                PlayerObservableLocationStream = p2Gps.AsObservable(),
+                ClientBus = p2Bus
+            };
+
+            var p3State = new Subject<bool>();
+            var p3Gps = new Subject<PlusCode>();
+            var p3Bus = new ClientEventBus();
+            var player3 = new ObservablePlayer()
+            {
+                Name = "Player3",
+                ConnectionStatus = p3State,
+                PlayerObservableLocationStream = p3Gps.AsObservable(),
+                ClientBus = p3Bus
+            };
+
+
+            //Setup Bus & Handlers
+            var cleanUp = new List<IDisposable>();
+            var eventBus = new ServerEventBus();
+
+            var movementHandler = new PlayerMovementTileUpdater(eventBus);
+            var tileConentHandler = new PlayerTileContentHandler(eventBus);
+            var playersOnlineHandler = new PlayersOnlineHandler(eventBus);
+
+            cleanUp.Add(movementHandler.AttachToBus());
+            cleanUp.Add(movementHandler.AttachCleanup());
+            cleanUp.Add(tileConentHandler.AttachToBus());
+            cleanUp.Add(playersOnlineHandler.AttachToBus());
+
+
+
+            var p1Login = new PlayerLoggedInEvent() { Player = player1 };
+            var p2Login = new PlayerLoggedInEvent() { Player = player2 };
+            var p3Login = new PlayerLoggedInEvent() { Player = player3 };
+
+
+
+            var mapEvents = new List<ServerMapEvent>();
+            var p1ContentEvents = new List<ServerTileContentEvent>();
+            var p2ContentEvents = new List<ServerTileContentEvent>();
+            eventBus.GetEventStream<ServerMapEvent>().Subscribe(v =>
+            {
+                mapEvents.Add(v);
+
+            });
+
+            p1Bus.GetEventStream<ServerTileContentEvent>().Subscribe(v =>
+            {
+                p1ContentEvents.Add(v);
+            });
+
+            p2Bus.GetEventStream<ServerTileContentEvent>().Subscribe(v =>
+            {
+                p2ContentEvents.Add(v);
+            });
+
+
+            eventBus.Publish(p1Login);
+            eventBus.Publish(p2Login);
+            eventBus.Publish(p3Login);
+
+            var plus1 = new PlusCode("8FX9XW2F+9X", 10);
+            var plus2 = new PlusCode("8FX9XW2F+8X", 10);
+            var plus3 = new PlusCode("8FX9XW2F+7X", 10);
+            var plus4 = new PlusCode("8FX9XW2F+6X", 10);
+            var plus5 = new PlusCode("8FX9XW2F+5X", 10);
+
+            //Spawn player on tile
+            p1Gps.OnNext(plus1);
+            //player has not moved yet, only one tile should be affected
+            Assert.IsTrue(mapEvents.Count == 1);
+            Assert.IsTrue(p1ContentEvents.Count == 1);
+
+
+            //Spawn p2 on same tile
+            p2Gps.OnNext(plus1);
+
+
+            //P2 "sees" P1 + self
+            Assert.IsTrue(mapEvents.Count == 2);
+            Assert.IsTrue(p2ContentEvents.Count == 2);
+
+            var p2Content = from e in p2ContentEvents
+                            from e2 in e.VisibleContent
+                            from e3 in e2.Value
+                            where e3 is Player
+                            select e3;
+
+            var p2VisiblePlayers = p2Content.Count();
+
+            Assert.IsTrue(p2VisiblePlayers == 2);
+
+
+            //Server receives update from p1 -> p1 "sees" p2 on update and himself
+            p1Gps.OnNext(plus1);
+
+            Assert.IsTrue(p1ContentEvents.Count == 2);
+            var p1Content = from e in p1ContentEvents
+                            from e2 in e.VisibleContent
+                            from e3 in e2.Value
+                            where e3 is Player
+                            select e3;
+
+            var p1VisiblePlayers = p1Content.Count();
+            Assert.IsTrue(p1VisiblePlayers == 2);
+
+
+
+        }
+
 
 
         [Test]
@@ -398,81 +611,96 @@ namespace ClientIntegration
             p2Gps.OnNext(plus2);
 
 
-            //P2 "sees" P1
-            Assert.IsTrue(mapEvents.Count == 2);
-            Assert.IsTrue(p2ContentEvents.Count == 1);
-            var p1Content = from e in p2ContentEvents[0].VisibleContent[0].Value
-                            where e is Player
-                            select e;
-            Assert.IsTrue(p1Content.Count() == 1);
 
 
-            //Server receives update from p1 -> p1 "sees" p2 on update and himself
-            p1Gps.OnNext(plus3);
+            //Both players see each other check:
+
+            var p2Content = from e in p2ContentEvents
+                            from e2 in e.VisibleContent
+                            from e3 in e2.Value
+                            where e3 is Player
+                            select e3;
+
+            var p2VisiblePlayers = p2Content.Count();
+
+
+            var p1Content = from e in p1ContentEvents
+                            from e2 in e.VisibleContent
+                            from e3 in e2.Value
+                            where e3 is Player
+                            select e3;
+            var p1VisiblePlayers = p1Content.Count();
+
 
             Assert.IsTrue(p1ContentEvents.Count == 2);
-            var playerCountForP1 = from e in p1ContentEvents
-                                   from e2 in e.VisibleContent
-                                   from e3 in e2.Value
-                                   where e3 is Player
-                                   select e;
+            Assert.IsTrue(p2ContentEvents.Count == 2);
+            Assert.IsTrue(p2VisiblePlayers == 2);
+            Assert.IsTrue(p1VisiblePlayers == 2);
 
-            Assert.IsTrue(playerCountForP1.Count() == 2);
-            Assert.IsTrue(mapEvents.Count == 3);
-
-
-
-
-
-            //Server receives update from p2 for same tile => p2 "sees" p1 on update and himself
+            p1ContentEvents.Clear();
             p2ContentEvents.Clear();
-            p2Gps.OnNext(plus2);
-
-            Assert.IsTrue(mapEvents.Count == 3); //No Mapevent due to p2 staying on same position
-            Assert.IsTrue(p2ContentEvents.Count == 3);  // 3 affected tiles: player1 moving away from one, standing on one, and himself standing
-            var playerCountForP2 = from e in p2ContentEvents
-                                   from e2 in e.VisibleContent
-                                   from e3 in e2.Value
-                                   where e3 is Player
-                                   select e;
-            Assert.IsTrue(playerCountForP2.Count() == 2);
 
 
 
 
 
-            //P1 disconnecting:
+
+            //One player moves:
+
+
+            p1Gps.OnNext(plus3);
+
+
+            p2Content = from e in p2ContentEvents
+                            from e2 in e.VisibleContent
+                            from e3 in e2.Value
+                            where e3 is Player
+                            select e3;
+
+            p2VisiblePlayers = p2Content.Count();
+
+
+            p1Content = from e in p1ContentEvents
+                            from e2 in e.VisibleContent
+                            from e3 in e2.Value
+                            where e3 is Player
+                            select e3;
+            p1VisiblePlayers = p1Content.Count();
+
+
+            Assert.IsTrue(p1ContentEvents.Count == 2);
+            Assert.IsTrue(p2ContentEvents.Count == 2);
+
+            //Only one player affected, due to player 2 standing still:
+            Assert.IsTrue(p2VisiblePlayers == 1);   
+            Assert.IsTrue(p1VisiblePlayers == 1);
+
+
+            p1ContentEvents.Clear();
             p2ContentEvents.Clear();
+
+
+
+            //Scenario: P1 disconnects:
             p1State.OnNext(false);
 
-            Assert.IsTrue(mapEvents.Count == 4); // Map event due to player disconnecting
-
-            p2Gps.OnNext(plus2); // Receive p2 gps on same tile, forcing update for p2
-
-            //Assert.IsTrue(mapEvents.Count == 4); // Assert no map event, due to p2 standing on same tile, or should it? TODO
-            Assert.IsTrue(p2ContentEvents.Count == 1); // 1 affected tile for p2
-
-            var playerCountForP2afterDisconnect = from e in p2ContentEvents
-                                                  from e2 in e.VisibleContent
-                                                  from e3 in e2.Value
-                                                  where e3 is Player
-                                                  select e;
-
-            Assert.IsTrue(playerCountForP2afterDisconnect.Count() == 0);   //Affected tile has no more player 1 on it
+            Assert.IsTrue(mapEvents.Count == 4); // Map event due to player disconnecting: Spawn, Spawn, Move, Disconnect => 4 events
 
 
+            p2Content = from e in p2ContentEvents
+                        from e2 in e.VisibleContent
+                        from e3 in e2.Value
+                        where e3 is Player
+                        select e3;
 
+            p2VisiblePlayers = p2Content.Count();
+            Assert.IsTrue(p2VisiblePlayers == 0);  // 0 due to list clear.
 
-
-
-            //DebugTest for same position, no map events should trigger
-            mapEvents.Clear();
+            p1ContentEvents.Clear();
             p2ContentEvents.Clear();
 
-            p2Gps.OnNext(plus2);
-            Assert.IsTrue(mapEvents.Count == 0);
-            Assert.IsTrue(p2ContentEvents.Count == 1); //Player2 only see's himself
-            
+
+
             //CleanUp
             cleanUp.ForEach(v => v.Dispose());
 

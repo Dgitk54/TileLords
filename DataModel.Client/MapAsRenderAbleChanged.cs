@@ -17,6 +17,7 @@ namespace DataModel.Client
             var nullcount = 0;
             var nonnull = 0;
             var hasContent = 0;
+            string additionalInfo = "";
             foreach (var v in nullval)
             {
                 if (v == null)
@@ -30,6 +31,18 @@ namespace DataModel.Client
                         if(v.Content.Count > 0)
                         {
                             hasContent++;
+                            if(v.Content.Count == 2)
+                            {
+                                Player player = null;
+                                if(v.Content[1] is Player)
+                                {
+                                    player = v.Content[1] as Player;
+                                    additionalInfo += " and Player " + player.Name;
+                                }
+
+
+                            }
+                            
                         }
                     }
                     
@@ -37,7 +50,7 @@ namespace DataModel.Client
                 }
             }
 
-            return "MapAsRenderAbleChanged "  + "NONNULL:" + nonnull + "TILECONTENT" + hasContent;
+            return "MapAsRenderAbleChanged "  + "NONNULL:" + nonnull + "TILECONTENT" + hasContent + "    " +  additionalInfo;
         }
     }
 }

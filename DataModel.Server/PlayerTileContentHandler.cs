@@ -30,33 +30,34 @@ namespace DataModel.Server
             var allMapEvents = eventBus.GetEventStream<ServerMapEvent>();
 
 
-            var mergedUpdate = from eventsWithPlayers in allMapEvents.WithLatestFrom(allOnlinePlayers, (map, players) => new { map, players })
-                                   from player in eventsWithPlayers.players.PlayersOnline
-                                   from playerLocation in player.PlayerObservableLocationStream.DistinctUntilChanged()
-                                   from changedMiniTile in eventsWithPlayers.map.MiniTiles
-                                   where playerLocation.GetChebyshevDistance(changedMiniTile.MiniTileId) < 50
-                                   select (player, changedMiniTile);
+            var mergedUpdate = allMapEvents.WithLatestFrom(allOnlinePlayers, (map, players) => new { map, players });
 
-
-
-
-            return mergedUpdate.DistinctUntilChanged().Subscribe(v =>
+            return mergedUpdate.Subscribe(v =>
             {
                 ;
-                var bus = v.player.ClientBus;
-                var tile = v.changedMiniTile;
-
-                var rawContent = new Dictionary<PlusCode, List<ITileContent>>()
+                v.players.PlayersOnline.ToList().ForEach(v2 =>
                 {
-                    {tile.MiniTileId, new List<ITileContent>(tile.Content)  }
-                };
+                    var bus = v2.ClientBus;
+
+                    v.map.MiniTiles.ToList().ForEach(v3 =>
+                    {
+                        var tile = v3;
+                        var rawContent = new Dictionary<PlusCode, List<ITileContent>>()
+                        {
+                            {tile.MiniTileId, new List<ITileContent>(tile.Content)  }
+                        };
+                        var content = new ServerTileContentEvent() { VisibleContent = rawContent.ToList() };
+                        bus.Publish(content);
+                    });
 
 
-                var content = new ServerTileContentEvent() { VisibleContent = rawContent.ToList() };
-                bus.Publish(content);
+
+                });
             });
 
-
+       
         }
+
+        
     }
 }
