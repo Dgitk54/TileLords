@@ -12,6 +12,7 @@ using System.Reactive.Joins;
 using System.Reactive.Subjects;
 using System.Diagnostics;
 using Newtonsoft.Json;
+using System.Reactive.Concurrency;
 
 namespace DataModel.Client
 {
@@ -21,8 +22,10 @@ namespace DataModel.Client
 
 
         static readonly IInternalLogger Logger = InternalLoggerFactory.GetInstance<ServerHandler>();
+        static readonly IScheduler scheduler = NewThreadScheduler.Default;
         readonly List<IDisposable> disposables = new List<IDisposable>();
         readonly IEventBus eventBus;
+        
 
 
 
@@ -48,14 +51,15 @@ namespace DataModel.Client
             if (byteBuffer != null)
             {
                 var data = byteBuffer.ToString(Encoding.UTF8);
-            //   if (data.Length > 500)
-            //   {
-            //       Console.WriteLine("Received large" + data.Length);
-            //   } else
-            //   {
-            //       Console.WriteLine(data);
-            //   }
-                eventBus.Publish(new DataSourceEvent(data));
+                //   if (data.Length > 500)
+                //   {
+                //       Console.WriteLine("Received large" + data.Length);
+                //   } else
+                //   {
+                //       Console.WriteLine(data);
+                //   }
+                scheduler.Schedule(() => eventBus.Publish(new DataSourceEvent(data)));
+                
             }
 
         }

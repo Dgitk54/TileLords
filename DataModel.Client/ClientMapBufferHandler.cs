@@ -97,8 +97,8 @@ namespace DataModel.Client
 
         IObservable<IList<MiniTile>> Accumulated(IObservable<IList<MiniTile>> bufferedMiniTileStream, IObservable<PlusCode> location, IObservable<ServerTileContentEvent> content)
         {
-            var output = location.CombineLatest(bufferedMiniTileStream, (loc, tiles) => new { loc, tiles })
-                                 .CombineLatest(content, (locTiles, serverTileContent) => new { locTiles, serverTileContent })
+            var output = location.DistinctUntilChanged().CombineLatest(bufferedMiniTileStream.DistinctUntilChanged(), (loc, tiles) => new { loc, tiles })
+                                 .CombineLatest(content.DistinctUntilChanged(), (locTiles, serverTileContent) => new { locTiles, serverTileContent })
                                  .Scan(new List<MiniTile>(), (list, val) => 
                                  {
                                      list = TileGenerator.RegenerateArea(val.locTiles.loc, list, val.locTiles.tiles, 40);
