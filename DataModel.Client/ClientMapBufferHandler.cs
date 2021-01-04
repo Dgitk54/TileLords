@@ -97,12 +97,13 @@ namespace DataModel.Client
 
         IObservable<IList<MiniTile>> Accumulated(IObservable<IList<MiniTile>> bufferedMiniTileStream, IObservable<PlusCode> location, IObservable<ServerTileContentEvent> content)
         {
-            var output = location.WithLatestFrom(bufferedMiniTileStream, (loc, tiles) => new { loc, tiles })
-                                 .WithLatestFrom(content, (locTiles, serverTileContent) => new { locTiles, serverTileContent })
+            var output = location.CombineLatest(bufferedMiniTileStream, (loc, tiles) => new { loc, tiles })
+                                 .CombineLatest(content, (locTiles, serverTileContent) => new { locTiles, serverTileContent })
                                  .Scan(new List<MiniTile>(), (list, val) => 
                                  {
                                      list = TileGenerator.RegenerateArea(val.locTiles.loc, list, val.locTiles.tiles, 40);
-                                     if(val.serverTileContent != null)
+
+                                     if(val.serverTileContent != null && val.serverTileContent.VisibleContent != null)
                                      {
                                          var copy = new List<KeyValuePair<PlusCode, List<ITileContent>>>(val.serverTileContent.VisibleContent);
                                          SetMinitileContent(list, copy);
@@ -121,7 +122,17 @@ namespace DataModel.Client
             content.ForEach(v =>
             {
                 var tile = TileUtility.GetMiniTile(v.Key, map);
-                tile.Content = v.Value;
+                if(tile != null)
+                {
+                    string tileContent = "";
+                    v.Value.ForEach(x =>
+                    {
+                        tileContent += x.ToString() + "  ";
+                    });
+
+                    Console.WriteLine("Adding tilecontent for " + v.Key + "  " + tileContent);
+                    tile.Content = v.Value;
+                }
             });
         }
 

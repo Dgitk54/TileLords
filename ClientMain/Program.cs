@@ -41,8 +41,25 @@ namespace ClientMain
                 if (string.IsNullOrEmpty(password))
                     continue;
 
-                Console.WriteLine("Starting with" + name + " password " + password);
-                var client1 = Task.Run(() => DebugLoginAndRunAroundClient(name, password, new GPS(49.000000, 7.900000), token.Token));
+                Console.WriteLine("LocationInt a: GPS(49.000000, 7.900040)        b: GPS(49.000000, 7.900000)          c : GPS(49.000000, 7.900020) ");
+                var locationChar = Console.ReadLine();
+                if (string.IsNullOrEmpty(password))
+                    continue;
+
+                switch (locationChar[0])
+                {
+                    case 'a':
+                        Task.Run(() => DebugLoginAndRunAroundClient(name, password, new GPS(49.000000, 7.900040), token.Token));
+                        break;
+                    case 'b':
+                        Task.Run(() => DebugLoginAndRunAroundClient(name, password, new GPS(49.000000, 7.900000), token.Token));
+                        break;
+                    case 'c':
+                        Task.Run(() => DebugLoginAndRunAroundClient(name, password, new GPS(49.000000, 7.900020), token.Token));
+                        break;
+                }
+
+               
             }
 
 
@@ -220,6 +237,7 @@ namespace ClientMain
 
             //var runCircle = Task.Run(() => SendGpsPath(instance, tokenSrc.Token, list, 4000), tokenSrc.Token);
 
+            Thread.Sleep(3000);
             var sendSame = Task.Run(() => SendSameGps(instance, tokenSrc.Token, circleCenter, 4000));
 
             do

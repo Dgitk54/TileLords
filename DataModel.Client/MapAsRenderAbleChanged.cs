@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Reactive.Linq;
+using System.Linq;
 
 namespace DataModel.Client
 {
@@ -31,17 +32,17 @@ namespace DataModel.Client
                         if(v.Content.Count > 0)
                         {
                             hasContent++;
-                            if(v.Content.Count == 2)
+
+                            v.Content.ToList().ForEach(v2 =>
                             {
                                 Player player = null;
-                                if(v.Content[1] is Player)
+                                if (v2 is Player)
                                 {
-                                    player = v.Content[1] as Player;
+                                    player = v2 as Player;
                                     additionalInfo += " and Player " + player.Name;
                                 }
-
-
-                            }
+                            });
+                            
                             
                         }
                     }
