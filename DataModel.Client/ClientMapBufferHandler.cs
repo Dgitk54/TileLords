@@ -35,7 +35,7 @@ namespace DataModel.Client
 
 
             var concat = from e in BigTiles.Merge(smallTiles).Where(v => v != null).Buffer(TimeSpan.FromSeconds(4))
-                         select e.SelectMany(v => v).ToList();
+                         select e.SelectMany(v => v).GroupBy(v =>v.MiniTileId ).ToDictionary(v => v.Key, v => v.First());
 
 
 
@@ -95,33 +95,33 @@ namespace DataModel.Client
 
 
 
-        IObservable<IList<MiniTile>> Accumulated(IObservable<IList<MiniTile>> bufferedMiniTileStream, IObservable<PlusCode> location, IObservable<ServerTileContentEvent> content)
+        IObservable<Dictionary<PlusCode,MiniTile>> Accumulated(IObservable<Dictionary<PlusCode,MiniTile>> bufferedMiniTileStream, IObservable<PlusCode> location, IObservable<ServerTileContentEvent> content)
         {
             var output = location.DistinctUntilChanged().CombineLatest(bufferedMiniTileStream.DistinctUntilChanged(), (loc, tiles) => new { loc, tiles })
                                  .CombineLatest(content.DistinctUntilChanged(), (locTiles, serverTileContent) => new { locTiles, serverTileContent })
-                                 .Scan(new List<MiniTile>(), (list, val) => 
+                                 .Scan(new Dictionary<PlusCode,MiniTile>(), (dict, val) => 
                                  {
-                                     list = TileGenerator.RegenerateArea(val.locTiles.loc, list, val.locTiles.tiles, 40);
-
+                                     dict = TileGenerator.RegenerateArea(val.locTiles.loc, dict, val.locTiles.tiles, 40);
+                                   
                                      if(val.serverTileContent != null && val.serverTileContent.VisibleContent != null)
                                      {
                                          var copy = new List<KeyValuePair<PlusCode, List<ITileContent>>>(val.serverTileContent.VisibleContent);
-                                         SetMinitileContent(list, copy);
+                                         SetMinitileContent(dict, copy);
 
                                      }
                                        
-                                     return list;
+                                     return dict;
                                  });
 
             return output.DistinctUntilChanged();
 
         }
 
-        void SetMinitileContent(List<MiniTile> map, List<KeyValuePair<PlusCode, List<ITileContent>>> content)
+        void SetMinitileContent(Dictionary<PlusCode,MiniTile> map, List<KeyValuePair<PlusCode, List<ITileContent>>> content)
         {
             content.ForEach(v =>
             {
-                var tile = TileUtility.GetMiniTile(v.Key, map);
+                var tile = TileUtility.GetMiniTile(v.Key, map.Values.ToList());
                 if(tile != null)
                 {
                     string tileContent = "";

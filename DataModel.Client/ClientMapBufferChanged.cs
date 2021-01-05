@@ -7,8 +7,8 @@ namespace DataModel.Client
 {
     public class ClientMapBufferChanged : IEvent
     {
-        public IList<MiniTile> TilesToRenderForUnity { get; set; }
-        public ClientMapBufferChanged(IList<MiniTile> tiles) => TilesToRenderForUnity = tiles;
+        public Dictionary<PlusCode,MiniTile> TilesToRenderForUnity { get; set; }
+        public ClientMapBufferChanged(Dictionary<PlusCode,MiniTile> tiles) => TilesToRenderForUnity = tiles;
 
         public override string ToString()
         {

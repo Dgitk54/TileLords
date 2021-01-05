@@ -105,6 +105,14 @@ namespace DataModel.Common
             return minitile.First();
         }
 
+        public static MiniTile GetMiniTile(this PlusCode locationCode, Dictionary<PlusCode,MiniTile> miniTileDict)
+        {
+           if(miniTileDict.TryGetValue(locationCode, out MiniTile miniTile)){
+                return miniTile;
+            }
+            return null;
+        }
+
         /// <summary>
         /// Function which returns a random miniTile code that belong to the parent 
         /// </summary>

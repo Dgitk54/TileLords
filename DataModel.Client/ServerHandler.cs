@@ -22,7 +22,6 @@ namespace DataModel.Client
 
 
         static readonly IInternalLogger Logger = InternalLoggerFactory.GetInstance<ServerHandler>();
-        static readonly IScheduler scheduler = NewThreadScheduler.Default;
         readonly List<IDisposable> disposables = new List<IDisposable>();
         readonly IEventBus eventBus;
         
@@ -58,7 +57,7 @@ namespace DataModel.Client
                 //   {
                 //       Console.WriteLine(data);
                 //   }
-                scheduler.Schedule(() => eventBus.Publish(new DataSourceEvent(data)));
+                eventBus.Publish(new DataSourceEvent(data));
                 
             }
 

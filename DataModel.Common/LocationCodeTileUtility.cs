@@ -37,6 +37,31 @@ namespace DataModel.Common
         }
 
 
+        public static Dictionary<int, string> BackwardsDictionary = new Dictionary<int, string>()
+        {
+            {1,"2" },
+            {2,"3" },
+            {3,"4" },
+            {4,"5" },
+            {5,"6" },
+            {6,"7" },
+            {7,"8" },
+            {8,"9" },
+            {9,"C" },
+            {10,"F" },
+            {11,"G" },
+            {12,"H" },
+            {13,"J" },
+            {14,"M" },
+            {15,"P" },
+            {16,"Q" },
+            {17,"R" },
+            {18,"V" },
+            {19,"W" },
+            {20,"X" },
+        
+        };
+    
         public static Dictionary<String, int> CreateDictionary()
         {
 
@@ -180,7 +205,7 @@ namespace DataModel.Common
                     newCode = "";
 
                     GoLeft(xArray);
-                    plusCodes.Add(ConvertBackToString(newCode, codeToInt, precision, xArray, yArray));
+                    plusCodes.Add(ConvertBackToString(newCode, precision, xArray, yArray));
                 }
                 Array.Copy(ResetX(xSaveArray), xArray, xArray.Length);
             }
@@ -196,7 +221,7 @@ namespace DataModel.Common
                 newCode = "";
 
                 GoUp(yArray);
-                plusCodes.Add(ConvertBackToString(newCode, codeToInt, precision, xArray, yArray));
+                plusCodes.Add(ConvertBackToString(newCode, precision, xArray, yArray));
 
             }
             Array.Copy(ResetX(xSaveArray), xArray, xArray.Length);
@@ -216,7 +241,7 @@ namespace DataModel.Common
 
                     GoRight(xArray);
                     //convert the code back into a location code and add it to the list
-                    plusCodes.Add(ConvertBackToString(newCode, codeToInt, precision, xArray, yArray));
+                    plusCodes.Add(ConvertBackToString(newCode, precision, xArray, yArray));
                 }
                 //resetting X values to original one
                 Array.Copy(ResetX(xSaveArray), xArray, xArray.Length);
@@ -237,7 +262,7 @@ namespace DataModel.Common
                 newCode = "";
 
                 GoLeft(xArray);
-                plusCodes.Add(ConvertBackToString(newCode, codeToInt, precision, xArray, yArray));
+                plusCodes.Add(ConvertBackToString(newCode, precision, xArray, yArray));
 
             }
             Array.Copy(ResetX(xSaveArray), xArray, xArray.Length);
@@ -258,7 +283,7 @@ namespace DataModel.Common
                 newCode = "";
 
                 GoRight(xArray);
-                plusCodes.Add(ConvertBackToString(newCode, codeToInt, precision, xArray, yArray));
+                plusCodes.Add(ConvertBackToString(newCode, precision, xArray, yArray));
 
             }
             Array.Copy(ResetX(xSaveArray), xArray, xArray.Length);
@@ -278,7 +303,7 @@ namespace DataModel.Common
 
                     GoLeft(xArray);
 
-                    plusCodes.Add(ConvertBackToString(newCode, codeToInt, precision, xArray, yArray));
+                    plusCodes.Add(ConvertBackToString(newCode, precision, xArray, yArray));
                 }
                 Array.Copy(ResetX(xSaveArray), xArray, xArray.Length);
             }
@@ -294,7 +319,7 @@ namespace DataModel.Common
                 newCode = "";
 
                 GoDown(yArray);
-                plusCodes.Add(ConvertBackToString(newCode, codeToInt, precision, xArray, yArray));
+                plusCodes.Add(ConvertBackToString(newCode, precision, xArray, yArray));
 
             }
 
@@ -314,7 +339,7 @@ namespace DataModel.Common
                     newCode = "";
 
                     GoRight(xArray);
-                    plusCodes.Add(ConvertBackToString(newCode, codeToInt, precision, xArray, yArray));
+                    plusCodes.Add(ConvertBackToString(newCode, precision, xArray, yArray));
                 }
                 Array.Copy(ResetX(xSaveArray), xArray, xArray.Length);
             }
@@ -389,23 +414,26 @@ namespace DataModel.Common
         /// <summary>
         /// Function which converts int to PlusCode back
         /// </summary>
-        static String ConvertBackToString(String newCode, Dictionary<String, int> codeToInt, int precision, int[] xArray, int[] yArray)
+        static String ConvertBackToString(String newCode, int precision, int[] xArray, int[] yArray)
         {
             int xArrayCounter = 0;
             int yArrayCounter = 0;
+            
             for (int i = 0; i < precision; i++)
             {
                 if (i % 2 == 0)
                 {
-                    var myKey = codeToInt.FirstOrDefault(x => x.Value == xArray[xArrayCounter]).Key;
+                    string sign = BackwardsDictionary[xArray[xArrayCounter]];
+                 
                     xArrayCounter++;
-                    newCode += myKey;
+                    newCode += sign;
                 }
                 else
                 {
-                    var myKey = codeToInt.FirstOrDefault(x => x.Value == yArray[yArrayCounter]).Key;
+                    string sign = BackwardsDictionary[yArray[yArrayCounter]];
+                   
                     yArrayCounter++;
-                    newCode += myKey;
+                    newCode += sign;
                 }
 
 

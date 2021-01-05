@@ -47,7 +47,7 @@ namespace DataModel.Common
         /// <param name="newTiles">A list of the "new state" miniTiles</param>
         /// <param name="radius">The radius of the regenerated area</param>
         /// <returns>The MiniTile list of all tiles in the regenerated area</returns>
-        public static List<MiniTile> RegenerateArea(PlusCode miniTileCode, List<MiniTile> currentTiles, IList<MiniTile> newTiles, int radius)
+        public static Dictionary<PlusCode,MiniTile> RegenerateArea(PlusCode miniTileCode, Dictionary<PlusCode,MiniTile> currentTiles, Dictionary<PlusCode,MiniTile> newTiles, int radius)
         {
             if (newTiles.Count == 0)
             {
@@ -56,7 +56,20 @@ namespace DataModel.Common
 
 
             var allNewPlusCodes = LocationCodeTileUtility.GetTileSection(miniTileCode.Code, radius, miniTileCode.Precision);
-            var oldArea = new ConcurrentBag<MiniTile>();
+            Dictionary<PlusCode, MiniTile> toReturn = new Dictionary<PlusCode, MiniTile>();
+
+            foreach (var code in allNewPlusCodes)
+            {
+                if(currentTiles.TryGetValue(new PlusCode(code,10), out MiniTile miniTile)){
+                    toReturn.Add(miniTile.MiniTileId, miniTile);
+                }
+                else if(newTiles.TryGetValue(new PlusCode(code, 10), out MiniTile miniTileNew)){
+                    toReturn.Add(miniTileNew.MiniTileId, miniTileNew);
+                }
+            }
+
+            return toReturn;
+           /* var oldArea = new ConcurrentBag<MiniTile>();
             var newArea = new ConcurrentBag<MiniTile>();
             var miniTileToAdd = new ConcurrentBag<MiniTile>();
 

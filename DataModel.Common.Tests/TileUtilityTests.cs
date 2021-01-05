@@ -190,9 +190,9 @@ namespace DataModel.Common.Tests
               Debug.WriteLine(newList.Count);
           } */
 
-        [Test]
+     //   [Test]
 
-        public void TestRegenerateArea()
+     /*   public void TestRegenerateArea()
         {
             List<MiniTile> miniTileList = TileGenerator.GenerateMiniTiles(new PlusCode("9F4MGC94+", 8), miniTileTypeList, worldObjectTypeList);
             List<MiniTile> miniTileList2 = TileGenerator.GenerateMiniTiles(new PlusCode("9F4MGC94+", 8), miniTileTypeList, worldObjectTypeList);
@@ -202,7 +202,7 @@ namespace DataModel.Common.Tests
             {
                 Debug.WriteLine(m);
             }
-        }
+        } */
 
         [Test]
 
