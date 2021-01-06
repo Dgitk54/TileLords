@@ -41,7 +41,7 @@ namespace ClientMain
                 if (string.IsNullOrEmpty(password))
                     continue;
 
-                Console.WriteLine("LocationInt a: GPS(49.000000, 7.900040)        b: GPS(49.000000, 7.900000)          c : GPS(49.000000, 7.900020) ");
+                Console.WriteLine("LocationInt a: GPS(49.000000, 7.900150)        b: GPS(49.000000, 7.900000)          c : GPS(49.000000, 7.900300) ");
                 var locationChar = Console.ReadLine();
                 if (string.IsNullOrEmpty(password))
                     continue;
@@ -49,13 +49,13 @@ namespace ClientMain
                 switch (locationChar[0])
                 {
                     case 'a':
-                        Task.Run(() => DebugLoginAndRunAroundClient(name, password, new GPS(49.000000, 7.900040), token.Token));
+                        Task.Run(() => DebugLoginAndRunAroundClient(name, password, new GPS(49.000000, 7.900150), token.Token));
                         break;
                     case 'b':
                         Task.Run(() => DebugLoginAndRunAroundClient(name, password, new GPS(49.000000, 7.900000), token.Token));
                         break;
                     case 'c':
-                        Task.Run(() => DebugLoginAndRunAroundClient(name, password, new GPS(49.000000, 7.900020), token.Token));
+                        Task.Run(() => DebugLoginAndRunAroundClient(name, password, new GPS(49.000000, 7.900300), token.Token));
                         break;
                 }
 
