@@ -14,7 +14,7 @@ namespace DataModel.Common
         Swamp,
         Jungle,
         Mountains,
-        Savannah,
+        Savanna,
 
 
      

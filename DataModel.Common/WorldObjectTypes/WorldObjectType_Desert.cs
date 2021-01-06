@@ -4,7 +4,7 @@ using System.Text;
 
 namespace DataModel.Common.WorldObjectTypes
 {
-    public enum WorldObjectType_Desert
+    public enum WorldObjectType_Desert 
     {
         Empty,
         Cactus,

@@ -12,10 +12,17 @@ namespace DataModel.Common
 
         public int Id { get; set; }        
         public WorldObjectType Type { get; set; }
+        public Enum TypeEnum { get; set; }
         public WorldObject() { }
         public WorldObject(WorldObjectType type)
         {
             Type = type;
+        }
+
+        public WorldObject(Enum type)
+        {
+            TypeEnum = type;
+            
         }
     }
 }

@@ -11,7 +11,7 @@ namespace DataModel.Common.WorldObjectTypes
         CopperRock,
         DesertTree,
         GoldRock,
-        Oaktree,
+        OakTree,
         OvergrownRuin,
         PalmTree,
         Pond,

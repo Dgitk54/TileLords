@@ -18,6 +18,7 @@ namespace DataModel.Common
         public List<MiniTile> MiniTiles { get; set; }
 
         public Tile(PlusCode c, TileType t, List<MiniTile> miniTiles) => (PlusCode, Ttype, MiniTiles) = (c, t, miniTiles );
+        public Tile(PlusCode c, TileType t) => (PlusCode, Ttype) = (c, t);
 
         public Tile() { }
       

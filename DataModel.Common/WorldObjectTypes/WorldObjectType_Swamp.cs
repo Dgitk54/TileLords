@@ -30,9 +30,9 @@ namespace DataModel.Common.WorldObjectTypes
         SwampTree,
         Mangrove,
         TreeTrunk,
-        Fantree,
+        FanTree,
         PalmTree,
-        SmallPalmtree
+        SmallPalmTree
 
 
     }

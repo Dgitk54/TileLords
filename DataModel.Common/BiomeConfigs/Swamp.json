@@ -1,0 +1,35 @@
+{
+  "worldObjectWeight": {
+    "Bush": 5,
+    "CopperRock": 12,
+    "Empty": 170,
+    "GoldRock": 10,
+    "OvergrownRuin": 10,
+    "Rock": 15,
+    "Pond": 5,
+    "RoseBush": 5,
+    "SheepBrown": 5,
+    "SheepBlack": 5,
+    "SheepWhite": 5,
+    "Skeleton": 5,
+    "Volcano": 1,
+    "WaterFall": 5,
+    "WheatField": 4,
+    "WinterTree": 5,
+    "WinterTree2": 5,
+    "TreeRoots": 15,
+    "TreeRoots2": 15,
+    "SwampTree": 30,
+    "Mangrove": 30,
+    "TreeTrunk": 15,
+    "FanTree": 20,
+    "PalmTree": 10,
+    "SmallPalmTree": 10
+  },
+  "tileTypeWeight": {
+    "Mud_Grass": 70,
+    "Mud_Marsh": 20,
+    "Grass_Tile": 20,
+    "Mud_Tile": 20
+  }
+}

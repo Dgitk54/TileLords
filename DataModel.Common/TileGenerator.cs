@@ -1,9 +1,12 @@
-﻿using DataModel.Common.MiniTileTypes;
+﻿using DataModel.Common.BiomeConfigs;
+using DataModel.Common.MiniTileTypes;
 using DataModel.Common.WorldObjectTypes;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -47,7 +50,7 @@ namespace DataModel.Common
         /// <param name="newTiles">A list of the "new state" miniTiles</param>
         /// <param name="radius">The radius of the regenerated area</param>
         /// <returns>The MiniTile list of all tiles in the regenerated area</returns>
-        public static Dictionary<PlusCode,MiniTile> RegenerateArea(PlusCode miniTileCode, Dictionary<PlusCode,MiniTile> currentTiles, Dictionary<PlusCode,MiniTile> newTiles, int radius)
+        public static Dictionary<PlusCode, MiniTile> RegenerateArea(PlusCode miniTileCode, Dictionary<PlusCode, MiniTile> currentTiles, Dictionary<PlusCode, MiniTile> newTiles, int radius)
         {
             if (newTiles.Count == 0)
             {
@@ -60,130 +63,132 @@ namespace DataModel.Common
 
             foreach (var code in allNewPlusCodes)
             {
-                if(currentTiles.TryGetValue(new PlusCode(code,10), out MiniTile miniTile)){
+                if (currentTiles.TryGetValue(new PlusCode(code, 10), out MiniTile miniTile))
+                {
                     toReturn.Add(miniTile.MiniTileId, miniTile);
                 }
-                else if(newTiles.TryGetValue(new PlusCode(code, 10), out MiniTile miniTileNew)){
+                else if (newTiles.TryGetValue(new PlusCode(code, 10), out MiniTile miniTileNew))
+                {
                     toReturn.Add(miniTileNew.MiniTileId, miniTileNew);
                 }
             }
 
             return toReturn;
-           /* var oldArea = new ConcurrentBag<MiniTile>();
-            var newArea = new ConcurrentBag<MiniTile>();
-            var miniTileToAdd = new ConcurrentBag<MiniTile>();
+            /* var oldArea = new ConcurrentBag<MiniTile>();
+             var newArea = new ConcurrentBag<MiniTile>();
+             var miniTileToAdd = new ConcurrentBag<MiniTile>();
 
 
-            currentTiles.AsParallel().ForAll(v =>
-            {
-                allNewPlusCodes.AsParallel()
-                .Where(e => v.MiniTileId.Code.Equals(e))
-                .ForAll(e => oldArea.Add(v));
+             currentTiles.AsParallel().ForAll(v =>
+             {
+                 allNewPlusCodes.AsParallel()
+                 .Where(e => v.MiniTileId.Code.Equals(e))
+                 .ForAll(e => oldArea.Add(v));
 
-            });
-
-
-
-            newTiles.AsParallel().ForAll(v =>
-            {
-                allNewPlusCodes.AsParallel()
-                .Where(e => v.MiniTileId.Code.Equals(e))
-                .ForAll(e => newArea.Add(v));
-            });
+             });
 
 
-            oldArea.AsParallel()
-                .ForAll(oldTile =>
+
+             newTiles.AsParallel().ForAll(v =>
+             {
+                 allNewPlusCodes.AsParallel()
+                 .Where(e => v.MiniTileId.Code.Equals(e))
+                 .ForAll(e => newArea.Add(v));
+             });
+
+
+             oldArea.AsParallel()
+                 .ForAll(oldTile =>
+                 {
+                     bool allowedToAdd = false;
+
+                     foreach (MiniTile newA in newArea)
+                     {
+                         if (oldTile.MiniTileId.Code.Equals(newA.MiniTileId.Code))
+                         {
+                             allowedToAdd = false;
+                             break;
+                         }
+                         else
+                         {
+                             allowedToAdd = true;
+                         }
+                     }
+
+                     if (allowedToAdd)
+                     {
+                         miniTileToAdd.Add(oldTile);
+                     }
+
+                 });
+
+             var toReturn = newArea.ToList();
+             toReturn.AddRange(miniTileToAdd.ToList());
+             return toReturn;
+
+             /*
+
+                 List<MiniTile> oldArea = new List<MiniTile>();
+                 List<MiniTile> newArea = new List<MiniTile>();
+                 List<MiniTile> miniTileToAdd = new List<MiniTile>();
+
+                foreach (MiniTile currentMiniTile in currentTiles)
                 {
-                    bool allowedToAdd = false;
-
-                    foreach (MiniTile newA in newArea)
+                    foreach(string s in allNewPlusCodes)
                     {
-                        if (oldTile.MiniTileId.Code.Equals(newA.MiniTileId.Code))
+                        if (currentMiniTile.MiniTileId.Code.Equals(s))
                         {
-                            allowedToAdd = false;
-                            break;
+                            oldArea.Add(currentMiniTile);
                         }
-                        else
-                        {
-                            allowedToAdd = true;
-                        }
-                    }
-
-                    if (allowedToAdd)
-                    {
-                        miniTileToAdd.Add(oldTile);
-                    }
-
-                });
-
-            var toReturn = newArea.ToList();
-            toReturn.AddRange(miniTileToAdd.ToList());
-            return toReturn;
-
-            /*
-
-                List<MiniTile> oldArea = new List<MiniTile>();
-                List<MiniTile> newArea = new List<MiniTile>();
-                List<MiniTile> miniTileToAdd = new List<MiniTile>();
-
-               foreach (MiniTile currentMiniTile in currentTiles)
-               {
-                   foreach(string s in allNewPlusCodes)
-                   {
-                       if (currentMiniTile.MiniTileId.Code.Equals(s))
-                       {
-                           oldArea.Add(currentMiniTile);
-                       }
-                   }
-               }
-            
-            
-            
-            
-            
-               foreach (MiniTile newMiniTiles in newTiles)
-               {
-                   foreach (string s in allNewPlusCodes)
-                   {
-                       if (newMiniTiles.MiniTileId.Code.Equals(s))
-                       {
-                           newArea.Add(newMiniTiles);
-                       }
-                   }
-               }
-
-            foreach (MiniTile old in oldArea)
-            {
-                bool allowedToAdd = false;
-
-                foreach (MiniTile newA in newArea)
-                {
-                    if (old.MiniTileId.Code.Equals(newA.MiniTileId.Code))
-                    {
-                        allowedToAdd = false;
-                        break;
-                    }
-                    else
-                    {
-                        allowedToAdd = true;
                     }
                 }
 
-                if (allowedToAdd)
+
+
+
+
+                foreach (MiniTile newMiniTiles in newTiles)
                 {
-                    miniTileToAdd.Add(old);
+                    foreach (string s in allNewPlusCodes)
+                    {
+                        if (newMiniTiles.MiniTileId.Code.Equals(s))
+                        {
+                            newArea.Add(newMiniTiles);
+                        }
+                    }
                 }
-            }
 
-            foreach (MiniTile add in miniTileToAdd)
-            {
-                newArea.Add(add);
-            }
+             foreach (MiniTile old in oldArea)
+             {
+                 bool allowedToAdd = false;
 
-            return newArea.ToList();
+                 foreach (MiniTile newA in newArea)
+                 {
+                     if (old.MiniTileId.Code.Equals(newA.MiniTileId.Code))
+                     {
+                         allowedToAdd = false;
+                         break;
+                     }
+                     else
+                     {
+                         allowedToAdd = true;
+                     }
+                 }
 
-            */
+                 if (allowedToAdd)
+                 {
+                     miniTileToAdd.Add(old);
+                 }
+             }
+
+             foreach (MiniTile add in miniTileToAdd)
+             {
+                 newArea.Add(add);
+             }
+
+             return newArea.ToList();
+
+             */
 
 
 
@@ -348,7 +353,7 @@ namespace DataModel.Common
                         i = r.Next(0, length);
                         return (MiniTileType_Snow)i;
                     }
-                case TileType.Savannah:
+                case TileType.Savanna:
                     {
                         length = Enum.GetNames(typeof(MiniTileType_Savanna)).Length;
                         r = new Random();
@@ -418,7 +423,7 @@ namespace DataModel.Common
                         i = r.Next(0, length);
                         return (WorldObjectType_Snow)i;
                     }
-                case TileType.Savannah:
+                case TileType.Savanna:
                     {
                         length = Enum.GetNames(typeof(WorldObjectType_Savanna)).Length;
                         r = new Random();
@@ -431,5 +436,296 @@ namespace DataModel.Common
 
         }
 
+        public static Enum GetSpecificWorldObject(Tile parentTile, Random r, List<WorldObjectType> weightList)
+        {
+
+
+            int length = weightList.Count;
+            int i;
+
+
+            switch (parentTile.Ttype)
+            {
+                case TileType.Desert:
+                    {
+
+
+                        i = r.Next(0, length);
+                        return weightList[i];
+                    }
+                case TileType.Grassland:
+                    {
+
+                        i = r.Next(0, length);
+
+                        return weightList[i];
+                    }
+                case TileType.Swamp:
+                    {
+
+
+                        i = r.Next(0, length);
+                        return weightList[i];
+                    }
+                case TileType.Jungle:
+                    {
+
+
+                        i = r.Next(0, length);
+                        return weightList[i];
+                    }
+                case TileType.Mountains:
+                    {
+
+
+                        i = r.Next(0, length);
+                        return weightList[i];
+                    }
+                case TileType.Snow:
+                    {
+
+
+                        i = r.Next(0, length);
+                        return weightList[i];
+                    }
+                case TileType.Savanna:
+                    {
+
+
+                        i = r.Next(0, length);
+                        return weightList[i];
+                    }
+
+            }
+            return WorldObjectType.Empty;
+
+        }
+
+        public static Enum GetSpecificMiniTileType(Tile parentTile, Random r, List<MiniTileType> weightList)
+        {
+
+            int length = weightList.Count;
+            int i;
+
+            switch (parentTile.Ttype)
+            {
+                case TileType.Desert:
+                    {
+
+                        i = r.Next(0, length);
+
+                        return weightList[i];
+                    }
+                case TileType.Grassland:
+                    {
+
+
+                        i = r.Next(0, length);
+
+                        return weightList[i];
+                    }
+                case TileType.Swamp:
+                    {
+
+
+                        i = r.Next(0, length);
+
+                        return weightList[i];
+                    }
+                case TileType.Jungle:
+                    {
+
+
+                        i = r.Next(0, length);
+
+                        return weightList[i];
+                    }
+                case TileType.Mountains:
+                    {
+
+
+                        i = r.Next(0, length);
+
+                        return weightList[i];
+                    }
+                case TileType.Snow:
+                    {
+
+
+                        i = r.Next(0, length);
+
+                        return weightList[i];
+                    }
+                case TileType.Savanna:
+                    {
+
+
+                        i = r.Next(0, length);
+
+                        return weightList[i];
+                    }
+
+            }
+            return MiniTileType.Unknown_Tile;
+
+        }
+
+
+        public static int GetRandomSeed()
+        {
+            Random r = new Random();
+            int seed = r.Next(0, Int32.MaxValue);
+
+            return seed;
+        }
+
+
+        public static int TestSeed(int seed)
+        {
+            Random seededRandom = new Random(seed);
+            return seededRandom.Next(1, 100);
+
+
+        }
+
+
+        public static List<Tile> GenerateArea(PlusCode code, int radius, int seed, String fileLocation)
+        {
+
+            Random r = new Random(seed);
+            string c = code.Code;
+            if (c.Length > 8)
+            {
+                c = c.Substring(0, 8);
+            }
+            var tiles = from miniTileCodeString in LocationCodeTileUtility.GetTileSection(c, radius, 8)
+                        select GenerateTile(new PlusCode(miniTileCodeString, 8), r, fileLocation);
+            return tiles.ToList();
+        }
+
+        public static List<Tile> GenerateArea(PlusCode code, int radius, Random rand, String fileLocation)
+        {
+
+            Random r = rand;
+            string c = code.Code;
+            if (c.Length > 8)
+            {
+                c = c.Substring(0, 8);
+            }
+            var tiles = from miniTileCodeString in LocationCodeTileUtility.GetTileSection(c, radius, 8)
+                        select GenerateTile(new PlusCode(miniTileCodeString, 8), r, fileLocation);
+            return tiles.ToList();
+        }
+
+
+        public static List<MiniTile> GenerateMiniTiles(Tile tile, Random r, List<WorldObjectType> worldObjectWeightList, List<MiniTileType> typeWeightList)
+        {
+            string code = tile.PlusCode.Code;
+            if (code.Length > 9)
+            {
+                code = code.Substring(0, 9);
+            }
+            if (!code.Contains("+"))
+            {
+                code += "+";
+            }
+
+
+      
+
+            var tiles = from miniTileCodeString in LocationCodeTileUtility.GetAndCombineWithAllAfterPlus(code)
+                        select new MiniTile(new PlusCode(miniTileCodeString, 10), (MiniTileType)GetSpecificMiniTileType(tile, r, typeWeightList), new List<ITileContent>() { new WorldObject((WorldObjectType)GetSpecificWorldObject(tile, r, worldObjectWeightList)) });
+    
+            return tiles.ToList();
+
+        }
+
+        public static Tile GenerateTile(PlusCode code, Random r, String fileLocation)
+        {
+            TileType type = getRandomTileType(r);
+
+            Tile tile = new Tile(code, type);
+            IBiome biome = null;
+            if (type == TileType.Grassland)
+            {
+                biome = (GrasslandBiome)JsonConvert.DeserializeObject<GrasslandBiome>(File.ReadAllText(fileLocation + "" + type + ".json"));
+            }
+            if (type == TileType.Desert)
+            {
+                biome = (DesertBiome)JsonConvert.DeserializeObject<DesertBiome>(File.ReadAllText(fileLocation + "" + type + ".json"));
+            }
+            if (type == TileType.Jungle)
+            {
+                biome = (JungleBiome)JsonConvert.DeserializeObject<JungleBiome>(File.ReadAllText(fileLocation + "" + type + ".json"));
+            }
+            if (type == TileType.Mountains)
+            {
+                biome = (MountainsBiome)JsonConvert.DeserializeObject<MountainsBiome>(File.ReadAllText(fileLocation + "" + type + ".json"));
+            }
+            if (type == TileType.Savanna)
+            {
+                biome = (SavannaBiome)JsonConvert.DeserializeObject<SavannaBiome>(File.ReadAllText(fileLocation + "" + type + ".json"));
+            }
+            if (type == TileType.Snow)
+            {
+                biome = (SnowBiome)JsonConvert.DeserializeObject<SnowBiome>(File.ReadAllText(fileLocation + "" + type + ".json"));
+            }
+            if (type == TileType.Swamp)
+            {
+                biome = (SwampBiome)JsonConvert.DeserializeObject<SwampBiome>(File.ReadAllText(fileLocation + "" + type + ".json"));
+            }
+            if (type == TileType.WaterBody)
+            {
+                biome = (WaterBodyBiome)JsonConvert.DeserializeObject<WaterBodyBiome>(File.ReadAllText(fileLocation + "" + type + ".json"));
+            }
+
+
+            List<WorldObjectType> worldObjectWeightList = new List<WorldObjectType>();
+            List<MiniTileType> typeWeightList = new List<MiniTileType>();
+
+
+            for (int i = 0; i < biome.WorldObjectWeightDict.Count; i++)
+            {
+                for (int j = 0; j < biome.WorldObjectWeightDict.ElementAt(i).Value; j++)
+                {
+                    WorldObjectType adding = (WorldObjectType)Enum.Parse(typeof(WorldObjectType), biome.WorldObjectWeightDict.ElementAt(i).Key);
+                    worldObjectWeightList.Add(adding);
+
+                }
+
+            }
+
+            for (int i = 0; i < biome.TileTypeWeightDict.Count; i++)
+            {
+                for (int j = 0; j < biome.TileTypeWeightDict.ElementAt(i).Value; j++)
+                {
+                    MiniTileType adding = (MiniTileType)Enum.Parse(typeof(MiniTileType), biome.TileTypeWeightDict.ElementAt(i).Key);
+                    typeWeightList.Add(adding);
+
+
+                }
+
+            }
+
+            tile.MiniTiles = GenerateMiniTiles(tile, r, worldObjectWeightList, typeWeightList);
+            Debug.WriteLine(tile.MiniTiles[0].TileType + " " + tile.MiniTiles[0].TileType + " " + tile.MiniTiles[0].TileType);
+
+
+            return tile;
+        }
+
+
+        public static TileType getRandomTileType(Random r)
+        {
+
+            int length = Enum.GetNames(typeof(TileType)).Length;
+            int i = r.Next(0, length);
+
+
+            return (TileType)i;
+
+        }
+
     }
+
 }

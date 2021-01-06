@@ -1,0 +1,30 @@
+{
+  "worldObjectWeight": {
+    "Bush": 5,
+    "CopperRock": 20,
+    "Empty": 200,
+    "Glacier": 15,
+    "GoldRock": 20,
+    "OvergrownRuin": 4,
+    "PineTree": 5,
+    "Pond": 3,
+    "Rock": 30,
+    "RoseBush": 8,
+    "SheepBrown": 5,
+    "SheepWhite": 5,
+    "SheepBlack": 5,
+    "Tree1": 5,
+    "Tree2": 5,
+    "Volcano": 5,
+    "WaterFall": 10,
+    "WheatField": 2,
+    "WinterTree": 15,
+    "WinterTree2": 15,
+    "TreeTrunk": 10
+  },
+  "tileTypeWeight": {
+    "Rock_Tile": 70,
+    "Rock_River": 20,
+    "Rock_River2": 20
+  }
+}

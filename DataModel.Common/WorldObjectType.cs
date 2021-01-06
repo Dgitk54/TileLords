@@ -51,7 +51,8 @@ namespace DataModel.Common
         CowWhite,
         AppleTree,
         OrangeTree,
-    
+        Pyramid
+   
 
 
     }

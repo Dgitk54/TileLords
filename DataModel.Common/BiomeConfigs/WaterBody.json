@@ -1,0 +1,8 @@
+{
+  "worldObjectWeight": {
+    "Empty": 1
+  },
+  "tileTypeWeight": {
+    "WaterBody_Tile": 1
+  }
+}
