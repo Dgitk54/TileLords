@@ -257,13 +257,15 @@ namespace DataModel.Common.Tests
         [Test]
         public void GenerateTileWithJsonTest()
         {
+            string workingDirectory = Environment.CurrentDirectory;
+            string projectDir = Directory.GetParent(workingDirectory).Parent.Parent.Parent.FullName;
             Random r = new Random(11);
-            Tile tile = TileGenerator.GenerateTile(new PlusCode("XXXXXX", 8), r, @"C:\Users\Kat\source\repos\TileLords\DataModel.Common\BiomeConfigs\");
+            Tile tile = TileGenerator.GenerateTile(new PlusCode("XXXXXX", 8), r, projectDir + @"\DataModel.Common\BiomeConfigs\");
             Debug.WriteLine(tile.Ttype + "");
             r = new Random(11);
-            Tile tile2 = TileGenerator.GenerateTile(new PlusCode("XXXXXX", 8), r, @"C:\Users\Kat\source\repos\TileLords\DataModel.Common\BiomeConfigs\");
+            Tile tile2 = TileGenerator.GenerateTile(new PlusCode("XXXXXX", 8), r, projectDir + @"\DataModel.Common\BiomeConfigs\");
             r = new Random(13);
-            Tile tile3 = TileGenerator.GenerateTile(new PlusCode("XXXXXX", 8), r, @"C:\Users\Kat\source\repos\TileLords\DataModel.Common\BiomeConfigs\");
+            Tile tile3 = TileGenerator.GenerateTile(new PlusCode("XXXXXX", 8), r, projectDir + @"\DataModel.Common\BiomeConfigs\");
             for (int i = 0; i < tile.MiniTiles.Count; i++)
             {
                 WorldObject a = (WorldObject)tile.MiniTiles[i].Content[0];
@@ -284,8 +286,10 @@ namespace DataModel.Common.Tests
         [Test]
         public void GenerateAreaWithJsonTest()
         {
-            List<Tile> tile = TileGenerator.GenerateArea(new PlusCode("9MHQ8533", 8), 1, 15, @"C:\Users\Kat\source\repos\TileLords\DataModel.Common\BiomeConfigs\");
-            List<Tile> tile2 = TileGenerator.GenerateArea(new PlusCode("9MHQ8534", 8), 1, 16, @"C:\Users\Kat\source\repos\TileLords\DataModel.Common\BiomeConfigs\");
+            string workingDirectory = Environment.CurrentDirectory;
+            string projectDir = Directory.GetParent(workingDirectory).Parent.Parent.Parent.FullName;
+            List<Tile> tile = TileGenerator.GenerateArea(new PlusCode("9MHQ8533", 8), 1, 15, projectDir + @"\DataModel.Common\BiomeConfigs\");
+            List<Tile> tile2 = TileGenerator.GenerateArea(new PlusCode("9MHQ8534", 8), 1, 16, projectDir + @"\DataModel.Common\BiomeConfigs\");
 
             foreach(var miniT in tile[0].MiniTiles)
             {
