@@ -35,7 +35,7 @@ namespace DataModel.Client
 
 
             var concat = from e in BigTiles.Merge(smallTiles).Where(v => v != null).Buffer(TimeSpan.FromSeconds(4))
-                         select e.SelectMany(v => v).GroupBy(v =>v.MiniTileId ).ToDictionary(v => v.Key, v => v.First());
+                         select e.SelectMany(v => v).GroupBy(v => v.MiniTileId).ToDictionary(v => v.Key, v => v.First());
 
 
 
@@ -50,6 +50,18 @@ namespace DataModel.Client
                                       .ParseOnlyValidUsingErrorHandler<ServerTileContentEvent>(ClientFunctions.PrintConsoleErrorHandler)
                                       .Where(v => v.VisibleContent != null)
                                       .StartWith(new ServerTileContentEvent());
+
+
+
+
+            concat.CombineLatest(tileContent, (tiles, content) => new { tiles, content }).Select(v =>
+            {
+                SetMinitileContent(v.tiles, v.content.VisibleContent);
+                return v.tiles;
+            });
+
+
+                
 
 
 
@@ -87,7 +99,7 @@ namespace DataModel.Client
             });
 
 
-            return Accumulated(concat, latestClient, tileContent).Subscribe(v => eventBus.Publish(new ClientMapBufferChanged(v)));
+            return Accumulated(concat, latestClient).Subscribe(v => eventBus.Publish(new ClientMapBufferChanged(v)));
         }
 
 
@@ -95,34 +107,25 @@ namespace DataModel.Client
 
 
 
-        IObservable<Dictionary<PlusCode,MiniTile>> Accumulated(IObservable<Dictionary<PlusCode,MiniTile>> bufferedMiniTileStream, IObservable<PlusCode> location, IObservable<ServerTileContentEvent> content)
+        IObservable<Dictionary<PlusCode, MiniTile>> Accumulated(IObservable<Dictionary<PlusCode, MiniTile>> bufferedMiniTileStream, IObservable<PlusCode> location)
         {
             var output = location.DistinctUntilChanged().CombineLatest(bufferedMiniTileStream.DistinctUntilChanged(), (loc, tiles) => new { loc, tiles })
-                                 .CombineLatest(content.DistinctUntilChanged(), (locTiles, serverTileContent) => new { locTiles, serverTileContent })
-                                 .Scan(new Dictionary<PlusCode,MiniTile>(), (dict, val) => 
-                                 {
-                                     dict = TileGenerator.RegenerateArea(val.locTiles.loc, dict, val.locTiles.tiles, 40);
-                                   
-                                     if(val.serverTileContent != null && val.serverTileContent.VisibleContent != null)
-                                     {
-                                         var copy = new List<KeyValuePair<PlusCode, List<ITileContent>>>(val.serverTileContent.VisibleContent);
-                                         SetMinitileContent(dict, copy);
-
-                                     }
-                                       
-                                     return dict;
-                                 });
+                                 .Scan(new Dictionary<PlusCode, MiniTile>(), (dict, val) =>
+                                  {
+                                      dict = TileGenerator.RegenerateArea(val.loc, dict, val.tiles, 40);
+                                      return dict;
+                                  });
 
             return output.DistinctUntilChanged();
 
         }
 
-        void SetMinitileContent(Dictionary<PlusCode,MiniTile> map, List<KeyValuePair<PlusCode, List<ITileContent>>> content)
+        void SetMinitileContent(Dictionary<PlusCode, MiniTile> map, List<KeyValuePair<PlusCode, List<ITileContent>>> content)
         {
             content.ForEach(v =>
             {
                 var tile = TileUtility.GetMiniTile(v.Key, map.Values.ToList());
-                if(tile != null)
+                if (tile != null)
                 {
                     string tileContent = "";
                     v.Value.ForEach(x =>

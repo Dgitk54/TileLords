@@ -16,6 +16,7 @@ using DataModel.Common;
 using DataModel.Common.BiomeConfigs;
 using Newtonsoft.Json;
 using System.IO;
+using System.Reflection;
 
 namespace DataModel.Common.Tests
 {
@@ -284,8 +285,12 @@ namespace DataModel.Common.Tests
         [Test]
         public void GenerateAreaWithJsonTest()
         {
-            List<Tile> tile = TileGenerator.GenerateArea(new PlusCode("9MHQ8533", 8), 1, 15, @"C:\Users\Kat\source\repos\TileLords\DataModel.Common\BiomeConfigs\");
-            List<Tile> tile2 = TileGenerator.GenerateArea(new PlusCode("9MHQ8534", 8), 1, 16, @"C:\Users\Kat\source\repos\TileLords\DataModel.Common\BiomeConfigs\");
+            var location = Directory.GetCurrentDirectory();
+            var outPutDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().CodeBase);
+            
+            
+            List<Tile> tile = TileGenerator.GenerateArea(new PlusCode("9MHQ8533", 8), 1, 15, @"\..\..\..\..\..\TileLords\DataModel.Common\BiomeConfigs\");
+            List<Tile> tile2 = TileGenerator.GenerateArea(new PlusCode("9MHQ8534", 8), 1, 16, @"\..\..\..\..\..\TileLords\DataModel.Common\BiomeConfigs\");
 
             foreach(var miniT in tile[0].MiniTiles)
             {
