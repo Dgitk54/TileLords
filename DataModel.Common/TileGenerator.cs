@@ -603,6 +603,22 @@ namespace DataModel.Common
             return tiles.ToList();
         }
 
+        public static List<Tile> GenerateArea(PlusCode code, int radius, int seed)
+        {
+            string workingDirectory = Environment.CurrentDirectory;
+            string projectDir = Directory.GetParent(workingDirectory).Parent.Parent.Parent.FullName;
+            string fileLocation = projectDir + @"\DataModel.Common\BiomeConfigs\";
+            Random r = new Random(seed);
+            string c = code.Code;
+            if (c.Length > 8)
+            {
+                c = c.Substring(0, 8);
+            }
+            var tiles = from miniTileCodeString in LocationCodeTileUtility.GetTileSection(c, radius, 8)
+                        select GenerateTile(new PlusCode(miniTileCodeString, 8), r, fileLocation);
+            return tiles.ToList();
+        }
+
         public static List<Tile> GenerateArea(PlusCode code, int radius, Random rand, String fileLocation)
         {
 
@@ -616,6 +632,7 @@ namespace DataModel.Common
                         select GenerateTile(new PlusCode(miniTileCodeString, 8), r, fileLocation);
             return tiles.ToList();
         }
+
 
 
         public static List<MiniTile> GenerateMiniTiles(Tile tile, Random r, List<WorldObjectType> worldObjectWeightList, List<MiniTileType> typeWeightList)

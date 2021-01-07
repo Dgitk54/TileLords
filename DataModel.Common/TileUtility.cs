@@ -54,6 +54,22 @@ namespace DataModel.Common
 
         }
 
+        public static string TileDebugContentString(this Tile t)
+        {
+
+            int contentCount = 0;
+            string tileContentString = "";
+            WorldObject wo;
+            t.MiniTiles.ForEach(v =>
+            {
+                contentCount += v.Content.Count;
+                wo = (WorldObject)v.Content[0];
+                v.Content.ToList().ForEach(v2 => tileContentString += " " + v2.ToString() + " " + wo.Type);
+                wo = (WorldObject)v.Content[0];
+            });
+            return "Tile" + t.PlusCode.Code + "   Count:" + contentCount + "   ContentString:" + tileContentString;
+
+        }
 
         public static bool EqualsBasedOnPlusCode(this MiniTile t1, MiniTile t2) => t1.MiniTileId.Code.Equals(t2.MiniTileId.Code);
 

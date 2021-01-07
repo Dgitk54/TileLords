@@ -60,8 +60,7 @@ namespace DataModel.Server
 
 
         
-
-
+       
 
         public static List<PlusCode> NeighborsIn8(PlusCode code)
         {
@@ -200,7 +199,7 @@ namespace DataModel.Server
         /// <returns>Updated Minitile</returns>
         static MiniTile AddTileContent(this MiniTile tile, ITileContent content)
         {
-            IReadOnlyList<ITileContent> collection;
+            List<ITileContent> collection;
             if (tile.Content != null)
             {
                 collection = tile.Content.Concat(new[] { content }).ToList();
@@ -216,7 +215,7 @@ namespace DataModel.Server
 
         static MiniTile RemoveTileContent(this MiniTile tile, ITileContent content)
         {
-            IReadOnlyList<ITileContent> collection;
+            List<ITileContent> collection;
             if (tile.Content != null)
             {
                 collection = tile.Content.Except(new[] { content }).ToList();

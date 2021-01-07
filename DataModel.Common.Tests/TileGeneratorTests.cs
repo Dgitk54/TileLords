@@ -257,6 +257,7 @@ namespace DataModel.Common.Tests
         [Test]
         public void GenerateTileWithJsonTest()
         {
+
             string workingDirectory = Environment.CurrentDirectory;
             string projectDir = Directory.GetParent(workingDirectory).Parent.Parent.Parent.FullName;
             Random r = new Random(11);
@@ -286,6 +287,7 @@ namespace DataModel.Common.Tests
         [Test]
         public void GenerateAreaWithJsonTest()
         {
+            
             string workingDirectory = Environment.CurrentDirectory;
             string projectDir = Directory.GetParent(workingDirectory).Parent.Parent.Parent.FullName;
             List<Tile> tile = TileGenerator.GenerateArea(new PlusCode("9MHQ8533", 8), 1, 15, projectDir + @"\DataModel.Common\BiomeConfigs\");

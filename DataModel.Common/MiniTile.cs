@@ -18,7 +18,7 @@ namespace DataModel.Common
 
         public Enum TileTypeAsEnum { get; set; }
 
-        public IReadOnlyList<ITileContent> Content { get; set; }
+        public List<ITileContent> Content { get; set; }
 
         public MiniTile(PlusCode c, MiniTileType t, List<ITileContent> con) => (MiniTileId, TileType, Content) = (c, t, con);
 

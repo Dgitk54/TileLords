@@ -26,7 +26,6 @@ namespace DataModel.Server
 
             return eventBus.GetEventStream<ServerTileContentEvent>().Subscribe(v =>
             {
-               
                 var serialized = JsonConvert.SerializeObject(v, typeof(ServerTileContentEvent), settings);
                 var sink = new DataSinkEvent(serialized);
                 eventBus.Publish(sink);

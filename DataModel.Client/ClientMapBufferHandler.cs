@@ -20,7 +20,7 @@ namespace DataModel.Client
             //Tiles
             var onlyValid = eventBus.GetEventStream<DataSourceEvent>()
                                     .ParseOnlyValidUsingErrorHandler<ServerMapEvent>(ClientFunctions.PrintConsoleErrorHandler);
-
+                                   
 
 
 
@@ -42,14 +42,16 @@ namespace DataModel.Client
             //Client
             var latestClient = ClientFunctions.LatestClientLocation(eventBus.GetEventStream<UserGpsEvent>());
 
-
+            var clientBuffer = from e in latestClient.DistinctUntilChanged()
+                               select new HashSet<PlusCode>(e.Neighbors(50));
 
 
             //Content
             var tileContent = eventBus.GetEventStream<DataSourceEvent>()
                                       .ParseOnlyValidUsingErrorHandler<ServerTileContentEvent>(ClientFunctions.PrintConsoleErrorHandler)
                                       .Where(v => v.VisibleContent != null)
-                                      .StartWith(new ServerTileContentEvent());
+                                      .StartWith(new ServerTileContentEvent())
+                                      .Do(v=> { if (v.VisibleContent != null) { Console.WriteLine(v.VisibleContent.Count); } });
 
 
 
@@ -61,41 +63,30 @@ namespace DataModel.Client
 
 
 
-            var clientPositionPlusContent = latestClient.WithLatestFrom(tileContent, (position, content) => new { position, content });
+            var clientPositionPlusContent = clientBuffer.CombineLatest(tileContent, (position, content) => new { position, content });
 
 
 
-
-            var bufferedContent = clientPositionPlusContent.Scan(new List<KeyValuePair<PlusCode, List<ITileContent>>>(), (buffer, val) =>
+            //https://stackoverflow.com/questions/294138/merging-dictionaries-in-c-sharp
+            var bufferedContent = clientPositionPlusContent.Scan(new Dictionary<PlusCode, List<ITileContent>>(), (buffer, val) =>
             {
 
                 //Remove values far away:
-                var currentClientLocation = val.position;
+                var farAway = from keyValue in buffer.Keys
+                              where !val.position.Contains(keyValue)
+                              select keyValue;
+                
+                farAway.ToList().ForEach(v => buffer.Remove(v));
 
-
-
-
-                var farAway = from keyValue in buffer
-                              let key = keyValue.Key
-                              where PlusCodeUtils.GetChebyshevDistance(key, currentClientLocation) > 50
-                              select key;
-
-
-                //farAway.ToList().ForEach(v => buffer.Remove(v));
-                //return buffer.Concat(val.content.VisibleContent).GroupBy(v => v.Key).ToDictionary(v => v.Key, v => v.First().Value);
-                if (val.content.VisibleContent == null)
-                    return buffer;
-
-
-                buffer.AddRange(val.content.VisibleContent);
-
-
+                if(val.content.VisibleContent != null)
+                {
+                    val.content.VisibleContent.GroupBy(v => v.Key).ToDictionary(v => v.Key, v => v.First().Value).ToList().ForEach(x => buffer[x.Key] = x.Value);
+                }
                 return buffer;
-
             });
 
 
-            return Accumulated(concat, latestClient, tileContent).Subscribe(v => eventBus.Publish(new ClientMapBufferChanged(v)));
+            return Accumulated(concat, latestClient, bufferedContent).Subscribe(v => eventBus.Publish(new ClientMapBufferChanged(v)));
         }
 
 
@@ -103,7 +94,7 @@ namespace DataModel.Client
 
 
 
-        IObservable<Dictionary<PlusCode, MiniTile>> Accumulated(IObservable<Dictionary<PlusCode, MiniTile>> bufferedMiniTileStream, IObservable<PlusCode> location, IObservable<ServerTileContentEvent> tileContent)
+        IObservable<Dictionary<PlusCode, MiniTile>> Accumulated(IObservable<Dictionary<PlusCode, MiniTile>> bufferedMiniTileStream, IObservable<PlusCode> location, IObservable<Dictionary<PlusCode,List<ITileContent>>> tileContent)
         {
             var output = location.DistinctUntilChanged().CombineLatest(bufferedMiniTileStream.DistinctUntilChanged(), (loc, tiles) => new { loc, tiles })
                                  .Scan(new Dictionary<PlusCode, MiniTile>(), (dict, val) =>
@@ -112,40 +103,26 @@ namespace DataModel.Client
                                       return dict;
                                   })
                                  .DistinctUntilChanged()
-                                 .CombineLatest(tileContent.DistinctUntilChanged(), (tiles, content) => new { tiles, content }).Select(v =>
+                                 .CombineLatest(tileContent, (tiles, content) => new { tiles, content }).Select(v =>
                                  {
-                                     SetMinitileContent(v.tiles, v.content.VisibleContent);
+                                     SetMinitileContent(v.tiles, v.content);
                                      return v.tiles;
                                  });
             return output;
 
         }
 
-        void SetMinitileContent(Dictionary<PlusCode, MiniTile> map, List<KeyValuePair<PlusCode, List<ITileContent>>> content)
+        void SetMinitileContent(Dictionary<PlusCode, MiniTile> map, Dictionary<PlusCode, List<ITileContent>> content)
         {
             if (content == null)
                 return;
-            content.ForEach(v =>
+
+            content.ToList().ForEach(v => 
             {
                 MiniTile tile = null;
                 map.TryGetValue(v.Key, out tile);
-                if (tile != null)
+                if (tile != null) 
                 {
-                    string tileContent = "";
-                    v.Value.ForEach(x =>
-                    {
-                        if(x is Player)
-                        {
-                            var player = x as Player;
-                            tileContent += player.Name + " playerLocation" + player.Location.Code;
-                        }else
-                        {
-                            tileContent += x.ToString() + "  ";
-                        }
-                        
-                    });
-
-                    Console.WriteLine("Adding tilecontent for " + v.Key.Code + "  " + tileContent);
                     tile.Content = v.Value;
                 }
             });

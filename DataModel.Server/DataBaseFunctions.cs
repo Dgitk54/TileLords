@@ -108,7 +108,8 @@ namespace DataModel.Server
                 var resultInLock = colWrite.Find(v => v.PlusCode.Code == code.Code);
                 if (resultInLock == null || resultInLock.Count() == 0)
                 {
-                    var created = TileGenerator.GenerateArea(code, 0);
+                    int seed = TileGenerator.GetRandomSeed();
+                    var created = TileGenerator.GenerateArea(code, 0, seed);
                     var tile = created[0];
                     var dbVal = colWrite.Insert(tile);
                     tile.Id = dbVal.AsInt32;
@@ -166,7 +167,8 @@ namespace DataModel.Server
                             var tiles = colWrite.Find(v => v.PlusCode.Code == code.Code);
                             if (tiles == null || tiles.Count() == 0)
                             {
-                                var created = TileGenerator.GenerateArea(largeCode, 0);
+                                int seed = TileGenerator.GetRandomSeed();
+                                var created = TileGenerator.GenerateArea(largeCode, 0, seed);
                                 var tile = created[0];
                                 var dbVal = colWrite.Insert(tile);
                                 tile.Id = dbVal.AsInt32;

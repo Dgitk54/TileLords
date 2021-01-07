@@ -209,7 +209,10 @@ namespace ClientMain
             var instance = result.Result.Item2;
             var nodesAmount = 20;
             var tokenSrc = new CancellationTokenSource();
-            var list = DataModelFunctions.GPSNodesInCircle(circleCenter, nodesAmount, 0.001);
+            //var list = DataModelFunctions.GPSNodesInCircle(circleCenter, nodesAmount, 0.001);
+
+
+            var debugJumpList = new List<GPS>() { new GPS(49.000000, 7.900300), new GPS(49.000000, 7.900000) };
 
 
             //Try to log in, create account if cant log in:
@@ -238,8 +241,9 @@ namespace ClientMain
             //var runCircle = Task.Run(() => SendGpsPath(instance, tokenSrc.Token, list, 4000), tokenSrc.Token);
 
             Thread.Sleep(3000);
-            var sendSame = Task.Run(() => SendSameGps(instance, tokenSrc.Token, circleCenter, 4000));
+            //var sendSame = Task.Run(() => SendSameGps(instance, tokenSrc.Token, circleCenter, 4000));
 
+            var sendPath = Task.Run(() => SendGpsPath(instance, tokenSrc.Token, debugJumpList, 4000));
             do
             {
                 if (cancellationToken.IsCancellationRequested)
@@ -249,7 +253,7 @@ namespace ClientMain
             } while (!cancellationToken.IsCancellationRequested);
 
             tokenSrc.Cancel();
-            sendSame.Wait();
+            sendPath.Wait();
             instance.DisconnectClient();
         }
 

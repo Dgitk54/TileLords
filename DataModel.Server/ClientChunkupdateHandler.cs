@@ -29,11 +29,31 @@ namespace DataModel.Server
             var createResponse = from v in TilesForPlusCode(TileHasChangedStream(ServerFunctions.ExtractPlusCodeLocationStream(cEventBus, 8)))
                                  let e = v.GetServerMapEvent()
                                  let serialized = JsonConvert.SerializeObject(e, typeof(ServerMapEvent), settings)
-                                 select new DataSinkEvent(serialized);
+                                 let servertilecontent = GrabContentFromTile(v)
+                                 select (new DataSinkEvent(serialized), servertilecontent);
 
-            return createResponse.Subscribe(v => cEventBus.Publish(v));
+            return createResponse.Subscribe(v => 
+            {
+                Console.WriteLine("PUSHING" + DateTime.Now);
+                cEventBus.Publish(v.Item1);
+                cEventBus.Publish(v.servertilecontent);
+            });
         }
 
+        ServerTileContentEvent GrabContentFromTile(Tile t)
+        {
+            var ret = new ServerTileContentEvent();
+            
+            var staticContentUpdate = new List<KeyValuePair<PlusCode, List<ITileContent>>> ();
+
+            t.MiniTiles.ForEach(v => 
+            {
+                staticContentUpdate.Add(new KeyValuePair<PlusCode, List<ITileContent>>(v.MiniTileId, v.Content)  );
+            });
+
+            ret.VisibleContent = staticContentUpdate;
+            return ret; 
+        }
 
        
         IObservable<PlusCode> TileHasChangedStream(IObservable<PlusCode> plusCodeStream) => plusCodeStream.DistinctUntilChanged();
