@@ -53,7 +53,7 @@ namespace DataModel.Common.BiomeConfigs
          {"Grass_Tile", 70 },
          {"Grass_River", 20 },
          {"Grass_River2", 20 },
-
+         {"Grass_Flowers", 20 },
 
         };
 

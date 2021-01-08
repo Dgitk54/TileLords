@@ -18,13 +18,13 @@ namespace DataModel.Common.BiomeConfigs
          {"GoldRock", 15 },
          {"OakTree", 15 },
          {"OvergrownRuin", 15 },
-         {"PalmTree", 15 },
+         {"PalmTree", 40 },
          {"Pond", 8 },
          {"Rock", 20 },
          {"RoseBush", 10 },
          {"SmallPalmTree", 5 },
-         {"Tree1", 15 },
-         {"Tree2", 5 },
+         {"Tree1", 20 },
+         {"Tree2", 20 },
          {"Volcano", 20 },
          {"WaterFall", 5 },
          {"WheatField", 15 },
@@ -45,9 +45,8 @@ namespace DataModel.Common.BiomeConfigs
         public Dictionary<string, int> tileTypeWeight = new Dictionary<string, int>
         {
 
-         {"Grass_Tile", 70 },
-         {"Grass_River", 20 },
-         {"Grass_River2", 20 },
+         {"Jungle_Tile", 1 },
+   
 
 
         };

@@ -8,7 +8,7 @@ namespace DataModel.Common
     public enum TileType 
     {
         Grassland,
-        WaterBody,
+        //WaterBody,
         Desert,
         Snow,
         Swamp,

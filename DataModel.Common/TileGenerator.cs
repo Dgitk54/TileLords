@@ -691,10 +691,10 @@ namespace DataModel.Common
             {
                 biome = (SwampBiome)JsonConvert.DeserializeObject<SwampBiome>(File.ReadAllText(fileLocation + "" + type + ".json"));
             }
-            if (type == TileType.WaterBody)
+            /*if (type == TileType.WaterBody)
             {
                 biome = (WaterBodyBiome)JsonConvert.DeserializeObject<WaterBodyBiome>(File.ReadAllText(fileLocation + "" + type + ".json"));
-            }
+            }*/
 
 
             List<WorldObjectType> worldObjectWeightList = new List<WorldObjectType>();
