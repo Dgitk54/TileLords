@@ -39,7 +39,7 @@ namespace DataModel.Client
                                 if (v2 is Player)
                                 {
                                     player = v2 as Player;
-                                    additionalInfo += " and Player " + player.Name;
+                                    additionalInfo += "  [Player " + player.Name + "  on:" + v.MiniTileId.Code + "]";
                                 }
                             });
                             

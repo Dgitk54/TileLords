@@ -46,16 +46,20 @@ namespace ClientMain
                 if (string.IsNullOrEmpty(password))
                     continue;
 
+                var debugJumpLista = new List<GPS>() { new GPS(49.000000, 7.900300), new GPS(49.000000, 7.900000) };
+                var debugJumpListb = new List<GPS>() { new GPS(49.000300, 7.900000), new GPS(49.000600, 7.900000) };
+                var debugJumpListc = new List<GPS>() { new GPS(49.000300, 7.900300), new GPS(49.000300, 7.900300) };
+
                 switch (locationChar[0])
                 {
                     case 'a':
-                        Task.Run(() => DebugLoginAndRunAroundClient(name, password, new GPS(49.000000, 7.900150), token.Token));
+                        Task.Run(() => DebugLoginAndRunAroundClient(name, password, debugJumpLista, token.Token));
                         break;
                     case 'b':
-                        Task.Run(() => DebugLoginAndRunAroundClient(name, password, new GPS(49.000000, 7.900000), token.Token));
+                        Task.Run(() => DebugLoginAndRunAroundClient(name, password, debugJumpListb, token.Token));
                         break;
                     case 'c':
-                        Task.Run(() => DebugLoginAndRunAroundClient(name, password, new GPS(49.000000, 7.900300), token.Token));
+                        Task.Run(() => DebugLoginAndRunAroundClient(name, password, debugJumpListc, token.Token));
                         break;
                 }
 
@@ -202,7 +206,7 @@ namespace ClientMain
             return received.Result;
         }
 
-        static void DebugLoginAndRunAroundClient(string name, string password, GPS circleCenter, CancellationToken cancellationToken)
+        static void DebugLoginAndRunAroundClient(string name, string password, List<GPS> path, CancellationToken cancellationToken)
         {
             var result = StartClient();
             result.Wait();
@@ -212,8 +216,7 @@ namespace ClientMain
             //var list = DataModelFunctions.GPSNodesInCircle(circleCenter, nodesAmount, 0.001);
 
 
-            var debugJumpList = new List<GPS>() { new GPS(49.000000, 7.900300), new GPS(49.000000, 7.900000) };
-
+            
 
             //Try to log in, create account if cant log in:
 
@@ -243,7 +246,7 @@ namespace ClientMain
             Thread.Sleep(3000);
             //var sendSame = Task.Run(() => SendSameGps(instance, tokenSrc.Token, circleCenter, 4000));
 
-            var sendPath = Task.Run(() => SendGpsPath(instance, tokenSrc.Token, debugJumpList, 4000));
+            var sendPath = Task.Run(() => SendGpsPath(instance, tokenSrc.Token, path, 4000));
             do
             {
                 if (cancellationToken.IsCancellationRequested)

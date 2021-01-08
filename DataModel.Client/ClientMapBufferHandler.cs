@@ -22,7 +22,6 @@ namespace DataModel.Client
                                     .ParseOnlyValidUsingErrorHandler<ServerMapEvent>(ClientFunctions.PrintConsoleErrorHandler);
 
 
-
             var bigTiles = from e in onlyValid
                            where e.Tiles != null
                            from tile in e.Tiles
@@ -36,7 +35,7 @@ namespace DataModel.Client
             //Concats large updates with small updates
             var concat = from e in bigTiles.Merge(smallTiles)
                          .Where(v => v != null)
-                         .Buffer(TimeSpan.FromSeconds(4))
+                         .Buffer(TimeSpan.FromSeconds(3))
                          select e.SelectMany(v => v).GroupBy(v => v.MiniTileId).ToDictionary(v => v.Key, v => v.First());
 
 
@@ -47,26 +46,24 @@ namespace DataModel.Client
             var clientCanSeeLookupSet = from e in latestClient.DistinctUntilChanged()
                                         select new HashSet<PlusCode>(e.Neighbors(50));
 
-            
+
             var tileContent = eventBus.GetEventStream<DataSourceEvent>()
                                       .ParseOnlyValidUsingErrorHandler<ServerTileContentEvent>(ClientFunctions.PrintConsoleErrorHandler)
                                       .Where(v => v.VisibleContent != null)
-                                      .StartWith(new ServerTileContentEvent())
-                                      .Do(v => { if (v.VisibleContent != null) { Console.WriteLine(v.VisibleContent.Count); } });
+                                      .StartWith(new ServerTileContentEvent());
+                                     // .Do(v => { Console.WriteLine("Received Tilecontent"); });
 
             var clientPositionPlusContent = clientCanSeeLookupSet.CombineLatest(tileContent, (position, content) => new { position, content });
 
 
             var bufferedContent = clientPositionPlusContent.Scan(new Dictionary<PlusCode, List<ITileContent>>(), (buffer, val) =>
             {
-
                 //Remove values far away:
                 var farAway = from keyValue in buffer.Keys
                               where !val.position.Contains(keyValue)
                               select keyValue;
 
                 farAway.ToList().ForEach(v => buffer.Remove(v));
-
                 if (val.content.VisibleContent != null)
                 {
                     val.content.VisibleContent.GroupBy(v => v.Key).ToDictionary(v => v.Key, v => v.First().Value).ToList().ForEach(x => buffer[x.Key] = x.Value);
@@ -75,29 +72,28 @@ namespace DataModel.Client
             });
 
 
-            return UpdateClientBufferWithBakedInTileContent(concat, latestClient, bufferedContent).DistinctUntilChanged().Subscribe(v => eventBus.Publish(new ClientMapBufferChanged(v)));
+            return UpdateClientBufferWithBakedInTileContent(concat, latestClient, bufferedContent).Subscribe(v => eventBus.Publish(new ClientMapBufferChanged(v)));
         }
-
-
 
 
 
 
         IObservable<Dictionary<PlusCode, MiniTile>> UpdateClientBufferWithBakedInTileContent(IObservable<Dictionary<PlusCode, MiniTile>> bufferedMiniTileStream, IObservable<PlusCode> location, IObservable<Dictionary<PlusCode, List<ITileContent>>> tileContent)
         {
-            return location.DistinctUntilChanged().CombineLatest(bufferedMiniTileStream.DistinctUntilChanged(), (loc, tiles) => new { loc, tiles })
+            return location.DistinctUntilChanged()
+                                 .CombineLatest(bufferedMiniTileStream.DistinctUntilChanged(), (loc, tiles) => new { loc, tiles })
                                  .Scan(new Dictionary<PlusCode, MiniTile>(), (dict, val) =>
                                   {
                                       dict = TileGenerator.RegenerateArea(val.loc, dict, val.tiles, 40);
                                       return dict;
                                   })
                                  .DistinctUntilChanged()
-                                 .CombineLatest(tileContent, (tiles, content) => new { tiles, content }).Select(v =>
+                                 .CombineLatest(tileContent, (tiles, content) => new { tiles, content })
+                                 .Select(v =>
                                  {
                                      SetMinitileContent(v.tiles, v.content);
                                      return v.tiles;
                                  });
-
         }
 
         void SetMinitileContent(Dictionary<PlusCode, MiniTile> map, Dictionary<PlusCode, List<ITileContent>> content)

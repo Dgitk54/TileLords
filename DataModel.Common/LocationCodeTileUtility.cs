@@ -36,6 +36,8 @@ namespace DataModel.Common
             return ret;
         }
 
+       
+        
 
         public static Dictionary<int, string> BackwardsDictionary = new Dictionary<int, string>()
         {
@@ -61,6 +63,8 @@ namespace DataModel.Common
             {20,"X" },
         
         };
+
+        
     
         public static Dictionary<String, int> CreateDictionary()
         {
@@ -117,8 +121,7 @@ namespace DataModel.Common
         /// <returns>The list containing all PlusCodes of this section</returns>
         public static List<String> GetTileSection(String code, int radius, int precision)
         {
-
-         
+            
             Dictionary<String, int> codeToInt;
             codeToInt = CreateDictionary();
             int[] xArray = new int[precision / 2];
@@ -215,14 +218,9 @@ namespace DataModel.Common
             //set top
             for (int k = 1; k <= radius; k++)
             {
-
-
-
                 newCode = "";
-
                 GoUp(yArray);
                 plusCodes.Add(ConvertBackToString(newCode, precision, xArray, yArray));
-
             }
             Array.Copy(ResetX(xSaveArray), xArray, xArray.Length);
             Array.Copy(ResetY(ySaveArray), yArray, yArray.Length);
@@ -231,14 +229,11 @@ namespace DataModel.Common
             //set top right
             for (int k = 1; k <= radius; k++)
             {
-
-
                 GoUp(yArray);
 
                 for (int l = 1; l <= radius; l++)
                 {
                     newCode = "";
-
                     GoRight(xArray);
                     //convert the code back into a location code and add it to the list
                     plusCodes.Add(ConvertBackToString(newCode, precision, xArray, yArray));
