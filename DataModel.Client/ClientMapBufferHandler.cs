@@ -20,11 +20,10 @@ namespace DataModel.Client
             //Tiles
             var onlyValid = eventBus.GetEventStream<DataSourceEvent>()
                                     .ParseOnlyValidUsingErrorHandler<ServerMapEvent>(ClientFunctions.PrintConsoleErrorHandler);
-                                   
 
 
 
-            var BigTiles = from e in onlyValid
+            var bigTiles = from e in onlyValid
                            where e.Tiles != null
                            from tile in e.Tiles
                            select tile.MiniTiles;
@@ -34,40 +33,30 @@ namespace DataModel.Client
                              select e.MiniTiles;
 
 
-            var concat = from e in BigTiles.Merge(smallTiles).Where(v => v != null).Buffer(TimeSpan.FromSeconds(4))
+            //Concats large updates with small updates
+            var concat = from e in bigTiles.Merge(smallTiles)
+                         .Where(v => v != null)
+                         .Buffer(TimeSpan.FromSeconds(4))
                          select e.SelectMany(v => v).GroupBy(v => v.MiniTileId).ToDictionary(v => v.Key, v => v.First());
-
 
 
             //Client
             var latestClient = ClientFunctions.LatestClientLocation(eventBus.GetEventStream<UserGpsEvent>());
 
-            var clientBuffer = from e in latestClient.DistinctUntilChanged()
-                               select new HashSet<PlusCode>(e.Neighbors(50));
+            //Create Buffer once
+            var clientCanSeeLookupSet = from e in latestClient.DistinctUntilChanged()
+                                        select new HashSet<PlusCode>(e.Neighbors(50));
 
-
-            //Content
+            
             var tileContent = eventBus.GetEventStream<DataSourceEvent>()
                                       .ParseOnlyValidUsingErrorHandler<ServerTileContentEvent>(ClientFunctions.PrintConsoleErrorHandler)
                                       .Where(v => v.VisibleContent != null)
                                       .StartWith(new ServerTileContentEvent())
-                                      .Do(v=> { if (v.VisibleContent != null) { Console.WriteLine(v.VisibleContent.Count); } });
+                                      .Do(v => { if (v.VisibleContent != null) { Console.WriteLine(v.VisibleContent.Count); } });
+
+            var clientPositionPlusContent = clientCanSeeLookupSet.CombineLatest(tileContent, (position, content) => new { position, content });
 
 
-
-
-            
-
-
-                
-
-
-
-            var clientPositionPlusContent = clientBuffer.CombineLatest(tileContent, (position, content) => new { position, content });
-
-
-
-            //https://stackoverflow.com/questions/294138/merging-dictionaries-in-c-sharp
             var bufferedContent = clientPositionPlusContent.Scan(new Dictionary<PlusCode, List<ITileContent>>(), (buffer, val) =>
             {
 
@@ -75,10 +64,10 @@ namespace DataModel.Client
                 var farAway = from keyValue in buffer.Keys
                               where !val.position.Contains(keyValue)
                               select keyValue;
-                
+
                 farAway.ToList().ForEach(v => buffer.Remove(v));
 
-                if(val.content.VisibleContent != null)
+                if (val.content.VisibleContent != null)
                 {
                     val.content.VisibleContent.GroupBy(v => v.Key).ToDictionary(v => v.Key, v => v.First().Value).ToList().ForEach(x => buffer[x.Key] = x.Value);
                 }
@@ -86,7 +75,7 @@ namespace DataModel.Client
             });
 
 
-            return Accumulated(concat, latestClient, bufferedContent).Subscribe(v => eventBus.Publish(new ClientMapBufferChanged(v)));
+            return UpdateClientBufferWithBakedInTileContent(concat, latestClient, bufferedContent).DistinctUntilChanged().Subscribe(v => eventBus.Publish(new ClientMapBufferChanged(v)));
         }
 
 
@@ -94,9 +83,9 @@ namespace DataModel.Client
 
 
 
-        IObservable<Dictionary<PlusCode, MiniTile>> Accumulated(IObservable<Dictionary<PlusCode, MiniTile>> bufferedMiniTileStream, IObservable<PlusCode> location, IObservable<Dictionary<PlusCode,List<ITileContent>>> tileContent)
+        IObservable<Dictionary<PlusCode, MiniTile>> UpdateClientBufferWithBakedInTileContent(IObservable<Dictionary<PlusCode, MiniTile>> bufferedMiniTileStream, IObservable<PlusCode> location, IObservable<Dictionary<PlusCode, List<ITileContent>>> tileContent)
         {
-            var output = location.DistinctUntilChanged().CombineLatest(bufferedMiniTileStream.DistinctUntilChanged(), (loc, tiles) => new { loc, tiles })
+            return location.DistinctUntilChanged().CombineLatest(bufferedMiniTileStream.DistinctUntilChanged(), (loc, tiles) => new { loc, tiles })
                                  .Scan(new Dictionary<PlusCode, MiniTile>(), (dict, val) =>
                                   {
                                       dict = TileGenerator.RegenerateArea(val.loc, dict, val.tiles, 40);
@@ -108,7 +97,6 @@ namespace DataModel.Client
                                      SetMinitileContent(v.tiles, v.content);
                                      return v.tiles;
                                  });
-            return output;
 
         }
 
@@ -117,11 +105,11 @@ namespace DataModel.Client
             if (content == null)
                 return;
 
-            content.ToList().ForEach(v => 
+            content.ToList().ForEach(v =>
             {
                 MiniTile tile = null;
                 map.TryGetValue(v.Key, out tile);
-                if (tile != null) 
+                if (tile != null)
                 {
                     tile.Content = v.Value;
                 }

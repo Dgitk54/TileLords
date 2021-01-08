@@ -355,19 +355,19 @@ namespace ClientIntegration
 
             p1Gps.OnNext(plus2);
             Assert.IsTrue(mapEvents.Count == 2);
-            Assert.IsTrue(p1ContentEvents.Count == 3); // step on new tile -> delete old, add new => 2 events => 3 as sum
+            Assert.IsTrue(p1ContentEvents.Count == 2); // stepping on a new tile should fire one event.
+            Assert.IsTrue(p1ContentEvents[1].VisibleContent.Count == 2); // two tiles should be changed.
+
+
+            //staying on same tile should not generate any new events, thus ContentEvents count remains same:
+            p1Gps.OnNext(plus2);
+            Assert.IsTrue(mapEvents.Count == 2);
+            Assert.IsTrue(p1ContentEvents.Count == 2);
+
 
             p1Gps.OnNext(plus2);
             Assert.IsTrue(mapEvents.Count == 2);
-            Assert.IsTrue(p1ContentEvents.Count == 3);
-
-
-            p1Gps.OnNext(plus2);
-            Assert.IsTrue(mapEvents.Count == 2);
-            Assert.IsTrue(p1ContentEvents.Count == 3);
-
-
-
+            Assert.IsTrue(p1ContentEvents.Count == 2);
 
         }
 
@@ -667,9 +667,12 @@ namespace ClientIntegration
                             select e3;
             p1VisiblePlayers = p1Content.Count();
 
+            //One player moved, one event with two affected tiles
+            Assert.IsTrue(p1ContentEvents.Count == 1);
+            Assert.IsTrue(p2ContentEvents.Count == 1);
+            Assert.IsTrue(p1ContentEvents[0].VisibleContent.Count == 2);
+            Assert.IsTrue(p2ContentEvents[0].VisibleContent.Count == 2);
 
-            Assert.IsTrue(p1ContentEvents.Count == 2);
-            Assert.IsTrue(p2ContentEvents.Count == 2);
 
             //Only one player affected, due to player 2 standing still:
             Assert.IsTrue(p2VisiblePlayers == 1);   

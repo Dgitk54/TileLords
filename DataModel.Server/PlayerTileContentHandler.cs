@@ -34,23 +34,20 @@ namespace DataModel.Server
 
             return mergedUpdate.Subscribe(v =>
             {
-                ;
+                
                 v.players.PlayersOnline.ToList().ForEach(v2 =>
                 {
                     var bus = v2.ClientBus;
 
+                    var rawContent = new Dictionary<PlusCode, List<ITileContent>>();
+
                     v.map.MiniTiles.ToList().ForEach(v3 =>
                     {
                         var tile = v3;
-                        var rawContent = new Dictionary<PlusCode, List<ITileContent>>()
-                        {
-                            {tile.MiniTileId, new List<ITileContent>(tile.Content)  }
-                        };
-                        var content = new ServerTileContentEvent() { VisibleContent = rawContent.ToList() };
-                        bus.Publish(content);
+                        rawContent.Add(tile.MiniTileId, new List<ITileContent>(tile.Content));
                     });
-
-
+                    var content = new ServerTileContentEvent() { VisibleContent = rawContent.ToList() };
+                    bus.Publish(content);
 
                 });
             });
