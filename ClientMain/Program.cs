@@ -278,8 +278,7 @@ namespace ClientMain
                 return result;
             });
             Thread.Sleep(300);
-            var startClient = Task.Run(instance.RunClientAsync);
-
+            var startClient = Task.Run(() => instance.RunClientAsyncWithIP());
             await waitForConnection;
             return (bus, instance, startClient);
         }

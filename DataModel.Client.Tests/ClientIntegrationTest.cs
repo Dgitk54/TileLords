@@ -9,6 +9,7 @@ using System.Threading;
 using System.Reactive.Concurrency;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 
 namespace ClientIntegration
 {
@@ -17,6 +18,116 @@ namespace ClientIntegration
         private ServerInstance server;
         private Task serverRunning;
 
+        [SetUp]
+        public void StartServer()
+        {
+            if (File.Exists(@"MyData.db"))
+                File.Delete(@"MyData.db");
+            server = new ServerInstance();
+            serverRunning = server.RunServerAsync();
+        }
+
+        [TearDown]
+        public void TearDown()
+        {
+            if (File.Exists(@"MyData.db"))
+            {
+                File.Delete(@"MyData.db");
+            }
+            server.ShutDownServer().Wait();
+        }
+        [Test]
+        public void CanConnect()
+        {
+
+            var result = StartClient();
+            var instance = result.Result.Item2;
+            instance.DisconnectClient();
+        }
+
+
+        [Test]
+        public void GetsNegativeResponseToRegisterTakenAccount()
+        {
+            var result = StartClient();
+            result.Wait();
+            var instance = result.Result.Item2;
+            GetsEvent<UserActionSuccessEvent, UserRegisterEvent>(instance, new UserRegisterEvent() { Name = "a", Password = "a" }, 5).Wait();
+            GetsEvent<UserActionErrorEvent, UserRegisterEvent>(instance, new UserRegisterEvent() { Name = "a", Password = "a" }, 5).Wait();
+            instance.DisconnectClient();
+        }
+
+        [Test]
+        public void GetsMapBufferChangeAfterGPS()
+        {
+            var result = StartClient();
+            result.Wait();
+
+            var instance = result.Result.Item2;
+            CancellationTokenSource tokenSrc = new CancellationTokenSource();
+
+            var cleanUp = Task.Run(() => SendDebugGps(instance, tokenSrc.Token, 5, 1000), tokenSrc.Token);
+            GetsEvent<ClientMapBufferChanged, UserGpsEvent>(instance, new UserGpsEvent(new GPS(49.000000, 7.900000)), 10).Wait();
+            tokenSrc.Cancel();
+            cleanUp.Wait();
+            instance.DisconnectClient();
+        }
+
+
+
+
+        [Test]
+        public void GetsMapResponseToGpsSendAfterLogin()
+        {
+            var result = StartClient();
+
+            result.Wait();
+            var instance = result.Result.Item2;
+
+            GetsEvent<UserActionSuccessEvent, UserRegisterEvent>(instance, new UserRegisterEvent() { Name = "a", Password = "a" }, 5).Wait();
+            GetsEvent<UserActionSuccessEvent, UserLoginEvent>(instance, new UserLoginEvent() { Name = "a", Password = "a" }, 10).Wait();
+
+            CancellationTokenSource tokenSrc = new CancellationTokenSource();
+            var cleanUp = Task.Run(() => SendDebugGps(instance, tokenSrc.Token, 20, 2000), tokenSrc.Token);
+
+
+
+            GetsEvent<MapAsRenderAbleChanged, UserGpsEvent>(instance, new UserGpsEvent(new GPS(49.000000, 7.900000)), 20).Wait();
+            Stopwatch watch = Stopwatch.StartNew();
+
+            tokenSrc.Cancel();
+            cleanUp.Wait();
+            instance.DisconnectClient();
+        }
+
+
+        [Test]
+        public void GetsResponseToLoginEvent()
+        {
+
+            var result = StartClient();
+            var instance = result.Result.Item2;
+            var bus = result.Result.Item1;
+            GetsEvent<UserActionSuccessEvent, UserRegisterEvent>(instance, new UserRegisterEvent() { Name = "a", Password = "a" }, 5).Wait();
+            GetsEvent<UserActionSuccessEvent, UserLoginEvent>(instance, new UserLoginEvent() { Name = "a", Password = "a" }, 5).Wait();
+
+            instance.DisconnectClient();
+        }
+
+
+        static void SendSameGps(ClientInstance instance, CancellationToken ct, GPS gps, int sleeptime)
+        {
+
+            do
+            {
+                instance.SendDebugGPS(gps);
+                Thread.Sleep(sleeptime);
+                if (ct.IsCancellationRequested)
+                    break;
+
+            } while (!ct.IsCancellationRequested);
+
+        }
 
         static async Task<(IEventBus, ClientInstance, Task)> StartClient()
         {
@@ -34,7 +145,7 @@ namespace ClientIntegration
                 return result;
             });
             Thread.Sleep(300);
-            var startClient = Task.Run(instance.RunClientAsync);
+            var startClient = Task.Run(() => instance.RunClientAsyncWithIP());
 
             await waitForConnection;
 
@@ -189,13 +300,13 @@ namespace ClientIntegration
                 {
                     throw new Exception("Can not log in nor register");
                 }
-         
+
                 var tryLoginAfterRegister = GetsEvent<UserActionSuccessEvent, UserLoginEvent>(instance, new UserLoginEvent() { Name = name, Password = password }, 5);
                 tryLoginAfterRegister.Wait();
                 if (tryLoginAfterRegister.IsFaulted)
                     throw new Exception("Can not log in after register");
             }
-            
+
             var runCircle = Task.Run(() => SendGpsPath(instance, tokenSrc.Token, list, 4000), tokenSrc.Token);
             do
             {
@@ -210,136 +321,7 @@ namespace ClientIntegration
             instance.DisconnectClient();
         }
 
-        [SetUp]
-        public void StartServer()
-        {
-            server = new ServerInstance();
-            serverRunning = server.RunServerAsync();
-        }
 
-        [Test]
-        public void CanConnect()
-        {
-
-            var result = StartClient();
-            var instance = result.Result.Item2;
-            instance.DisconnectClient();
-        }
-
-
-        [Test]
-        public void TwoClientsCanConnectAndLogIn()
-        {
-            var token = new CancellationTokenSource();
-            var client1 = Task.Run(() => DebugLoginSendSameGps("a", "a", new GPS(49.000000, 7.900000), token.Token));
-            var client2 = Task.Run(() => DebugLoginSendSameGps("b", "b", new GPS(49.000005, 7.900005), token.Token));
-            Thread.Sleep(60 * 1000);
-            token.Cancel();
-            client1.Wait();
-            //client2.Wait();
-
-        }
-        [Test]
-        public void GetsNegativeResponseToRegisterAccount()
-        {
-            var result = StartClient();
-            result.Wait();
-            var instance = result.Result.Item2;
-            GetsEvent<UserActionErrorEvent, UserRegisterEvent>(instance, new UserRegisterEvent() { Name = "a", Password = "a" }, 5).Wait();
-            instance.DisconnectClient();
-        }
-
-        [Test]
-        public void GetsMapBufferChangeAfterGPS()
-        {
-            var result = StartClient();
-            result.Wait();
-
-            var instance = result.Result.Item2;
-            CancellationTokenSource tokenSrc = new CancellationTokenSource();
-
-            var cleanUp = Task.Run(() => SendDebugGps(instance, tokenSrc.Token, 5, 1000), tokenSrc.Token);
-            GetsEvent<ClientMapBufferChanged, UserGpsEvent>(instance, new UserGpsEvent(new GPS(49.000000, 7.900000)), 10).Wait();
-            tokenSrc.Cancel();
-            cleanUp.Wait();
-            instance.DisconnectClient();
-        }
-
-
-
-
-        [Test]
-        public void GetsMapResponseToGpsSendAfterLogin()
-        {
-            var result = StartClient();
-
-            result.Wait();
-            var instance = result.Result.Item2;
-
-
-            GetsEvent<UserActionSuccessEvent, UserLoginEvent>(instance, new UserLoginEvent() { Name = "a", Password = "a" }, 10).Wait();
-
-            CancellationTokenSource tokenSrc = new CancellationTokenSource();
-            var cleanUp = Task.Run(() => SendDebugGps(instance, tokenSrc.Token, 20, 2000), tokenSrc.Token);
-
-
-
-            GetsEvent<MapAsRenderAbleChanged, UserGpsEvent>(instance, new UserGpsEvent(new GPS(49.000000, 7.900000)), 20).Wait();
-            Stopwatch watch = Stopwatch.StartNew();
-
-            tokenSrc.Cancel();
-            cleanUp.Wait();
-            instance.DisconnectClient();
-        }
-
-
-
-
-
-        [Test]
-        public void GetsResponseToLoginEvent()
-        {
-
-            var result = StartClient();
-            var instance = result.Result.Item2;
-            var bus = result.Result.Item1;
-
-            GetsEvent<UserActionSuccessEvent, UserLoginEvent>(instance, new UserLoginEvent() { Name = "a", Password = "a" }, 5).Wait();
-
-            instance.DisconnectClient();
-        }
-
-        [Test]
-        public void GetsMapResponseForStandingStill()
-        {
-            var result = StartClient();
-            result.Wait();
-            var instance = result.Result.Item2;
-            GetsEvent<UserActionSuccessEvent, UserLoginEvent>(instance, new UserLoginEvent() { Name = "a", Password = "a" }, 10).Wait();
-
-
-        }
-        static void SendSameGps(ClientInstance instance, CancellationToken ct, GPS gps, int sleeptime)
-        {
-
-            do
-            {
-                instance.SendDebugGPS(gps);
-                Thread.Sleep(sleeptime);
-                if (ct.IsCancellationRequested)
-                    break;
-
-            } while (!ct.IsCancellationRequested);
-
-        }
-
-
-
-        [TearDown]
-        public void ShutDown()
-        {
-            server.ShutDownServer().Wait();
-        }
 
     }
 }

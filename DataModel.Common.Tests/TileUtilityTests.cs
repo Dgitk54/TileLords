@@ -36,6 +36,34 @@ namespace DataModel.Common.Tests
             miniTiles = TileUtility.GetTileSectionWithinChebyshevDistance(startCode, tiles, 2);
             Assert.IsTrue(miniTiles.Count == 5 * 5);
         }
+        [Test]
+        public void GetTileSectionReturnsCodesWithPlus()
+        {
+            
+            var list = LocationCodeTileUtility.GetTileSection("8FX9XW2F+", 5, 8);
+            
+            
+            Assert.IsTrue(list[0][8] == '+');
+            var watch = Stopwatch.StartNew();
+            var list2 = LocationCodeTileUtility.GetTileSection("8FX9XW2F+XX", 5, 10);
+            watch.Stop();
+            var elapsedMs = watch.ElapsedMilliseconds;
+            Debug.WriteLine(elapsedMs);
+            Assert.IsTrue(list2[0][8] == '+');
+
+            watch = Stopwatch.StartNew();
+            var list3 = LocationCodeTileUtility.GetTileSection("8FX9XW2F+XX", 50, 10);
+            watch.Stop();
+            var tileSection50Time = watch.ElapsedMilliseconds;
+
+            watch = Stopwatch.StartNew();
+            var list4 = LocationCodeTileUtility.GetTileSectionParallel("8FX9XW2F+XX", 50, 10);
+            watch.Stop();
+            var tileSection50ParallelTime = watch.ElapsedMilliseconds;
+
+            Assert.IsTrue(list4.Count == list3.Count);
+            ;
+        }
 
         [Test]
         public void GivenEdgeTileChebyshevAlsoFindsNeighborsInOtherTiles()

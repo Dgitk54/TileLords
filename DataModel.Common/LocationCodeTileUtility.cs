@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace DataModel.Common
 {
@@ -39,7 +40,7 @@ namespace DataModel.Common
        
         
 
-        public static Dictionary<int, string> BackwardsDictionary = new Dictionary<int, string>()
+        public static Dictionary<int, string> IntegerPlusCodeLookup = new Dictionary<int, string>()
         {
             {1,"2" },
             {2,"3" },
@@ -64,9 +65,31 @@ namespace DataModel.Common
         
         };
 
-        
+        public static Dictionary<string, int> PlusCodeIntegerLookup = new Dictionary<string, int>()
+        {
+            {"2", 1},
+            {"3", 2},
+            {"4", 3},
+            {"5", 4},
+            {"6", 5},
+            {"7", 6},
+            {"8", 7},
+            {"9", 8},
+            {"C", 9},
+            {"F", 10},
+            {"G", 11},
+            {"H", 12},
+            {"J", 13},
+            {"M", 14},
+            {"P", 15},
+            {"Q", 16},
+            {"R", 17},
+            {"V", 18},
+            {"W", 19},
+            {"X", 20}
+        };
     
-        public static Dictionary<String, int> CreateDictionary()
+        public static Dictionary<String, int> CreateDictionary() 
         {
 
             var codeToInt = new Dictionary<String, int>();
@@ -119,15 +142,13 @@ namespace DataModel.Common
         /// <param name="radius">The radius of the section to create.</param>
         /// <param name="precision">The PlusCode precision of this section.</param>
         /// <returns>The list containing all PlusCodes of this section</returns>
-        public static List<String> GetTileSection(String code, int radius, int precision)
+        public static List<string> GetTileSection(string code, int radius, int precision)
         {
-            
-            Dictionary<String, int> codeToInt;
-            codeToInt = CreateDictionary();
-            int[] xArray = new int[precision / 2];
-            int[] yArray = new int[precision / 2];
-            int[] xSaveArray = new int[precision / 2];
-            int[] ySaveArray = new int[precision / 2];
+            int arraySize = precision / 2;
+            int[] xArray = new int[arraySize];
+            int[] yArray = new int[arraySize];
+            int[] xSaveArray = new int[arraySize];
+            int[] ySaveArray = new int[arraySize];
 
        
 
@@ -144,12 +165,11 @@ namespace DataModel.Common
             code = code.Replace("+", "");
          
             //create the list to return later
-            List<String> locationCodes = new List<String>();
+            List<string> locationCodes = new List<string>();
 
 
             //set x1 to x5 and y1 to y5 to the int values accordingly
-            CodeToIntegerValues(code, codeToInt, xArray, yArray);
-
+            CodeToIntegerValues(code, PlusCodeIntegerLookup, xArray, yArray);
 
 
             //save x and y int values of the given code
@@ -158,29 +178,202 @@ namespace DataModel.Common
 
 
             //determine the codes and add them to the list
-            DetermineLocationCodes(code, locationCodes, codeToInt, radius, precision, xArray, yArray, xSaveArray, ySaveArray);
-
-
-            for (int i = 0; i < locationCodes.Count; i++)
-            {
-                //add the "+" back
-                if (locationCodes[i].Length > 8)
-                {
-                    locationCodes[i] = locationCodes[i].Insert(8, "+");
-                }
-                else
-                {
-                    locationCodes[i] = locationCodes[i] + "+";
-                }
-
-
-            }
-
-
+            DetermineLocationCodes(code, locationCodes, PlusCodeIntegerLookup, radius, precision, xArray, yArray, xSaveArray, ySaveArray);
 
             return locationCodes;
         }
        
+        /// <summary>
+        /// See GetTileSection, but run in parallel, used for large values.
+        /// </summary>
+        /// <param name="startLocation">Location to start from</param>
+        /// <param name="radius">Radius in which all LocationCodes should be added to the List</param>
+        /// <param name="precision">precision of the startLocation string</param>
+        /// <returns></returns>
+        public static List<string> GetTileSectionParallel(string startLocation, int radius, int precision)
+        {
+            var code = startLocation.Replace("+", "");
+            var arraySize = precision / 2;
+            int[] xValues = new int[arraySize];
+            int[] yValues = new int[arraySize];
+            CodeToIntegerValues(code, PlusCodeIntegerLookup, xValues, yValues);
+
+            var topleft = Task.Run(() => GetTopLeft(radius, precision, xValues, yValues));
+            var top = Task.Run(() => GetTopSection(radius, precision, xValues, yValues));
+            var topRight = Task.Run(() => GetTopRightSection(radius, precision, xValues, yValues));
+            var left = Task.Run(() => GetLeftSection(radius, precision, xValues, yValues));
+            var right = Task.Run(() => GetRightSection(radius, precision, xValues, yValues));
+            var bottomLeft = Task.Run(() => GetBottomLeftSection(radius, precision, xValues, yValues));
+            var bottom = Task.Run(() => GetBottomSection(radius, precision, xValues, yValues));
+            var bottomRight = Task.Run(() => GetBottomRightSection(radius, precision, xValues, yValues));
+
+            Task.WhenAll(topleft, top, topRight, left, right, bottomLeft, bottom, bottomRight).Wait();
+
+            var ret = new List<string>();
+
+            ret.AddRange(topleft.Result);
+            ret.AddRange(top.Result);
+            ret.AddRange(topRight.Result);
+            ret.AddRange(left.Result);
+            ret.AddRange(right.Result);
+            ret.AddRange(bottomLeft.Result);
+            ret.AddRange(bottom.Result);
+            ret.AddRange(bottomRight.Result);
+
+            ret.Add(startLocation);
+
+            return ret;
+        }
+
+        static List<string> GetTopLeft(int radius, int precision, int[] readOnlyXSource, int[] readOnlyYSource)
+        {
+            var size = precision / 2;
+            int[] xtmp = new int[size];
+            int[] ytmp = new int[size];
+            Array.Copy(readOnlyXSource, xtmp, readOnlyXSource.Length);
+            Array.Copy(readOnlyYSource, ytmp, readOnlyYSource.Length);
+            var returnedSection = new List<string>();
+            for (int i = 1; i <= radius; i++)
+            {
+                GoUp(ytmp);
+                for (int j = 1; j <= radius; j++)
+                {
+                    GoLeft(xtmp);
+                    returnedSection.Add(ConvertBackToString(precision, xtmp, ytmp));
+                }
+                Array.Copy(readOnlyXSource, xtmp, readOnlyXSource.Length);
+            }
+            return returnedSection;
+        }
+
+        static List<string> GetTopRightSection(int radius, int precision, int[] readOnlyXSource, int[] readOnlyYSource)
+        {
+            var size = precision / 2;
+            int[] xtmp = new int[size];
+            int[] ytmp = new int[size];
+            Array.Copy(readOnlyXSource, xtmp, readOnlyXSource.Length);
+            Array.Copy(readOnlyYSource, ytmp, readOnlyYSource.Length);
+            var returnedSection = new List<string>();
+            for (int i = 1; i <= radius; i++)
+            {
+                GoUp(ytmp);
+                for (int j = 1; j <= radius; j++)
+                {
+                    GoRight(xtmp);
+                    returnedSection.Add(ConvertBackToString(precision, xtmp, ytmp));
+                }
+                Array.Copy(readOnlyXSource, xtmp, readOnlyXSource.Length);
+            }
+            return returnedSection;
+        }
+        static List<string> GetTopSection(int radius, int precision, int[] readOnlyXSource, int[] readOnlyYSource)
+        {
+            var size = precision / 2;
+            int[] xtmp = new int[size];
+            int[] ytmp = new int[size];
+            Array.Copy(readOnlyXSource, xtmp, readOnlyXSource.Length);
+            Array.Copy(readOnlyYSource, ytmp, readOnlyYSource.Length);
+            var returnedSection = new List<string>();
+            for (int i = 1; i <= radius; i++)
+            {
+                GoUp(ytmp);
+                returnedSection.Add(ConvertBackToString(precision, xtmp, ytmp));
+            }
+            return returnedSection;
+        }
+
+        static List<string> GetLeftSection(int radius, int precision, int[] readOnlyXSource, int[] readOnlyYSource)
+        {
+            var size = precision / 2;
+            int[] xtmp = new int[size];
+            int[] ytmp = new int[size];
+            Array.Copy(readOnlyXSource, xtmp, readOnlyXSource.Length);
+            Array.Copy(readOnlyYSource, ytmp, readOnlyYSource.Length);
+            var returnedSection = new List<string>();
+            for (int i = 1; i <= radius; i++)
+            {
+                GoLeft(xtmp);
+                returnedSection.Add(ConvertBackToString(precision, xtmp, ytmp));
+            }
+            return returnedSection;
+        }
+        static List<string> GetRightSection(int radius, int precision, int[] readOnlyXSource, int[] readOnlyYSource)
+        {
+            var size = precision / 2;
+            int[] xtmp = new int[size];
+            int[] ytmp = new int[size];
+            Array.Copy(readOnlyXSource, xtmp, readOnlyXSource.Length);
+            Array.Copy(readOnlyYSource, ytmp, readOnlyYSource.Length);
+            var returnedSection = new List<string>();
+            for (int i = 1; i <= radius; i++)
+            {
+                GoRight(xtmp);
+                returnedSection.Add(ConvertBackToString(precision, xtmp, ytmp));
+            }
+            return returnedSection;
+        }
+        static List<string> GetBottomSection(int radius, int precision, int[] readOnlyXSource, int[] readOnlyYSource)
+        {
+            var size = precision / 2;
+            int[] xtmp = new int[size];
+            int[] ytmp = new int[size];
+            Array.Copy(readOnlyXSource, xtmp, readOnlyXSource.Length);
+            Array.Copy(readOnlyYSource, ytmp, readOnlyYSource.Length);
+            var returnedSection = new List<string>();
+            for (int i = 1; i <= radius; i++)
+            {
+                GoDown(ytmp);
+                returnedSection.Add(ConvertBackToString(precision, xtmp, ytmp));
+            }
+            return returnedSection;
+        }
+        static List<string> GetBottomLeftSection(int radius, int precision, int[] readOnlyXSource, int[] readOnlyYSource)
+        {
+            var size = precision / 2;
+            int[] xtmp = new int[size];
+            int[] ytmp = new int[size];
+            Array.Copy(readOnlyXSource, xtmp, readOnlyXSource.Length);
+            Array.Copy(readOnlyYSource, ytmp, readOnlyYSource.Length);
+            var returnedSection = new List<string>();
+            
+            for (int k = 1; k <= radius; k++)
+            {
+                GoDown(ytmp);
+                for (int l = 1; l <= radius; l++)
+                {
+
+                    GoLeft(xtmp);
+
+                    returnedSection.Add(ConvertBackToString(precision, xtmp, ytmp));
+                }
+                Array.Copy(readOnlyXSource, xtmp, readOnlyXSource.Length);
+            }
+            return returnedSection;
+        }
+        static List<string> GetBottomRightSection(int radius, int precision, int[] readOnlyXSource, int[] readOnlyYSource)
+        {
+            var size = precision / 2;
+            int[] xtmp = new int[size];
+            int[] ytmp = new int[size];
+            Array.Copy(readOnlyXSource, xtmp, readOnlyXSource.Length);
+            Array.Copy(readOnlyYSource, ytmp, readOnlyYSource.Length);
+            var returnedSection = new List<string>();
+            //set bottom right
+            for (int k = 1; k <= radius; k++)
+            {
+                GoDown(ytmp);
+                for (int l = 1; l <= radius; l++)
+                {
+                    GoRight(xtmp);
+                    returnedSection.Add(ConvertBackToString(precision, xtmp, ytmp));
+                }
+                Array.Copy(readOnlyXSource, xtmp, readOnlyXSource.Length);
+            }
+            return returnedSection;
+        }
+
+
+
         /// <summary>
         /// Function which calculates the Location Codes for the desired section
         /// </summary>
@@ -194,21 +387,18 @@ namespace DataModel.Common
         /// <param name="xSaveArray">Array with original "Tile" X PlusCode parts.</param>
         /// <param name="ySaveArray">Array with original "Tile" Y PlusCode parts.</param>
 
-        static void DetermineLocationCodes(String code, List<String> plusCodes, Dictionary<String, int> codeToInt, int radius, int precision, int[] xArray, int[] yArray, int[] xSaveArray, int[] ySaveArray)
+        static void DetermineLocationCodes(string code, List<string> plusCodes, Dictionary<string, int> codeToInt, int radius, int precision, int[] xArray, int[] yArray, int[] xSaveArray, int[] ySaveArray)
         {
-            String newCode = "";
+            
             //set top left
             for (int k = 1; k <= radius; k++)
-            {
-
-
+            {   
                 GoUp(yArray);
                 for (int l = 1; l <= radius; l++)
                 {
-                    newCode = "";
-
+                    
                     GoLeft(xArray);
-                    plusCodes.Add(ConvertBackToString(newCode, precision, xArray, yArray));
+                    plusCodes.Add(ConvertBackToString(precision, xArray, yArray));
                 }
                 Array.Copy(ResetX(xSaveArray), xArray, xArray.Length);
             }
@@ -218,9 +408,9 @@ namespace DataModel.Common
             //set top
             for (int k = 1; k <= radius; k++)
             {
-                newCode = "";
+                
                 GoUp(yArray);
-                plusCodes.Add(ConvertBackToString(newCode, precision, xArray, yArray));
+                plusCodes.Add(ConvertBackToString(precision, xArray, yArray));
             }
             Array.Copy(ResetX(xSaveArray), xArray, xArray.Length);
             Array.Copy(ResetY(ySaveArray), yArray, yArray.Length);
@@ -233,10 +423,10 @@ namespace DataModel.Common
 
                 for (int l = 1; l <= radius; l++)
                 {
-                    newCode = "";
+                    
                     GoRight(xArray);
                     //convert the code back into a location code and add it to the list
-                    plusCodes.Add(ConvertBackToString(newCode, precision, xArray, yArray));
+                    plusCodes.Add(ConvertBackToString(precision, xArray, yArray));
                 }
                 //resetting X values to original one
                 Array.Copy(ResetX(xSaveArray), xArray, xArray.Length);
@@ -252,12 +442,8 @@ namespace DataModel.Common
             for (int k = 1; k <= radius; k++)
             {
 
-
-
-                newCode = "";
-
                 GoLeft(xArray);
-                plusCodes.Add(ConvertBackToString(newCode, precision, xArray, yArray));
+                plusCodes.Add(ConvertBackToString(precision, xArray, yArray));
 
             }
             Array.Copy(ResetX(xSaveArray), xArray, xArray.Length);
@@ -265,7 +451,8 @@ namespace DataModel.Common
 
 
             //set middle
-            plusCodes.Add(code);
+            var codeWithPlus = code.Insert(8, "+") ;
+            plusCodes.Add(codeWithPlus);
 
 
 
@@ -273,12 +460,8 @@ namespace DataModel.Common
             for (int k = 1; k <= radius; k++)
             {
 
-
-
-                newCode = "";
-
                 GoRight(xArray);
-                plusCodes.Add(ConvertBackToString(newCode, precision, xArray, yArray));
+                plusCodes.Add(ConvertBackToString(precision, xArray, yArray));
 
             }
             Array.Copy(ResetX(xSaveArray), xArray, xArray.Length);
@@ -289,16 +472,13 @@ namespace DataModel.Common
             //set bottom left
             for (int k = 1; k <= radius; k++)
             {
-
-
                 GoDown(yArray);
                 for (int l = 1; l <= radius; l++)
                 {
-                    newCode = "";
-
+                    
                     GoLeft(xArray);
 
-                    plusCodes.Add(ConvertBackToString(newCode, precision, xArray, yArray));
+                    plusCodes.Add(ConvertBackToString(precision, xArray, yArray));
                 }
                 Array.Copy(ResetX(xSaveArray), xArray, xArray.Length);
             }
@@ -310,11 +490,8 @@ namespace DataModel.Common
             //set bottom
             for (int k = 1; k <= radius; k++)
             {
-
-                newCode = "";
-
                 GoDown(yArray);
-                plusCodes.Add(ConvertBackToString(newCode, precision, xArray, yArray));
+                plusCodes.Add(ConvertBackToString(precision, xArray, yArray));
 
             }
 
@@ -326,24 +503,14 @@ namespace DataModel.Common
             //set bottom right
             for (int k = 1; k <= radius; k++)
             {
-
-
                 GoDown(yArray);
                 for (int l = 1; l <= radius; l++)
                 {
-                    newCode = "";
-
                     GoRight(xArray);
-                    plusCodes.Add(ConvertBackToString(newCode, precision, xArray, yArray));
+                    plusCodes.Add(ConvertBackToString(precision, xArray, yArray));
                 }
                 Array.Copy(ResetX(xSaveArray), xArray, xArray.Length);
             }
-
-
-
-
-
-
 
 
 
@@ -409,23 +576,23 @@ namespace DataModel.Common
         /// <summary>
         /// Function which converts int to PlusCode back
         /// </summary>
-        static String ConvertBackToString(String newCode, int precision, int[] xArray, int[] yArray)
+        static string ConvertBackToString( int precision, int[] xArray, int[] yArray)
         {
             int xArrayCounter = 0;
             int yArrayCounter = 0;
-            
+            var newCode = "";
             for (int i = 0; i < precision; i++)
             {
                 if (i % 2 == 0)
                 {
-                    string sign = BackwardsDictionary[xArray[xArrayCounter]];
+                    string sign = IntegerPlusCodeLookup[xArray[xArrayCounter]];
                  
                     xArrayCounter++;
                     newCode += sign;
                 }
                 else
                 {
-                    string sign = BackwardsDictionary[yArray[yArrayCounter]];
+                    string sign = IntegerPlusCodeLookup[yArray[yArrayCounter]];
                    
                     yArrayCounter++;
                     newCode += sign;
@@ -433,14 +600,11 @@ namespace DataModel.Common
 
 
             }
-
+            newCode = newCode.Insert(8, "+");
             return newCode;
         }
 
-
-
-  
-
+        
 
         /// <summary>
         /// Function which determines the right PlusCode

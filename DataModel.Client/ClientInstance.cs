@@ -12,6 +12,7 @@ using System.Diagnostics;
 using System.Net;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -84,48 +85,9 @@ namespace DataModel.Client
         }
 
 
-        public async Task RunClientAsync()
-        {
-            try
-            {
+        
 
-                if (Bootstrap != null)
-                {
-                    throw new Exception("Client already running!");
-                }
-                var serverIP = IPAddress.Parse("127.0.0.1");
-                int serverPort = 8080;
-
-
-                Bootstrap = new Bootstrap();
-                Bootstrap
-                    .Group(group)
-                    .Channel<TcpSocketChannel>()
-                    .Option(ChannelOption.TcpNodelay, true) // Do not buffer and send packages right away
-                    .Handler(new ActionChannelInitializer<ISocketChannel>(channel =>
-                    {
-                        IChannelPipeline pipeline = channel.Pipeline;
-                        pipeline.AddLast("framing-enc", new LengthFieldPrepender(2));
-                        pipeline.AddLast("framing-dec", new LengthFieldBasedFrameDecoder(ushort.MaxValue, 0, 2, 0, 2));
-                        pipeline.AddLast(ServerHandler);
-                    }));
-
-                BootstrapChannel = await Bootstrap.ConnectAsync(new IPEndPoint(serverIP, serverPort));
-                closingEvent.WaitOne();
-            }
-            finally
-            {
-
-                //Task.WaitAll(group.ShutdownGracefullyAsync());
-            }
-
-
-
-
-
-        }
-
-        public async Task RunClientAsyncWithIP(string ipAdress, int port)
+        public async Task RunClientAsyncWithIP(string ipAdress = "127.0.0.1", int port = 8080)
         {
             try
             {
@@ -137,6 +99,17 @@ namespace DataModel.Client
                 var serverIP = IPAddress.Parse(ipAdress);
                 int serverPort = port;
 
+
+
+                
+
+                
+
+
+            //    X509Certificate2 cert = null;
+            //    string targetHost = null;
+            //    cert = new X509Certificate2("name", "password");
+            //    targetHost = cert.GetNameInfo(X509NameType.DnsName, false);
 
                 Bootstrap = new Bootstrap();
                 Bootstrap

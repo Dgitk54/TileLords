@@ -32,8 +32,7 @@ namespace DataModel.Common
         /// <returns>True or False depending on plusCode < plusCode2 </returns>
         public static bool IsTileCodeBigger(PlusCode plusCode, PlusCode plusCode2)
         {
-            Dictionary<String, int> codeToInt;
-            codeToInt = LocationCodeTileUtility.CreateDictionary();
+            var codeToInt = LocationCodeTileUtility.PlusCodeIntegerLookup;
 
             String code = plusCode.Code;
             //remove the plus
