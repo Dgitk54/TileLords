@@ -40,7 +40,8 @@ namespace DataModel.Common.BiomeConfigs
         {
 
          {"Grass_Tile", 1 },
-       
+         {"Savanna_Tile", 2 },
+
 
 
         };

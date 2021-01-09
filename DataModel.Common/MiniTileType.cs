@@ -9,12 +9,15 @@ namespace DataModel.Common
         Grass_Tile,
         Grass_River,
         Grass_River2,
+        Grass_Flowers,
         Snow_Tile,
         Snow_River,
         Snow_River2,
         Snow_PatchyGrass,
         Sand_Tile,
         Sand_River,
+        Sand_Stone,
+        Sand_Tile2,
         Rock_Tile,
         Rock_River,
         Rock_River2,
@@ -22,6 +25,8 @@ namespace DataModel.Common
         Mud_Grass,
         Mud_Marsh,
         Mud_Tile,
+        Jungle_Tile,
+        Savanna_Tile,
         Unknown_Tile
 
     }

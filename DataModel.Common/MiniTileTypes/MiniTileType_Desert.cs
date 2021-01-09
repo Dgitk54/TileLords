@@ -8,6 +8,8 @@ namespace DataModel.Common.MiniTileTypes
     {
     
         Sand_Tile,
+        Sand_Tile2,
+        Sand_Stone,
         Sand_River,
         Unknown_Tile
 

@@ -7,6 +7,7 @@ namespace DataModel.Common.MiniTileTypes
     public enum MiniTileType_Savanna
     {
         Grass_Tile,
+        Savanna_Tile,
         Unknown_Tile
 
     }

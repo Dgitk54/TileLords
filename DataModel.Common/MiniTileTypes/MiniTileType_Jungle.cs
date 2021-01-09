@@ -9,6 +9,7 @@ namespace DataModel.Common.MiniTileTypes
         Grass_Tile,
         Grass_River,
         Grass_River2,
+        Jungle_Tile,
         Unknown_Tile
 
     }

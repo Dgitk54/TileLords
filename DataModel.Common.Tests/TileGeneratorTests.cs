@@ -200,7 +200,7 @@ namespace DataModel.Common.Tests
             type = TileGenerator.GetSpecificWorldObject(parent) + "";
             Debug.WriteLine(type);
 
-            parent.Ttype = TileType.WaterBody;
+            /*parent.Ttype = TileType.WaterBody;
             type = TileGenerator.GetSpecificWorldObject(parent) + "";
             Debug.WriteLine(type);
             type = TileGenerator.GetSpecificWorldObject(parent) + "";
@@ -211,7 +211,7 @@ namespace DataModel.Common.Tests
             parent.Ttype = TileType.Jungle;
             int seed = TileGenerator.GetRandomSeed();
             Debug.WriteLine("seed is " + seed);
-            Random r = new Random(seed);
+            Random r = new Random(seed); */
             /*  type = TileGenerator.GetSpecificWorldObject(parent, r) + "";
               Debug.WriteLine(type);
 

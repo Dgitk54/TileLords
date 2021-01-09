@@ -21,6 +21,7 @@
     "Zebra": 15
   },
   "tileTypeWeight": {
-    "Grass_Tile": 1
+    "Grass_Tile": 1,
+    "Savanna_Tile": 2
   }
 }
