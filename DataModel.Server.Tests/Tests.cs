@@ -757,12 +757,14 @@ namespace ClientIntegration
             var movementHandler = new PlayerMovementTileUpdater(eventBus);
             var tileConentHandler = new PlayerTileContentHandler(eventBus);
             var playersOnlineHandler = new PlayersOnlineHandler(eventBus);
+            var dataBaseUpdateHandler = new DatabaseUpdateHandler(eventBus);
 
+            cleanUp.Add(dataBaseUpdateHandler.AttachToBus());
             cleanUp.Add(movementHandler.AttachToBus());
             cleanUp.Add(movementHandler.AttachCleanup());
             cleanUp.Add(tileConentHandler.AttachToBus());
             cleanUp.Add(playersOnlineHandler.AttachToBus());
-
+            
 
 
             var p1Login = new PlayerLoggedInEvent() { Player = player1 };
@@ -810,13 +812,14 @@ namespace ClientIntegration
 
 
 
-            //Spawn p2
-            p2Gps.OnNext(plus2);
+
 
 
 
 
             //Both players see each other check:
+            //Spawn p2
+            p2Gps.OnNext(plus2);
 
             var p2Content = from e in p2ContentEvents
                             from e2 in e.VisibleContent
@@ -843,8 +846,38 @@ namespace ClientIntegration
             p1ContentEvents.Clear();
             p2ContentEvents.Clear();
 
+
+            //Move player on different tile check:
+            p2Gps.OnNext(plus3);
+            p2Content = from e in p2ContentEvents
+                        from e2 in e.VisibleContent
+                        from e3 in e2.Value
+                        where e3 is Player
+                        select e3;
+
+            p2VisiblePlayers = p2Content.Count();
+
+
+            p1Content = from e in p1ContentEvents
+                        from e2 in e.VisibleContent
+                        from e3 in e2.Value
+                        where e3 is Player
+                        select e3;
+            p1VisiblePlayers = p1Content.Count();
+
+
+            //One player affected in update
+            Assert.IsTrue(p1ContentEvents.Count == 1);
+            Assert.IsTrue(p2ContentEvents.Count == 1);
+            Assert.IsTrue(p2VisiblePlayers == 1);
+            Assert.IsTrue(p1VisiblePlayers == 1);
+
+            p1ContentEvents.Clear();
+            p2ContentEvents.Clear();
+            mapEvents.Clear();
+
             //Player 2 moves on same tile as player 1
-            
+
             p2Gps.OnNext(plus1);
 
             p2Content = from e in p2ContentEvents
@@ -863,6 +896,7 @@ namespace ClientIntegration
                         select e3;
             p1VisiblePlayers = p1Content.Count();
 
+            var mapE = mapEvents;
             //Only 1 player moved:
             Assert.IsTrue(p1ContentEvents.Count == 1);
             Assert.IsTrue(p2ContentEvents.Count == 1);

@@ -66,16 +66,42 @@ namespace DataModel.Server
                 col.Insert(userForDb);
                 return true;
             }
-
-
-
         }
 
-        public static void UpdateTile(MiniTile miniTile)
+        public static bool UpdateTile(Tile tile)
         {
-
+            using (var dbWrite = new LiteDatabase(DataBasePath()))
+            {
+                var colWrite = dbWrite.GetCollection<Tile>("tiles");
+                colWrite.EnsureIndex(v => v.MiniTiles);
+                colWrite.EnsureIndex(v => v.PlusCode);
+                colWrite.EnsureIndex(v => v.Ttype);
+                //Ensure in lock no tiles have been added.
+                var resultInLock = colWrite.Find(v => v.PlusCode.Code == tile.PlusCode.Code);
+                if (resultInLock == null || resultInLock.Count() == 0)
+                    return false;
+                if (resultInLock.Count() > 1)
+                    throw new Exception("Two Tiles for same ID");
+                var toChange = resultInLock.First();
+                if (tile.Id != toChange.Id)
+                    throw new Exception("ID mismatch for tiles");
+                return colWrite.Update(tile);
+            }
         }
 
+        public static bool UpdateTile(MiniTile miniTile)
+        {
+            var largeCode = miniTile.MiniTileId;
+            if (largeCode.Precision == 10)
+                largeCode = miniTile.MiniTileId.ToLowerResolution(8);
+            var tile = LookupOnly(largeCode);
+            if (tile == null)
+                return false;
+
+            tile.MiniTiles.RemoveAll(v => v.MiniTileId.Equals(miniTile.MiniTileId));
+            tile.MiniTiles.Add(miniTile);
+            return UpdateTile(tile);
+        }
 
         public static MiniTile LookupMiniTile(PlusCode code)
         {

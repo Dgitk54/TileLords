@@ -112,7 +112,19 @@ namespace DataModel.Server
         static void RemovePlayer(MiniTile tile, Player player)
         {
             var newContent = new List<ITileContent>(tile.Content);
-            var removed = newContent.Remove(player);
+            var samePlayer = newContent.Where(v =>
+            {
+                if (v is Player)
+                {
+                    var tmp = v as Player;
+                    tmp.Name.Equals(player.Name);
+                    return true;
+                }
+                return false;
+            }).First();
+
+            var removed = newContent.Remove(samePlayer);
+            ;
             tile.Content = newContent;
 
         }
