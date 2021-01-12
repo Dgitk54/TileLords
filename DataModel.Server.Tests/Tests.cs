@@ -184,14 +184,14 @@ namespace ClientIntegration
 
 
             var movementHandler = new PlayerMovementTileUpdater(eventBus);
-
+            var databaseUpdater = new DatabaseUpdateHandler(eventBus);
 
             var plus1 = new PlusCode("8FX9XW2F+9X", 10);
             var plus2 = new PlusCode("8FX9XW2F+8X", 10);
 
             cleanUp.Add(movementHandler.AttachToBus());
             cleanUp.Add(movementHandler.AttachCleanup());
-
+            cleanUp.Add(databaseUpdater.AttachToBus());
 
 
 
@@ -287,7 +287,7 @@ namespace ClientIntegration
 
 
 
-
+            ;
             //Cleanup
             cleanUp.ForEach(v => v.Dispose());
 
@@ -317,12 +317,13 @@ namespace ClientIntegration
             var movementHandler = new PlayerMovementTileUpdater(eventBus);
             var tileConentHandler = new PlayerTileContentHandler(eventBus);
             var playersOnlineHandler = new PlayersOnlineHandler(eventBus);
+            var dataBaseHandler = new DatabaseUpdateHandler(eventBus);
 
             cleanUp.Add(movementHandler.AttachToBus());
             cleanUp.Add(movementHandler.AttachCleanup());
             cleanUp.Add(tileConentHandler.AttachToBus());
             cleanUp.Add(playersOnlineHandler.AttachToBus());
-
+            cleanUp.Add(dataBaseHandler.AttachToBus());
 
             var p1Login = new PlayerLoggedInEvent() { Player = player1 };
 
@@ -557,12 +558,13 @@ namespace ClientIntegration
             var movementHandler = new PlayerMovementTileUpdater(eventBus);
             var tileConentHandler = new PlayerTileContentHandler(eventBus);
             var playersOnlineHandler = new PlayersOnlineHandler(eventBus);
+            var dataBaseUpdateHandler = new DatabaseUpdateHandler(eventBus);
 
             cleanUp.Add(movementHandler.AttachToBus());
             cleanUp.Add(movementHandler.AttachCleanup());
             cleanUp.Add(tileConentHandler.AttachToBus());
             cleanUp.Add(playersOnlineHandler.AttachToBus());
-
+            cleanUp.Add(dataBaseUpdateHandler.AttachToBus());
 
 
             var p1Login = new PlayerLoggedInEvent() { Player = player1 };
@@ -759,9 +761,10 @@ namespace ClientIntegration
             var playersOnlineHandler = new PlayersOnlineHandler(eventBus);
             var dataBaseUpdateHandler = new DatabaseUpdateHandler(eventBus);
 
-            cleanUp.Add(dataBaseUpdateHandler.AttachToBus());
+            
             cleanUp.Add(movementHandler.AttachToBus());
             cleanUp.Add(movementHandler.AttachCleanup());
+            cleanUp.Add(dataBaseUpdateHandler.AttachToBus());
             cleanUp.Add(tileConentHandler.AttachToBus());
             cleanUp.Add(playersOnlineHandler.AttachToBus());
             
@@ -876,6 +879,8 @@ namespace ClientIntegration
             p2ContentEvents.Clear();
             mapEvents.Clear();
 
+
+
             //Player 2 moves on same tile as player 1
 
             p2Gps.OnNext(plus1);
@@ -896,13 +901,46 @@ namespace ClientIntegration
                         select e3;
             p1VisiblePlayers = p1Content.Count();
 
-            var mapE = mapEvents;
             //Only 1 player moved:
             Assert.IsTrue(p1ContentEvents.Count == 1);
             Assert.IsTrue(p2ContentEvents.Count == 1);
             //Two players should be visible
             Assert.IsTrue(p2VisiblePlayers == 2);
             Assert.IsTrue(p1VisiblePlayers == 2);
+
+            p1ContentEvents.Clear();
+            p2ContentEvents.Clear();
+            mapEvents.Clear();
+
+            //Player 2 moves away from same tile as player 1
+
+            p2Gps.OnNext(plus4);
+
+            p2Content = from e in p2ContentEvents
+                        from e2 in e.VisibleContent
+                        from e3 in e2.Value
+                        where e3 is Player
+                        select e3;
+
+            p2VisiblePlayers = p2Content.Count();
+
+
+            p1Content = from e in p1ContentEvents
+                        from e2 in e.VisibleContent
+                        from e3 in e2.Value
+                        where e3 is Player
+                        select e3;
+            p1VisiblePlayers = p1Content.Count();
+
+            //Only 1 player moved:
+            Assert.IsTrue(p1ContentEvents.Count == 1);
+            Assert.IsTrue(p2ContentEvents.Count == 1);
+            //Two players should be visible due to 2 tiles affected with players standing on them
+            Assert.IsTrue(p2VisiblePlayers == 2);
+            Assert.IsTrue(p1VisiblePlayers == 2);
+            p1ContentEvents.Clear();
+            p2ContentEvents.Clear();
+            mapEvents.Clear();
         }
 
 

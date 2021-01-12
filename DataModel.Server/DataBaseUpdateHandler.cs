@@ -27,12 +27,12 @@ namespace DataModel.Server
         {
             var mapEvents = eventBus.GetEventStream<ServerMapEvent>();
 
-            mapEvents.Subscribe(v =>
+            return mapEvents.Subscribe(v =>
             {
                 v.MiniTiles.ToList().ForEach(v2 => DataBaseFunctions.UpdateTile(v2));
             });
 
-            return null;
+            
         }
     }
 }

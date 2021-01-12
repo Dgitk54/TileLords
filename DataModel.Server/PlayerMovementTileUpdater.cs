@@ -117,8 +117,10 @@ namespace DataModel.Server
                 if (v is Player)
                 {
                     var tmp = v as Player;
-                    tmp.Name.Equals(player.Name);
-                    return true;
+                    if (tmp.Name.Equals(player.Name))
+                    {
+                        return true;
+                    }
                 }
                 return false;
             }).First();
