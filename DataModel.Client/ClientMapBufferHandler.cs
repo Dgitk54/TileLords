@@ -43,18 +43,23 @@ namespace DataModel.Client
             //Client
             var latestClient = ClientFunctions.LatestClientLocation(eventBus.GetEventStream<UserGpsEvent>());
 
-            //Create Buffer once
-            var clientCanSeeLookupSet = from e in latestClient.DistinctUntilChanged()
+
+
+            //Setup buffers:
+            var largeMapBuffer = from e in latestClient.DistinctUntilChanged()
                                         select new HashSet<PlusCode>(e.Neighbors(50));
+
+            var smallUnityBuffer = from location in latestClient.DistinctUntilChanged()
+                                          select (new HashSet<PlusCode>(location.Neighbors(10)), location);
 
 
             var tileContent = eventBus.GetEventStream<DataSourceEvent>()
                                       .ParseOnlyValidUsingErrorHandler<ServerTileContentEvent>(ClientFunctions.PrintConsoleErrorHandler)
                                       .Where(v => v.VisibleContent != null)
                                       .StartWith(new ServerTileContentEvent());
-                                     // .Do(v => { Console.WriteLine("Received Tilecontent"); });
+                                     
 
-            var clientPositionPlusContent = clientCanSeeLookupSet.CombineLatest(tileContent, (position, content) => new { position, content });
+            var clientPositionPlusContent = largeMapBuffer.CombineLatest(tileContent, (position, content) => new { position, content });
 
 
             var bufferedContent = clientPositionPlusContent.Scan(new Dictionary<PlusCode, List<ITileContent>>(), (buffer, val) =>
@@ -65,6 +70,8 @@ namespace DataModel.Client
                               select keyValue;
 
                 farAway.ToList().ForEach(v => buffer.Remove(v));
+
+                //Merge content overwriting old values on conflict:
                 if (val.content.VisibleContent != null)
                 {
                     val.content.VisibleContent.GroupBy(v => v.Key).ToDictionary(v => v.Key, v => v.First().Value).ToList().ForEach(x => buffer[x.Key] = x.Value);
@@ -73,7 +80,16 @@ namespace DataModel.Client
             });
 
 
-            return UpdateClientBufferWithBakedInTileContent(concat, latestClient, bufferedContent).SubscribeOn(TaskPoolScheduler.Default).Subscribe(v => eventBus.Publish(new ClientMapBufferChanged(v)));
+
+
+            return UpdateClientBufferWithBakedInTileContent(concat, latestClient, bufferedContent)
+                .SubscribeOn(TaskPoolScheduler.Default)
+                .WithLatestFrom(smallUnityBuffer, (buffer, renderDistance) => new { buffer, renderDistance })
+                .Select(v => UnityRenderMap(v.renderDistance.Item1, v.buffer, v.renderDistance.location))
+                .Where(v=>v.NullTiles == 0)
+                .DistinctUntilChanged()
+                .ObserveOn(DefaultScheduler.Instance)
+                .Subscribe(v => eventBus.Publish(v));
         }
 
 
@@ -90,17 +106,15 @@ namespace DataModel.Client
                                   })
                                  .DistinctUntilChanged()
                                  .CombineLatest(tileContent, (tiles, content) => new { tiles, content })
-                                 .Select(v =>
-                                 {
-                                     SetMinitileContent(v.tiles, v.content);
-                                     return v.tiles;
-                                 });
+                                 .Select(v => SetMinitileContent(v.tiles, v.content));
         }
 
-        void SetMinitileContent(Dictionary<PlusCode, MiniTile> map, Dictionary<PlusCode, List<ITileContent>> content)
+        
+
+        static Dictionary<PlusCode, MiniTile> SetMinitileContent(Dictionary<PlusCode, MiniTile> map, Dictionary<PlusCode, List<ITileContent>> content)
         {
             if (content == null)
-                return;
+                return map;
 
             content.ToList().ForEach(v =>
             {
@@ -111,8 +125,31 @@ namespace DataModel.Client
                     tile.Content = v.Value;
                 }
             });
+            return map;
         }
 
+        public static MapAsRenderAbleChanged UnityRenderMap(HashSet<PlusCode> visibleMap, Dictionary<PlusCode, MiniTile> buffer, PlusCode location)
+        {
+            var sortedList = new List<MiniTile>();
+            int nullTiles = 0;
+
+            visibleMap.ToList().ForEach(c =>
+            {
+                var tile = c.GetMiniTile(buffer);
+                if (tile != null)
+                {
+                    sortedList.Add(tile);
+                }
+                else
+                {
+                    nullTiles++;
+                    sortedList.Add(new MiniTile(c, MiniTileType.Unknown_Tile, null));
+                }
+            });
+            sortedList = LocationCodeTileUtility.SortList(sortedList);
+            return new MapAsRenderAbleChanged() { Location = location, Map = sortedList, NullTiles = nullTiles };
+
+        }
 
     }
 }
