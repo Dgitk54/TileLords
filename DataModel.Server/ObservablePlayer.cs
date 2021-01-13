@@ -10,6 +10,8 @@ namespace DataModel.Server
     {
         public string Name { get; set; }
 
+        public int Id { get; set; }
+
         public IEventBus ClientBus { get; set; }
 
         public IChannel ClientChannel { get; set; }

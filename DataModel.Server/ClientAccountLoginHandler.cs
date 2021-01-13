@@ -64,6 +64,7 @@ namespace DataModel.Server
                         {
                             ClientBus = eventBus,
                             Name = user.UserName,
+                            Id = user.Id,
                             PlayerObservableLocationStream = ServerFunctions.ExtractPlusCodeLocationStream(eventBus, 10),
                             ClientChannel = channel,
                             ConnectionStatus = isActive
