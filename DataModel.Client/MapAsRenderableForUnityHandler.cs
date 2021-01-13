@@ -24,11 +24,25 @@ namespace DataModel.Client
                                        .Subscribe(v => 
                                        {
                                            var neighbors = v.loc.Neighbors(10);
-                                           var dict = new Dictionary<PlusCode, MiniTile>();
+                                           var sortedList = new List<MiniTile>();
+                                           int nullTiles = 0;
+                                           neighbors.ForEach(c => 
+                                           {
+                                               var tile = c.GetMiniTile(v.buffer.TilesToRenderForUnity);
 
-                                           neighbors.ForEach(c => dict.Add(c, c.GetMiniTile(v.buffer.TilesToRenderForUnity)));
-
-                                           var map = new MapAsRenderAbleChanged() { Location = v.loc, Map = dict };
+                                               if (tile != null) 
+                                               {
+                                                   sortedList.Add(c.GetMiniTile(v.buffer.TilesToRenderForUnity));
+                                               } else 
+                                               {
+                                                   nullTiles++;
+                                                   sortedList.Add(new MiniTile(c, MiniTileType.Unknown_Tile, null));
+                                               }
+                                                
+                                               
+                                           });
+                                           sortedList = LocationCodeTileUtility.SortList(sortedList);
+                                           var map = new MapAsRenderAbleChanged() { Location = v.loc, Map = sortedList, NullTiles = nullTiles };
                                            eventBus.Publish(map);
                                        });
         }

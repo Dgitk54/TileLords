@@ -36,8 +36,9 @@ namespace DataModel.Common.Tests
             miniTiles = TileUtility.GetTileSectionWithinChebyshevDistance(startCode, tiles, 2);
             Assert.IsTrue(miniTiles.Count == 5 * 5);
         }
-        [Test]
-        public void GetTileSectionReturnsCodesWithPlus()
+
+        /*[Test]
+         public void GetTileSectionReturnsCodesWithPlus()
         {
             
             var list = LocationCodeTileUtility.GetTileSection("8FX9XW2F+", 5, 8);
@@ -63,7 +64,7 @@ namespace DataModel.Common.Tests
 
             Assert.IsTrue(list4.Count == list3.Count);
             ;
-        }
+        } */
 
         [Test]
         public void GivenEdgeTileChebyshevAlsoFindsNeighborsInOtherTiles()

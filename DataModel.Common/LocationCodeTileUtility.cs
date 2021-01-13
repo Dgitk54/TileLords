@@ -10,7 +10,7 @@ namespace DataModel.Common
 
     public static class LocationCodeTileUtility
     {
-
+        
         /// <summary>
         /// Function which sorts the list in the order from top left tile (north west) to bottom right (south east)
         /// </summary>
@@ -190,7 +190,7 @@ namespace DataModel.Common
         /// <param name="radius">Radius in which all LocationCodes should be added to the List</param>
         /// <param name="precision">precision of the startLocation string</param>
         /// <returns></returns>
-        public static List<string> GetTileSectionParallel(string startLocation, int radius, int precision)
+       /* public static List<string> GetTileSectionParallel(string startLocation, int radius, int precision)
         {
             var code = startLocation.Replace("+", "");
             var arraySize = precision / 2;
@@ -370,7 +370,7 @@ namespace DataModel.Common
                 Array.Copy(readOnlyXSource, xtmp, readOnlyXSource.Length);
             }
             return returnedSection;
-        }
+        } */
 
 
 
@@ -389,7 +389,7 @@ namespace DataModel.Common
 
         static void DetermineLocationCodes(string code, List<string> plusCodes, Dictionary<string, int> codeToInt, int radius, int precision, int[] xArray, int[] yArray, int[] xSaveArray, int[] ySaveArray)
         {
-            
+            StringBuilder sb = new StringBuilder();
             //set top left
             for (int k = 1; k <= radius; k++)
             {   
@@ -398,7 +398,8 @@ namespace DataModel.Common
                 {
                     
                     GoLeft(xArray);
-                    plusCodes.Add(ConvertBackToString(precision, xArray, yArray));
+                  
+                    plusCodes.Add(ConvertBackToString(precision, xArray, yArray, sb));
                 }
                 Array.Copy(ResetX(xSaveArray), xArray, xArray.Length);
             }
@@ -410,7 +411,7 @@ namespace DataModel.Common
             {
                 
                 GoUp(yArray);
-                plusCodes.Add(ConvertBackToString(precision, xArray, yArray));
+                plusCodes.Add(ConvertBackToString(precision, xArray, yArray, sb));
             }
             Array.Copy(ResetX(xSaveArray), xArray, xArray.Length);
             Array.Copy(ResetY(ySaveArray), yArray, yArray.Length);
@@ -426,7 +427,7 @@ namespace DataModel.Common
                     
                     GoRight(xArray);
                     //convert the code back into a location code and add it to the list
-                    plusCodes.Add(ConvertBackToString(precision, xArray, yArray));
+                    plusCodes.Add(ConvertBackToString(precision, xArray, yArray, sb));
                 }
                 //resetting X values to original one
                 Array.Copy(ResetX(xSaveArray), xArray, xArray.Length);
@@ -443,7 +444,7 @@ namespace DataModel.Common
             {
 
                 GoLeft(xArray);
-                plusCodes.Add(ConvertBackToString(precision, xArray, yArray));
+                plusCodes.Add(ConvertBackToString(precision, xArray, yArray, sb));
 
             }
             Array.Copy(ResetX(xSaveArray), xArray, xArray.Length);
@@ -461,7 +462,7 @@ namespace DataModel.Common
             {
 
                 GoRight(xArray);
-                plusCodes.Add(ConvertBackToString(precision, xArray, yArray));
+                plusCodes.Add(ConvertBackToString(precision, xArray, yArray, sb));
 
             }
             Array.Copy(ResetX(xSaveArray), xArray, xArray.Length);
@@ -478,7 +479,7 @@ namespace DataModel.Common
                     
                     GoLeft(xArray);
 
-                    plusCodes.Add(ConvertBackToString(precision, xArray, yArray));
+                    plusCodes.Add(ConvertBackToString(precision, xArray, yArray, sb));
                 }
                 Array.Copy(ResetX(xSaveArray), xArray, xArray.Length);
             }
@@ -491,7 +492,7 @@ namespace DataModel.Common
             for (int k = 1; k <= radius; k++)
             {
                 GoDown(yArray);
-                plusCodes.Add(ConvertBackToString(precision, xArray, yArray));
+                plusCodes.Add(ConvertBackToString(precision, xArray, yArray, sb));
 
             }
 
@@ -507,7 +508,7 @@ namespace DataModel.Common
                 for (int l = 1; l <= radius; l++)
                 {
                     GoRight(xArray);
-                    plusCodes.Add(ConvertBackToString(precision, xArray, yArray));
+                    plusCodes.Add(ConvertBackToString(precision, xArray, yArray, sb));
                 }
                 Array.Copy(ResetX(xSaveArray), xArray, xArray.Length);
             }
@@ -576,31 +577,36 @@ namespace DataModel.Common
         /// <summary>
         /// Function which converts int to PlusCode back
         /// </summary>
-        static string ConvertBackToString( int precision, int[] xArray, int[] yArray)
+        static string ConvertBackToString( int precision, int[] xArray, int[] yArray, StringBuilder sb)
         {
+            sb.Clear();
             int xArrayCounter = 0;
             int yArrayCounter = 0;
-            var newCode = "";
+            string newCode;
             for (int i = 0; i < precision; i++)
             {
                 if (i % 2 == 0)
                 {
-                    string sign = IntegerPlusCodeLookup[xArray[xArrayCounter]];
+                    sb.Append(IntegerPlusCodeLookup[xArray[xArrayCounter]]);
+                    //string sign = IntegerPlusCodeLookup[xArray[xArrayCounter]];
                  
                     xArrayCounter++;
-                    newCode += sign;
+                    //newCode += sign;
                 }
                 else
                 {
-                    string sign = IntegerPlusCodeLookup[yArray[yArrayCounter]];
-                   
+                    sb.Append(IntegerPlusCodeLookup[yArray[yArrayCounter]]);
+                    // string sign = IntegerPlusCodeLookup[yArray[yArrayCounter]];
+
                     yArrayCounter++;
-                    newCode += sign;
+                   // newCode += sign;
                 }
 
 
             }
-            newCode = newCode.Insert(8, "+");
+            sb.Insert(8, "+");
+            newCode = sb.ToString();
+            //newCode = newCode.Insert(8, "+");
             return newCode;
         }
 

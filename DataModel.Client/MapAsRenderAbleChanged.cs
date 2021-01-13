@@ -9,17 +9,17 @@ namespace DataModel.Client
 {
     public class MapAsRenderAbleChanged : IEvent
     {
-        public Dictionary<PlusCode, MiniTile> Map { get; set; }
+        public List<MiniTile> Map { get; set; }
         public PlusCode Location { get; set; }
+        public int NullTiles { get; set; }
 
         public override string ToString()
         {
-            var nullval = Map.Values;
             var nullcount = 0;
             var nonnull = 0;
             var hasContent = 0;
             string additionalInfo = "";
-            foreach (var v in nullval)
+            foreach (var v in Map)
             {
                 if (v == null)
                 {
