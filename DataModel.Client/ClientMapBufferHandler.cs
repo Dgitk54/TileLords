@@ -6,6 +6,7 @@ using System.Text;
 using System.Linq;
 using System.Reactive.Linq;
 using System.Diagnostics;
+using System.Reactive.Concurrency;
 
 namespace DataModel.Client
 {
@@ -72,7 +73,7 @@ namespace DataModel.Client
             });
 
 
-            return UpdateClientBufferWithBakedInTileContent(concat, latestClient, bufferedContent).Subscribe(v => eventBus.Publish(new ClientMapBufferChanged(v)));
+            return UpdateClientBufferWithBakedInTileContent(concat, latestClient, bufferedContent).SubscribeOn(TaskPoolScheduler.Default).Subscribe(v => eventBus.Publish(new ClientMapBufferChanged(v)));
         }
 
 

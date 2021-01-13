@@ -46,7 +46,9 @@ namespace DataModel.Common.BiomeConfigs
         {
 
          {"Jungle_Tile", 1 },
-   
+
+         {"Jungle_Roots", 1 },
+
 
 
         };

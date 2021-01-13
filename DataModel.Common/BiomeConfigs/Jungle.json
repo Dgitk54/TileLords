@@ -25,6 +25,7 @@
     "OrangeTree": 5
   },
   "tileTypeWeight": {
-    "Jungle_Tile": 1
+    "Jungle_Tile": 1,
+    "Jungle_Roots": 1
   }
 }

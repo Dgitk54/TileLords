@@ -143,27 +143,27 @@ namespace DataModel.Common.Tests
         {
 
             List<MiniTile> unsorted = new List<MiniTile>();
-            unsorted.Add(new MiniTile(new PlusCode("8FX9WWVC+W2", 10), MiniTileType.Grass_River, null));
-            unsorted.Add(new MiniTile(new PlusCode("8FX9WWV9+XW", 10), MiniTileType.Grass_River, null));
-            unsorted.Add(new MiniTile(new PlusCode("8FX9WWVC+X2", 10), MiniTileType.Grass_River, null));
-            unsorted.Add(new MiniTile(new PlusCode("8FX9WWV9+WW", 10), MiniTileType.Grass_River, null));
-            unsorted.Add(new MiniTile(new PlusCode("8FX9WWW9+2W", 10), MiniTileType.Grass_River, null));
-            unsorted.Add(new MiniTile(new PlusCode("8FX9WWW9+2X", 10), MiniTileType.Grass_River, null));
-            unsorted.Add(new MiniTile(new PlusCode("8FX9WWWC+22", 10), MiniTileType.Grass_River, null));
-            unsorted.Add(new MiniTile(new PlusCode("8FX9WWV9+WX", 10), MiniTileType.Grass_River, null));
-            unsorted.Add(new MiniTile(new PlusCode("8FX9WWV9+XX", 10), MiniTileType.Grass_River, null));
+            unsorted.Add(new MiniTile(new PlusCode("8FX9WWVC+W2", 10), MiniTileType.Grass_Dirt, null));
+            unsorted.Add(new MiniTile(new PlusCode("8FX9WWV9+XW", 10), MiniTileType.Grass_Dirt, null));
+            unsorted.Add(new MiniTile(new PlusCode("8FX9WWVC+X2", 10), MiniTileType.Grass_Dirt, null));
+            unsorted.Add(new MiniTile(new PlusCode("8FX9WWV9+WW", 10), MiniTileType.Grass_Dirt, null));
+            unsorted.Add(new MiniTile(new PlusCode("8FX9WWW9+2W", 10), MiniTileType.Grass_Dirt, null));
+            unsorted.Add(new MiniTile(new PlusCode("8FX9WWW9+2X", 10), MiniTileType.Grass_Dirt, null));
+            unsorted.Add(new MiniTile(new PlusCode("8FX9WWWC+22", 10), MiniTileType.Grass_Dirt, null));
+            unsorted.Add(new MiniTile(new PlusCode("8FX9WWV9+WX", 10), MiniTileType.Grass_Dirt, null));
+            unsorted.Add(new MiniTile(new PlusCode("8FX9WWV9+XX", 10), MiniTileType.Grass_Dirt, null));
             unsorted = LocationCodeTileUtility.SortList(unsorted);
 
             List<MiniTile> sorted = new List<MiniTile>();
-            sorted.Add(new MiniTile(new PlusCode("8FX9WWW9+2W", 10), MiniTileType.Grass_River, null));
-            sorted.Add(new MiniTile(new PlusCode("8FX9WWW9+2X", 10), MiniTileType.Grass_River, null));
-            sorted.Add(new MiniTile(new PlusCode("8FX9WWWC+22", 10), MiniTileType.Grass_River, null));
-            sorted.Add(new MiniTile(new PlusCode("8FX9WWV9+XW", 10), MiniTileType.Grass_River, null));
-            sorted.Add(new MiniTile(new PlusCode("8FX9WWV9+XX", 10), MiniTileType.Grass_River, null));
-            sorted.Add(new MiniTile(new PlusCode("8FX9WWVC+X2", 10), MiniTileType.Grass_River, null));
-            sorted.Add(new MiniTile(new PlusCode("8FX9WWV9+WW", 10), MiniTileType.Grass_River, null));
-            sorted.Add(new MiniTile(new PlusCode("8FX9WWV9+WX", 10), MiniTileType.Grass_River, null));
-            sorted.Add(new MiniTile(new PlusCode("8FX9WWVC+W2", 10), MiniTileType.Grass_River, null));
+            sorted.Add(new MiniTile(new PlusCode("8FX9WWW9+2W", 10), MiniTileType.Grass_Dirt, null));
+            sorted.Add(new MiniTile(new PlusCode("8FX9WWW9+2X", 10), MiniTileType.Grass_Dirt, null));
+            sorted.Add(new MiniTile(new PlusCode("8FX9WWWC+22", 10), MiniTileType.Grass_Dirt, null));
+            sorted.Add(new MiniTile(new PlusCode("8FX9WWV9+XW", 10), MiniTileType.Grass_Dirt, null));
+            sorted.Add(new MiniTile(new PlusCode("8FX9WWV9+XX", 10), MiniTileType.Grass_Dirt, null));
+            sorted.Add(new MiniTile(new PlusCode("8FX9WWVC+X2", 10), MiniTileType.Grass_Dirt, null));
+            sorted.Add(new MiniTile(new PlusCode("8FX9WWV9+WW", 10), MiniTileType.Grass_Dirt, null));
+            sorted.Add(new MiniTile(new PlusCode("8FX9WWV9+WX", 10), MiniTileType.Grass_Dirt, null));
+            sorted.Add(new MiniTile(new PlusCode("8FX9WWVC+W2", 10), MiniTileType.Grass_Dirt, null));
 
 
 
@@ -174,7 +174,7 @@ namespace DataModel.Common.Tests
             }
 
 
-        }
+        } 
 
         [Test]
         public void GetTileSectionsReturnsSameStringUnmodified()

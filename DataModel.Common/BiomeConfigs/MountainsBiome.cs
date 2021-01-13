@@ -41,9 +41,9 @@ namespace DataModel.Common.BiomeConfigs
         public Dictionary<string, int> tileTypeWeight = new Dictionary<string, int>
         {
 
-         {"Rock_Tile", 70 },
-         {"Rock_River", 20 },
-         {"Rock_River2", 20 },
+         {"Rock_Tile", 7 },
+         {"Rock_Ice", 2 },
+         {"Rock_Moss", 2 },
         
 
         };

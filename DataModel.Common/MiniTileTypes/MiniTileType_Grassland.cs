@@ -7,8 +7,8 @@ namespace DataModel.Common.MiniTileTypes
     public enum MiniTileType_Grassland
     {
         Grass_Tile,
-        Grass_River,
-        Grass_River2,
+        Grass_Dirt,
+        Grass_Mushrooms,
         Grass_Flowers,
         Unknown_Tile
 

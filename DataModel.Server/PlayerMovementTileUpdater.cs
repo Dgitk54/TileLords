@@ -33,11 +33,11 @@ namespace DataModel.Server
 
 
             var playerDisconnectedWithLocation = from e in playerLogInStream
-                           from merged in e.Player.ConnectionStatus.WithLatestFrom(e.Player.PlayerObservableLocationStream, (val1, lastPosition) => new { val1, lastPosition })
-                           where merged.val1 == false
-                           select (e.Player, merged);
+                                                 from merged in e.Player.ConnectionStatus.WithLatestFrom(e.Player.PlayerObservableLocationStream, (val1, lastPosition) => new { val1, lastPosition })
+                                                 where merged.val1 == false
+                                                 select (e.Player, merged);
 
-            return playerDisconnectedWithLocation.Subscribe(v => 
+            return playerDisconnectedWithLocation.Subscribe(v =>
             {
                 GetWithRetries(v.merged.lastPosition)
                 .Subscribe(tile =>
@@ -49,7 +49,7 @@ namespace DataModel.Server
                 });
             });
 
-       
+
         }
 
         public IDisposable AttachToBus()
@@ -112,7 +112,9 @@ namespace DataModel.Server
         static void RemovePlayer(MiniTile tile, Player player)
         {
             var newContent = new List<ITileContent>(tile.Content);
-            var samePlayer = newContent.Where(v =>
+
+
+            var samePlayerCount = newContent.Where(v =>
             {
                 if (v is Player)
                 {
@@ -123,11 +125,31 @@ namespace DataModel.Server
                     }
                 }
                 return false;
-            }).First();
+            }).Count();
 
-            var removed = newContent.Remove(samePlayer);
-            ;
-            tile.Content = newContent;
+            if (samePlayerCount > 0)
+            {
+
+                var samePlayer = newContent.Where(v =>
+                {
+                    if (v is Player)
+                    {
+                        var tmp = v as Player;
+                        if (tmp.Name.Equals(player.Name))
+                        {
+                            return true;
+                        }
+                    }
+                    return false;
+                }).First();
+
+                var removed = newContent.Remove(samePlayer);
+
+                tile.Content = newContent;
+
+            }
+
+
 
         }
 

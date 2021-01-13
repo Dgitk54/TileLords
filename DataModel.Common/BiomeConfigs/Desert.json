@@ -18,9 +18,9 @@
     "Pyramid": 5
   },
   "tileTypeWeight": {
-    "Sand_Tile": 30,
-    "Sand_Tile2": 30,
-    "Sand_River": 5,
-    "Sand_Stone": 15
+    "Sand_Tile": 2,
+    "Sand_Tile2": 2,
+    "Sand_Tile3": 2,
+    "Sand_Stone": 1
   }
 }

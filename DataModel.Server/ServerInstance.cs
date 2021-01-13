@@ -31,7 +31,7 @@ namespace DataModel.Server
             //disposables.Add(new ClientToClientPositionUpdateHandler(bus).AttachToBus());
 
             disposables.Add(new PlayersOnlineHandler(bus).AttachToBus());
-            disposables.Add(new DatabaseUpdateHandler(bus).AttachToBus());
+            //disposables.Add(new DatabaseUpdateHandler(bus).AttachToBus());
             var movementUpdater = new PlayerMovementTileUpdater(bus);
             disposables.Add(movementUpdater.AttachToBus());
             disposables.Add(movementUpdater.AttachCleanup());

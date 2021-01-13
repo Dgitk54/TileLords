@@ -8,8 +8,8 @@ namespace DataModel.Common.MiniTileTypes
     {
        
         Snow_Tile,
-        Snow_River,
-        Snow_River2,
+        Snow_Tile2,
+        Snow_Tile3,
         Snow_PatchyGrass,
         Unknown_Tile
 

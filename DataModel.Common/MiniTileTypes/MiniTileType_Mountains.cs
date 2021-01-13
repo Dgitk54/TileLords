@@ -8,8 +8,8 @@ namespace DataModel.Common.MiniTileTypes
     {
        
         Rock_Tile,
-        Rock_River,
-        Rock_River2,
+        Rock_Ice,
+        Rock_Moss,
         Unknown_Tile
 
     }
