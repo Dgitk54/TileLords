@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace DataModel.Common
 {
@@ -178,11 +176,12 @@ namespace DataModel.Common
 
 
             //determine the codes and add them to the list
-            DetermineLocationCodes(code, locationCodes, PlusCodeIntegerLookup, radius, precision, xArray, yArray, xSaveArray, ySaveArray);
+            //DetermineLocationCodes(code, locationCodes, PlusCodeIntegerLookup, radius, precision, xArray, yArray, xSaveArray, ySaveArray);
+            DetermineLocationCodesSorted(locationCodes, radius, precision, xArray, yArray);
 
             return locationCodes;
         }
-       
+
         /// <summary>
         /// See GetTileSection, but run in parallel, used for large values.
         /// </summary>
@@ -190,187 +189,187 @@ namespace DataModel.Common
         /// <param name="radius">Radius in which all LocationCodes should be added to the List</param>
         /// <param name="precision">precision of the startLocation string</param>
         /// <returns></returns>
-       /* public static List<string> GetTileSectionParallel(string startLocation, int radius, int precision)
-        {
-            var code = startLocation.Replace("+", "");
-            var arraySize = precision / 2;
-            int[] xValues = new int[arraySize];
-            int[] yValues = new int[arraySize];
-            CodeToIntegerValues(code, PlusCodeIntegerLookup, xValues, yValues);
+        /* public static List<string> GetTileSectionParallel(string startLocation, int radius, int precision)
+         {
+             var code = startLocation.Replace("+", "");
+             var arraySize = precision / 2;
+             int[] xValues = new int[arraySize];
+             int[] yValues = new int[arraySize];
+             CodeToIntegerValues(code, PlusCodeIntegerLookup, xValues, yValues);
 
-            var topleft = Task.Run(() => GetTopLeft(radius, precision, xValues, yValues));
-            var top = Task.Run(() => GetTopSection(radius, precision, xValues, yValues));
-            var topRight = Task.Run(() => GetTopRightSection(radius, precision, xValues, yValues));
-            var left = Task.Run(() => GetLeftSection(radius, precision, xValues, yValues));
-            var right = Task.Run(() => GetRightSection(radius, precision, xValues, yValues));
-            var bottomLeft = Task.Run(() => GetBottomLeftSection(radius, precision, xValues, yValues));
-            var bottom = Task.Run(() => GetBottomSection(radius, precision, xValues, yValues));
-            var bottomRight = Task.Run(() => GetBottomRightSection(radius, precision, xValues, yValues));
+             var topleft = Task.Run(() => GetTopLeft(radius, precision, xValues, yValues));
+             var top = Task.Run(() => GetTopSection(radius, precision, xValues, yValues));
+             var topRight = Task.Run(() => GetTopRightSection(radius, precision, xValues, yValues));
+             var left = Task.Run(() => GetLeftSection(radius, precision, xValues, yValues));
+             var right = Task.Run(() => GetRightSection(radius, precision, xValues, yValues));
+             var bottomLeft = Task.Run(() => GetBottomLeftSection(radius, precision, xValues, yValues));
+             var bottom = Task.Run(() => GetBottomSection(radius, precision, xValues, yValues));
+             var bottomRight = Task.Run(() => GetBottomRightSection(radius, precision, xValues, yValues));
 
-            Task.WhenAll(topleft, top, topRight, left, right, bottomLeft, bottom, bottomRight).Wait();
+             Task.WhenAll(topleft, top, topRight, left, right, bottomLeft, bottom, bottomRight).Wait();
 
-            var ret = new List<string>();
+             var ret = new List<string>();
 
-            ret.AddRange(topleft.Result);
-            ret.AddRange(top.Result);
-            ret.AddRange(topRight.Result);
-            ret.AddRange(left.Result);
-            ret.AddRange(right.Result);
-            ret.AddRange(bottomLeft.Result);
-            ret.AddRange(bottom.Result);
-            ret.AddRange(bottomRight.Result);
+             ret.AddRange(topleft.Result);
+             ret.AddRange(top.Result);
+             ret.AddRange(topRight.Result);
+             ret.AddRange(left.Result);
+             ret.AddRange(right.Result);
+             ret.AddRange(bottomLeft.Result);
+             ret.AddRange(bottom.Result);
+             ret.AddRange(bottomRight.Result);
 
-            ret.Add(startLocation);
+             ret.Add(startLocation);
 
-            return ret;
-        }
+             return ret;
+         }
 
-        static List<string> GetTopLeft(int radius, int precision, int[] readOnlyXSource, int[] readOnlyYSource)
-        {
-            var size = precision / 2;
-            int[] xtmp = new int[size];
-            int[] ytmp = new int[size];
-            Array.Copy(readOnlyXSource, xtmp, readOnlyXSource.Length);
-            Array.Copy(readOnlyYSource, ytmp, readOnlyYSource.Length);
-            var returnedSection = new List<string>();
-            for (int i = 1; i <= radius; i++)
-            {
-                GoUp(ytmp);
-                for (int j = 1; j <= radius; j++)
-                {
-                    GoLeft(xtmp);
-                    returnedSection.Add(ConvertBackToString(precision, xtmp, ytmp));
-                }
-                Array.Copy(readOnlyXSource, xtmp, readOnlyXSource.Length);
-            }
-            return returnedSection;
-        }
+         static List<string> GetTopLeft(int radius, int precision, int[] readOnlyXSource, int[] readOnlyYSource)
+         {
+             var size = precision / 2;
+             int[] xtmp = new int[size];
+             int[] ytmp = new int[size];
+             Array.Copy(readOnlyXSource, xtmp, readOnlyXSource.Length);
+             Array.Copy(readOnlyYSource, ytmp, readOnlyYSource.Length);
+             var returnedSection = new List<string>();
+             for (int i = 1; i <= radius; i++)
+             {
+                 GoUp(ytmp);
+                 for (int j = 1; j <= radius; j++)
+                 {
+                     GoLeft(xtmp);
+                     returnedSection.Add(ConvertBackToString(precision, xtmp, ytmp));
+                 }
+                 Array.Copy(readOnlyXSource, xtmp, readOnlyXSource.Length);
+             }
+             return returnedSection;
+         }
 
-        static List<string> GetTopRightSection(int radius, int precision, int[] readOnlyXSource, int[] readOnlyYSource)
-        {
-            var size = precision / 2;
-            int[] xtmp = new int[size];
-            int[] ytmp = new int[size];
-            Array.Copy(readOnlyXSource, xtmp, readOnlyXSource.Length);
-            Array.Copy(readOnlyYSource, ytmp, readOnlyYSource.Length);
-            var returnedSection = new List<string>();
-            for (int i = 1; i <= radius; i++)
-            {
-                GoUp(ytmp);
-                for (int j = 1; j <= radius; j++)
-                {
-                    GoRight(xtmp);
-                    returnedSection.Add(ConvertBackToString(precision, xtmp, ytmp));
-                }
-                Array.Copy(readOnlyXSource, xtmp, readOnlyXSource.Length);
-            }
-            return returnedSection;
-        }
-        static List<string> GetTopSection(int radius, int precision, int[] readOnlyXSource, int[] readOnlyYSource)
-        {
-            var size = precision / 2;
-            int[] xtmp = new int[size];
-            int[] ytmp = new int[size];
-            Array.Copy(readOnlyXSource, xtmp, readOnlyXSource.Length);
-            Array.Copy(readOnlyYSource, ytmp, readOnlyYSource.Length);
-            var returnedSection = new List<string>();
-            for (int i = 1; i <= radius; i++)
-            {
-                GoUp(ytmp);
-                returnedSection.Add(ConvertBackToString(precision, xtmp, ytmp));
-            }
-            return returnedSection;
-        }
+         static List<string> GetTopRightSection(int radius, int precision, int[] readOnlyXSource, int[] readOnlyYSource)
+         {
+             var size = precision / 2;
+             int[] xtmp = new int[size];
+             int[] ytmp = new int[size];
+             Array.Copy(readOnlyXSource, xtmp, readOnlyXSource.Length);
+             Array.Copy(readOnlyYSource, ytmp, readOnlyYSource.Length);
+             var returnedSection = new List<string>();
+             for (int i = 1; i <= radius; i++)
+             {
+                 GoUp(ytmp);
+                 for (int j = 1; j <= radius; j++)
+                 {
+                     GoRight(xtmp);
+                     returnedSection.Add(ConvertBackToString(precision, xtmp, ytmp));
+                 }
+                 Array.Copy(readOnlyXSource, xtmp, readOnlyXSource.Length);
+             }
+             return returnedSection;
+         }
+         static List<string> GetTopSection(int radius, int precision, int[] readOnlyXSource, int[] readOnlyYSource)
+         {
+             var size = precision / 2;
+             int[] xtmp = new int[size];
+             int[] ytmp = new int[size];
+             Array.Copy(readOnlyXSource, xtmp, readOnlyXSource.Length);
+             Array.Copy(readOnlyYSource, ytmp, readOnlyYSource.Length);
+             var returnedSection = new List<string>();
+             for (int i = 1; i <= radius; i++)
+             {
+                 GoUp(ytmp);
+                 returnedSection.Add(ConvertBackToString(precision, xtmp, ytmp));
+             }
+             return returnedSection;
+         }
 
-        static List<string> GetLeftSection(int radius, int precision, int[] readOnlyXSource, int[] readOnlyYSource)
-        {
-            var size = precision / 2;
-            int[] xtmp = new int[size];
-            int[] ytmp = new int[size];
-            Array.Copy(readOnlyXSource, xtmp, readOnlyXSource.Length);
-            Array.Copy(readOnlyYSource, ytmp, readOnlyYSource.Length);
-            var returnedSection = new List<string>();
-            for (int i = 1; i <= radius; i++)
-            {
-                GoLeft(xtmp);
-                returnedSection.Add(ConvertBackToString(precision, xtmp, ytmp));
-            }
-            return returnedSection;
-        }
-        static List<string> GetRightSection(int radius, int precision, int[] readOnlyXSource, int[] readOnlyYSource)
-        {
-            var size = precision / 2;
-            int[] xtmp = new int[size];
-            int[] ytmp = new int[size];
-            Array.Copy(readOnlyXSource, xtmp, readOnlyXSource.Length);
-            Array.Copy(readOnlyYSource, ytmp, readOnlyYSource.Length);
-            var returnedSection = new List<string>();
-            for (int i = 1; i <= radius; i++)
-            {
-                GoRight(xtmp);
-                returnedSection.Add(ConvertBackToString(precision, xtmp, ytmp));
-            }
-            return returnedSection;
-        }
-        static List<string> GetBottomSection(int radius, int precision, int[] readOnlyXSource, int[] readOnlyYSource)
-        {
-            var size = precision / 2;
-            int[] xtmp = new int[size];
-            int[] ytmp = new int[size];
-            Array.Copy(readOnlyXSource, xtmp, readOnlyXSource.Length);
-            Array.Copy(readOnlyYSource, ytmp, readOnlyYSource.Length);
-            var returnedSection = new List<string>();
-            for (int i = 1; i <= radius; i++)
-            {
-                GoDown(ytmp);
-                returnedSection.Add(ConvertBackToString(precision, xtmp, ytmp));
-            }
-            return returnedSection;
-        }
-        static List<string> GetBottomLeftSection(int radius, int precision, int[] readOnlyXSource, int[] readOnlyYSource)
-        {
-            var size = precision / 2;
-            int[] xtmp = new int[size];
-            int[] ytmp = new int[size];
-            Array.Copy(readOnlyXSource, xtmp, readOnlyXSource.Length);
-            Array.Copy(readOnlyYSource, ytmp, readOnlyYSource.Length);
-            var returnedSection = new List<string>();
-            
-            for (int k = 1; k <= radius; k++)
-            {
-                GoDown(ytmp);
-                for (int l = 1; l <= radius; l++)
-                {
+         static List<string> GetLeftSection(int radius, int precision, int[] readOnlyXSource, int[] readOnlyYSource)
+         {
+             var size = precision / 2;
+             int[] xtmp = new int[size];
+             int[] ytmp = new int[size];
+             Array.Copy(readOnlyXSource, xtmp, readOnlyXSource.Length);
+             Array.Copy(readOnlyYSource, ytmp, readOnlyYSource.Length);
+             var returnedSection = new List<string>();
+             for (int i = 1; i <= radius; i++)
+             {
+                 GoLeft(xtmp);
+                 returnedSection.Add(ConvertBackToString(precision, xtmp, ytmp));
+             }
+             return returnedSection;
+         }
+         static List<string> GetRightSection(int radius, int precision, int[] readOnlyXSource, int[] readOnlyYSource)
+         {
+             var size = precision / 2;
+             int[] xtmp = new int[size];
+             int[] ytmp = new int[size];
+             Array.Copy(readOnlyXSource, xtmp, readOnlyXSource.Length);
+             Array.Copy(readOnlyYSource, ytmp, readOnlyYSource.Length);
+             var returnedSection = new List<string>();
+             for (int i = 1; i <= radius; i++)
+             {
+                 GoRight(xtmp);
+                 returnedSection.Add(ConvertBackToString(precision, xtmp, ytmp));
+             }
+             return returnedSection;
+         }
+         static List<string> GetBottomSection(int radius, int precision, int[] readOnlyXSource, int[] readOnlyYSource)
+         {
+             var size = precision / 2;
+             int[] xtmp = new int[size];
+             int[] ytmp = new int[size];
+             Array.Copy(readOnlyXSource, xtmp, readOnlyXSource.Length);
+             Array.Copy(readOnlyYSource, ytmp, readOnlyYSource.Length);
+             var returnedSection = new List<string>();
+             for (int i = 1; i <= radius; i++)
+             {
+                 GoDown(ytmp);
+                 returnedSection.Add(ConvertBackToString(precision, xtmp, ytmp));
+             }
+             return returnedSection;
+         }
+         static List<string> GetBottomLeftSection(int radius, int precision, int[] readOnlyXSource, int[] readOnlyYSource)
+         {
+             var size = precision / 2;
+             int[] xtmp = new int[size];
+             int[] ytmp = new int[size];
+             Array.Copy(readOnlyXSource, xtmp, readOnlyXSource.Length);
+             Array.Copy(readOnlyYSource, ytmp, readOnlyYSource.Length);
+             var returnedSection = new List<string>();
 
-                    GoLeft(xtmp);
+             for (int k = 1; k <= radius; k++)
+             {
+                 GoDown(ytmp);
+                 for (int l = 1; l <= radius; l++)
+                 {
 
-                    returnedSection.Add(ConvertBackToString(precision, xtmp, ytmp));
-                }
-                Array.Copy(readOnlyXSource, xtmp, readOnlyXSource.Length);
-            }
-            return returnedSection;
-        }
-        static List<string> GetBottomRightSection(int radius, int precision, int[] readOnlyXSource, int[] readOnlyYSource)
-        {
-            var size = precision / 2;
-            int[] xtmp = new int[size];
-            int[] ytmp = new int[size];
-            Array.Copy(readOnlyXSource, xtmp, readOnlyXSource.Length);
-            Array.Copy(readOnlyYSource, ytmp, readOnlyYSource.Length);
-            var returnedSection = new List<string>();
-            //set bottom right
-            for (int k = 1; k <= radius; k++)
-            {
-                GoDown(ytmp);
-                for (int l = 1; l <= radius; l++)
-                {
-                    GoRight(xtmp);
-                    returnedSection.Add(ConvertBackToString(precision, xtmp, ytmp));
-                }
-                Array.Copy(readOnlyXSource, xtmp, readOnlyXSource.Length);
-            }
-            return returnedSection;
-        } */
+                     GoLeft(xtmp);
+
+                     returnedSection.Add(ConvertBackToString(precision, xtmp, ytmp));
+                 }
+                 Array.Copy(readOnlyXSource, xtmp, readOnlyXSource.Length);
+             }
+             return returnedSection;
+         }
+         static List<string> GetBottomRightSection(int radius, int precision, int[] readOnlyXSource, int[] readOnlyYSource)
+         {
+             var size = precision / 2;
+             int[] xtmp = new int[size];
+             int[] ytmp = new int[size];
+             Array.Copy(readOnlyXSource, xtmp, readOnlyXSource.Length);
+             Array.Copy(readOnlyYSource, ytmp, readOnlyYSource.Length);
+             var returnedSection = new List<string>();
+             //set bottom right
+             for (int k = 1; k <= radius; k++)
+             {
+                 GoDown(ytmp);
+                 for (int l = 1; l <= radius; l++)
+                 {
+                     GoRight(xtmp);
+                     returnedSection.Add(ConvertBackToString(precision, xtmp, ytmp));
+                 }
+                 Array.Copy(readOnlyXSource, xtmp, readOnlyXSource.Length);
+             }
+             return returnedSection;
+         } */
 
 
 
@@ -382,22 +381,58 @@ namespace DataModel.Common
         /// <param name="codeToInt">Dictionary to convert PlusCode signs into ints.</param>
         /// <param name="radius">radius of desired section.</param>
         /// <param name="precision">precision of given PlusCode.</param>
-        /// <param name="xArray">Array holding each PlusCode part of x (left/right).</param>
-        /// <param name="yArray">Array holding each PlusCode part of Y (north/south).</param>
+        /// <param name="yArray">Array holding each PlusCode part of x (left/right).</param>
+        /// <param name="xArray">Array holding each PlusCode part of Y (north/south).</param>
         /// <param name="xSaveArray">Array with original "Tile" X PlusCode parts.</param>
         /// <param name="ySaveArray">Array with original "Tile" Y PlusCode parts.</param>
+        static void DetermineLocationCodesSorted(List<string> plusCodes, int radius, int precision, int[] yArray, int[] xArray)
+        {
+            StringBuilder sb = new StringBuilder();
+          
+            //get to top left corner
+            for (int k = 1; k <= radius; k++)
+            {
+               
+                GoLeft(xArray);
+            
+                GoUp(yArray);
+      
+            }
+            //copy area by value (not by reference!)
+            int[] saveX = xArray.ToArray();
+            //go from top left to bottom right
+            for (int i = 1; i <= (radius*2) +1; i++)
+            {
 
-        static void DetermineLocationCodes(string code, List<string> plusCodes, Dictionary<string, int> codeToInt, int radius, int precision, int[] xArray, int[] yArray, int[] xSaveArray, int[] ySaveArray)
+                for(int j = 1; j <= (radius*2) +1; j++)
+                {
+            
+                    plusCodes.Add(ConvertBackToString(precision, yArray, xArray, sb));
+                    GoRight(xArray);
+                
+
+                }
+               
+               //reset x value (first column again)
+                xArray = saveX.ToArray();
+
+                GoDown(yArray);
+
+            }
+        }
+
+
+     /*       static void DetermineLocationCodes(string code, List<string> plusCodes, Dictionary<string, int> codeToInt, int radius, int precision, int[] xArray, int[] yArray, int[] xSaveArray, int[] ySaveArray)
         {
             StringBuilder sb = new StringBuilder();
             //set top left
             for (int k = 1; k <= radius; k++)
             {   
-                GoUp(yArray);
+                GoRight(yArray);
                 for (int l = 1; l <= radius; l++)
                 {
                     
-                    GoLeft(xArray);
+                    GoDown(xArray);
                   
                     plusCodes.Add(ConvertBackToString(precision, xArray, yArray, sb));
                 }
@@ -410,7 +445,7 @@ namespace DataModel.Common
             for (int k = 1; k <= radius; k++)
             {
                 
-                GoUp(yArray);
+                GoRight(yArray);
                 plusCodes.Add(ConvertBackToString(precision, xArray, yArray, sb));
             }
             Array.Copy(ResetX(xSaveArray), xArray, xArray.Length);
@@ -420,12 +455,12 @@ namespace DataModel.Common
             //set top right
             for (int k = 1; k <= radius; k++)
             {
-                GoUp(yArray);
+                GoRight(yArray);
 
                 for (int l = 1; l <= radius; l++)
                 {
                     
-                    GoRight(xArray);
+                    GoUp(xArray);
                     //convert the code back into a location code and add it to the list
                     plusCodes.Add(ConvertBackToString(precision, xArray, yArray, sb));
                 }
@@ -443,7 +478,7 @@ namespace DataModel.Common
             for (int k = 1; k <= radius; k++)
             {
 
-                GoLeft(xArray);
+                GoDown(xArray);
                 plusCodes.Add(ConvertBackToString(precision, xArray, yArray, sb));
 
             }
@@ -461,7 +496,7 @@ namespace DataModel.Common
             for (int k = 1; k <= radius; k++)
             {
 
-                GoRight(xArray);
+                GoUp(xArray);
                 plusCodes.Add(ConvertBackToString(precision, xArray, yArray, sb));
 
             }
@@ -473,11 +508,11 @@ namespace DataModel.Common
             //set bottom left
             for (int k = 1; k <= radius; k++)
             {
-                GoDown(yArray);
+                GoLeft(yArray);
                 for (int l = 1; l <= radius; l++)
                 {
                     
-                    GoLeft(xArray);
+                    GoDown(xArray);
 
                     plusCodes.Add(ConvertBackToString(precision, xArray, yArray, sb));
                 }
@@ -491,7 +526,7 @@ namespace DataModel.Common
             //set bottom
             for (int k = 1; k <= radius; k++)
             {
-                GoDown(yArray);
+                GoLeft(yArray);
                 plusCodes.Add(ConvertBackToString(precision, xArray, yArray, sb));
 
             }
@@ -504,10 +539,10 @@ namespace DataModel.Common
             //set bottom right
             for (int k = 1; k <= radius; k++)
             {
-                GoDown(yArray);
+                GoLeft(yArray);
                 for (int l = 1; l <= radius; l++)
                 {
-                    GoRight(xArray);
+                    GoUp(xArray);
                     plusCodes.Add(ConvertBackToString(precision, xArray, yArray, sb));
                 }
                 Array.Copy(ResetX(xSaveArray), xArray, xArray.Length);
@@ -515,7 +550,7 @@ namespace DataModel.Common
 
 
 
-        }
+        }*/
 
 
         /// <summary>
@@ -613,9 +648,9 @@ namespace DataModel.Common
         
 
         /// <summary>
-        /// Function which determines the right PlusCode
+        /// Function which determines the upper PlusCode
         /// </summary>
-        static void GoRight(int[] xArray)
+        static void GoUp(int[] xArray)
         {
 
 
@@ -634,9 +669,9 @@ namespace DataModel.Common
 
 
         /// <summary>
-        /// Function which determines the left PlusCode
+        /// Function which determines the lower PlusCode
         /// </summary>
-        static void GoLeft(int[] xArray)
+        static void GoDown(int[] xArray)
         {
             for (int i = xArray.Length - 1; i > 0; i--)
             {
@@ -650,10 +685,10 @@ namespace DataModel.Common
         }
 
         /// <summary>
-        /// Function which determines the upper PlusCode
+        /// Function which determines the right PlusCode
         /// </summary>
 
-        static void GoUp(int[] yArray)
+        static void GoRight(int[] yArray)
         {
 
             for (int i = yArray.Length - 1; i > 0; i--)
@@ -669,9 +704,9 @@ namespace DataModel.Common
 
 
         /// <summary>
-        /// Function which determines the lower PlusCode
+        /// Function which determines the left PlusCode
         /// </summary>
-        static void GoDown(int[] yArray)
+        static void GoLeft(int[] yArray)
         {
             for (int i = yArray.Length - 1; i > 0; i--)
             {

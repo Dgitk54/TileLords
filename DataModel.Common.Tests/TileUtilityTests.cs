@@ -175,7 +175,7 @@ namespace DataModel.Common.Tests
             }
 
 
-        } 
+        }
 
         [Test]
         public void GetTileSectionsReturnsSameStringUnmodified()
@@ -219,19 +219,19 @@ namespace DataModel.Common.Tests
               Debug.WriteLine(newList.Count);
           } */
 
-     //   [Test]
+        //   [Test]
 
-     /*   public void TestRegenerateArea()
-        {
-            List<MiniTile> miniTileList = TileGenerator.GenerateMiniTiles(new PlusCode("9F4MGC94+", 8), miniTileTypeList, worldObjectTypeList);
-            List<MiniTile> miniTileList2 = TileGenerator.GenerateMiniTiles(new PlusCode("9F4MGC94+", 8), miniTileTypeList, worldObjectTypeList);
-            List<MiniTile> newList = TileGenerator.RegenerateArea(new PlusCode("9F4MGC94+X2", 10), miniTileList, miniTileList2, 10);
-            Debug.WriteLine(newList.Count);
-            foreach (MiniTile m in newList)
-            {
-                Debug.WriteLine(m);
-            }
-        } */
+        /*   public void TestRegenerateArea()
+           {
+               List<MiniTile> miniTileList = TileGenerator.GenerateMiniTiles(new PlusCode("9F4MGC94+", 8), miniTileTypeList, worldObjectTypeList);
+               List<MiniTile> miniTileList2 = TileGenerator.GenerateMiniTiles(new PlusCode("9F4MGC94+", 8), miniTileTypeList, worldObjectTypeList);
+               List<MiniTile> newList = TileGenerator.RegenerateArea(new PlusCode("9F4MGC94+X2", 10), miniTileList, miniTileList2, 10);
+               Debug.WriteLine(newList.Count);
+               foreach (MiniTile m in newList)
+               {
+                   Debug.WriteLine(m);
+               }
+           } */
 
         [Test]
 
@@ -319,6 +319,30 @@ namespace DataModel.Common.Tests
             Assert.IsTrue(code.Code.Contains("8FXW92W"));
             Assert.AreEqual("8FXW92W", code.Code.Substring(0, 7));
             Debug.WriteLine(code.Code);
+        }
+
+
+        [Test]
+        public void DetermineLocationCodesTest()
+        {
+            List<string> codes =  LocationCodeTileUtility.GetTileSection("8FX9WWV9+XX", 1 , 10);
+            List<string> realCodes = new List<String>();
+            realCodes.Add("8FX9WWW9+2W");
+            realCodes.Add("8FX9WWW9+2X");
+            realCodes.Add("8FX9WWWC+22");
+            realCodes.Add("8FX9WWV9+XW");
+            realCodes.Add("8FX9WWV9+XX");
+            realCodes.Add("8FX9WWVC+X2");
+            realCodes.Add("8FX9WWV9+WW");
+            realCodes.Add("8FX9WWV9+WX");
+            realCodes.Add("8FX9WWVC+W2");
+            Debug.WriteLine("Count: " + codes.Count);
+
+           for(int i = 0; i < codes.Count; i++)
+            {
+                Debug.WriteLine(codes[i]);
+                Assert.AreEqual(realCodes[i], codes[i]);
+            }
         }
     }
 }

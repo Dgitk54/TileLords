@@ -41,7 +41,7 @@ namespace DataModel.Client
                                                 
                                                
                                            });
-                                           sortedList = LocationCodeTileUtility.SortList(sortedList);
+                                           //sortedList = LocationCodeTileUtility.SortList(sortedList);
                                            var map = new MapAsRenderAbleChanged() { Location = v.loc, Map = sortedList, NullTiles = nullTiles };
                                            eventBus.Publish(map);
                                        });

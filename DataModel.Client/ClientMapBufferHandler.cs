@@ -50,7 +50,7 @@ namespace DataModel.Client
                                         select new HashSet<PlusCode>(e.Neighbors(50));
 
             var smallUnityBuffer = from location in latestClient.DistinctUntilChanged()
-                                          select (new HashSet<PlusCode>(location.Neighbors(10)), location);
+                                          select (location.Neighbors(10) , location);
 
 
             var tileContent = eventBus.GetEventStream<DataSourceEvent>()
@@ -84,7 +84,7 @@ namespace DataModel.Client
 
             return UpdateClientBufferWithBakedInTileContent(concat, latestClient, bufferedContent)
                 .SubscribeOn(TaskPoolScheduler.Default)
-                .WithLatestFrom(smallUnityBuffer, (buffer, renderDistance) => new { buffer, renderDistance })
+                .CombineLatest(smallUnityBuffer, (buffer, renderDistance) => new { buffer, renderDistance })
                 .Select(v => UnityRenderMap(v.renderDistance.Item1, v.buffer, v.renderDistance.location))
                 .Where(v=>v.NullTiles == 0)
                 .DistinctUntilChanged()
@@ -128,12 +128,12 @@ namespace DataModel.Client
             return map;
         }
 
-        public static MapAsRenderAbleChanged UnityRenderMap(HashSet<PlusCode> visibleMap, Dictionary<PlusCode, MiniTile> buffer, PlusCode location)
+        public static MapAsRenderAbleChanged UnityRenderMap(List<PlusCode> visibleMap, Dictionary<PlusCode, MiniTile> buffer, PlusCode location)
         {
             var sortedList = new List<MiniTile>();
             int nullTiles = 0;
 
-            visibleMap.ToList().ForEach(c =>
+            visibleMap.ForEach(c =>
             {
                 var tile = c.GetMiniTile(buffer);
                 if (tile != null)
@@ -146,7 +146,6 @@ namespace DataModel.Client
                     sortedList.Add(new MiniTile(c, MiniTileType.Unknown_Tile, null));
                 }
             });
-            sortedList = LocationCodeTileUtility.SortList(sortedList);
             return new MapAsRenderAbleChanged() { Location = location, Map = sortedList, NullTiles = nullTiles };
 
         }
