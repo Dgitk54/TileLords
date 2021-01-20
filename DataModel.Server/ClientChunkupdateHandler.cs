@@ -34,9 +34,9 @@ namespace DataModel.Server
 
             return createResponse.Subscribe(v => 
             {
-                Console.WriteLine("PUSHING" + DateTime.Now);
-                cEventBus.Publish(v.Item1);
-                cEventBus.Publish(v.servertilecontent);
+               // Console.WriteLine("PUSHING" + DateTime.Now);
+               // cEventBus.Publish(v.Item1);
+               // cEventBus.Publish(v.servertilecontent);
             });
         }
 

@@ -19,8 +19,9 @@ namespace DataModel.Client
         {
 
             //Tiles
-            var onlyValid = eventBus.GetEventStream<DataSourceEvent>()
-                                    .ParseOnlyValidUsingErrorHandler<ServerMapEvent>(ClientFunctions.PrintConsoleErrorHandler);
+            //var onlyValid = eventBus.GetEventStream<DataSourceEvent>()
+            //                        .ParseOnlyValidUsingErrorHandler<ServerMapEvent>(ClientFunctions.PrintConsoleErrorHandler);
+            var onlyValid = eventBus.GetEventStream<ServerMapEvent>();
 
 
             var bigTiles = from e in onlyValid
@@ -36,7 +37,7 @@ namespace DataModel.Client
             //Concats large updates with small updates
             var concat = from e in bigTiles.Merge(smallTiles)
                          .Where(v => v != null)
-                         .Buffer(TimeSpan.FromSeconds(3))
+                         .Buffer(TimeSpan.FromSeconds(1))
                          select e.SelectMany(v => v).GroupBy(v => v.MiniTileId).ToDictionary(v => v.Key, v => v.First());
 
 

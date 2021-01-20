@@ -25,9 +25,14 @@ namespace DataModel.Client
 
         public IDisposable AttachToBus()
         {
-            var latestClient = ClientFunctions.LatestClientLocation(clientBus.GetEventStream<UserGpsEvent>());
-
-            return null;
+            return ClientFunctions.LatestClientAreaChange(clientBus.GetEventStream<UserGpsEvent>())
+                                  .DistinctUntilChanged()
+                                  .Select(v => LocationCodeTileUtility.GetTileSection(v.Code, 1, v.Precision))
+                                  .Select(v => v.ConvertAll(e => new PlusCode(e, 8)))
+                                  .Select(v => v.ConvertAll(e => WorldGenerator.GenerateTile(e)))
+                                  .Select(v => new ServerMapEvent() { Tiles = v})
+                                  .DistinctUntilChanged()
+                                  .Subscribe(v => clientBus.Publish(v));
         }
     }
 }

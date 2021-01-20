@@ -41,6 +41,7 @@ namespace DataModel.Client
         //    disposables.Add(new MapAsRenderableForUnityHandler(eventBus).AttachToBus());
             disposables.Add(new ClientActionSuccessHandler(eventBus).AttachToBus());
             disposables.Add(new ClientActionErrorHandler(eventBus).AttachToBus());
+            disposables.Add(new ClientLocalMapBufferHandler(eventBus).AttachToBus());
         }
 
 

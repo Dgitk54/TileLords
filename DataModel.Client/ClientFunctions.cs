@@ -34,7 +34,10 @@ namespace DataModel.Client
             => events.Subscribe(v => Debug.WriteLine("Event:" + v.ToString()));
 
         public static IObservable<PlusCode> LatestClientLocation(IObservable<UserGpsEvent> observable) => from e in observable
-                                                                                                                   select DataModelFunctions.GetPlusCode(e.GpsData, 10);
+                                                                                                          select DataModelFunctions.GetPlusCode(e.GpsData, 10);
+
+        public static IObservable<PlusCode> LatestClientAreaChange(IObservable<UserGpsEvent> observable) => from e in observable
+                                                                                                            select DataModelFunctions.GetPlusCode(e.GpsData, 8);
 
         public static IObservable<T> ParseOnlyValidUsingErrorHandler<T>(this IObservable<DataSourceEvent> observable, EventHandler<ErrorEventArgs> eventHandler) where T : IEvent
 
