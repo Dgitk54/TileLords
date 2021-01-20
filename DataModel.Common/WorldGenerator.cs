@@ -10,12 +10,13 @@ namespace DataModel.Common
     {
         public static Tile GenerateTile(PlusCode code)
         {
-            var rnd = new Random(code.GetHashCode());
+            var md5Hasher = MD5.Create();
+            var hashed = md5Hasher.ComputeHash(Encoding.UTF8.GetBytes(code.Code));
+            var asInt = BitConverter.ToInt32(hashed, 0); // more collisions!
+            var rnd = new Random(asInt);
             var type = getRandomTileType(rnd);
             
             var biomevalues = WorldWeights.biomes[type];
-            
-            //var biomeValues = WorldWeights.biomes[type];
             var list = MiniTilesForTile(code, biomevalues.Item1, biomevalues.Item2, rnd);
             return new Tile(code, type, list);
         }
