@@ -12,7 +12,7 @@ using System.Reactive.Subjects;
 
 namespace ClientIntegration
 {
-    public class Tests
+    public class HandlerTests
     {
         [SetUp]
         public void Setup()

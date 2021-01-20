@@ -657,7 +657,7 @@ namespace DataModel.Common
 
         }
 
-        public static Tile GenerateTile(PlusCode code, Random r, String fileLocation)
+        public static Tile GenerateTile(PlusCode code, Random r, String biomeConfigLocation)
         {
             TileType type = getRandomTileType(r);
 
@@ -665,31 +665,31 @@ namespace DataModel.Common
             IBiome biome = null;
             if (type == TileType.Grassland)
             {
-                biome = (GrasslandBiome)JsonConvert.DeserializeObject<GrasslandBiome>(File.ReadAllText(fileLocation + "" + type + ".json"));
+                biome = (GrasslandBiome)JsonConvert.DeserializeObject<GrasslandBiome>(File.ReadAllText(biomeConfigLocation + "" + type + ".json"));
             }
             if (type == TileType.Desert)
             {
-                biome = (DesertBiome)JsonConvert.DeserializeObject<DesertBiome>(File.ReadAllText(fileLocation + "" + type + ".json"));
+                biome = (DesertBiome)JsonConvert.DeserializeObject<DesertBiome>(File.ReadAllText(biomeConfigLocation + "" + type + ".json"));
             }
             if (type == TileType.Jungle)
             {
-                biome = (JungleBiome)JsonConvert.DeserializeObject<JungleBiome>(File.ReadAllText(fileLocation + "" + type + ".json"));
+                biome = (JungleBiome)JsonConvert.DeserializeObject<JungleBiome>(File.ReadAllText(biomeConfigLocation + "" + type + ".json"));
             }
             if (type == TileType.Mountains)
             {
-                biome = (MountainsBiome)JsonConvert.DeserializeObject<MountainsBiome>(File.ReadAllText(fileLocation + "" + type + ".json"));
+                biome = (MountainsBiome)JsonConvert.DeserializeObject<MountainsBiome>(File.ReadAllText(biomeConfigLocation + "" + type + ".json"));
             }
             if (type == TileType.Savanna)
             {
-                biome = (SavannaBiome)JsonConvert.DeserializeObject<SavannaBiome>(File.ReadAllText(fileLocation + "" + type + ".json"));
+                biome = (SavannaBiome)JsonConvert.DeserializeObject<SavannaBiome>(File.ReadAllText(biomeConfigLocation + "" + type + ".json"));
             }
             if (type == TileType.Snow)
             {
-                biome = (SnowBiome)JsonConvert.DeserializeObject<SnowBiome>(File.ReadAllText(fileLocation + "" + type + ".json"));
+                biome = (SnowBiome)JsonConvert.DeserializeObject<SnowBiome>(File.ReadAllText(biomeConfigLocation + "" + type + ".json"));
             }
             if (type == TileType.Swamp)
             {
-                biome = (SwampBiome)JsonConvert.DeserializeObject<SwampBiome>(File.ReadAllText(fileLocation + "" + type + ".json"));
+                biome = (SwampBiome)JsonConvert.DeserializeObject<SwampBiome>(File.ReadAllText(biomeConfigLocation + "" + type + ".json"));
             }
             /*if (type == TileType.WaterBody)
             {

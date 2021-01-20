@@ -24,7 +24,13 @@ namespace DataModel.Server
     public static class ServerFunctions
     {
 
-
+        public static string BiomeConfigs
+        {
+            get
+            {
+                return System.IO.Directory.GetParent(Environment.CurrentDirectory).Parent.Parent.Parent.FullName + @"\DataModel.Common\BiomeConfigs\";
+            }
+        }
 
         public static IDisposable DebugEventToConsoleSink<T>(IObservable<T> events) where T : IEvent
             => events.Subscribe(v => Console.WriteLine("Event occured:" + v.ToString()));
@@ -40,7 +46,7 @@ namespace DataModel.Server
              () => Console.WriteLine("StreamSink Write Sequence Completed"));
 
 
-       
+
 
 
         public static IObservable<PlusCode> ExtractPlusCodeLocationStream(IEventBus clientBus, int precision)
@@ -59,8 +65,8 @@ namespace DataModel.Server
         }
 
 
-        
-       
+
+
 
         public static List<PlusCode> NeighborsIn8(PlusCode code)
         {
