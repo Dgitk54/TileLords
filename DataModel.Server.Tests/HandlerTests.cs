@@ -67,7 +67,7 @@ namespace ClientIntegration
             };
 
 
-            var eventBus = new ServerEventBus();
+            var eventBus = new ServerMessageBus();
             var handler = new PlayersOnlineHandler(eventBus);
 
             handler.AttachToBus();
@@ -114,7 +114,7 @@ namespace ClientIntegration
 
             var loggedInForCleanup = new PlayerLoggedInEvent() { Player = player1 };
             var playerOnline = new PlayersOnlineEvent() { PlayersOnline = playerOnlineList.AsReadOnly() };
-            var eventBus = new ServerEventBus();
+            var eventBus = new ServerMessageBus();
 
 
             var movementHandler = new PlayerMovementTileUpdater(eventBus);
@@ -180,7 +180,7 @@ namespace ClientIntegration
 
             var loggedInForCleanup = new PlayerLoggedInEvent() { Player = player1 };
             var playerOnline = new PlayersOnlineEvent() { PlayersOnline = playerOnlineList.AsReadOnly() };
-            var eventBus = new ServerEventBus();
+            var eventBus = new ServerMessageBus();
 
 
             var movementHandler = new PlayerMovementTileUpdater(eventBus);
@@ -301,7 +301,7 @@ namespace ClientIntegration
             //Setup Player
             var p1State = new Subject<bool>();
             var p1Gps = new Subject<PlusCode>();
-            var p1Bus = new ClientEventBus();
+            var p1Bus = new ClientMessageBus();
             var player1 = new ObservablePlayer()
             {
                 Name = "Player1",
@@ -312,7 +312,7 @@ namespace ClientIntegration
 
             //Setup Bus & Handlers
             var cleanUp = new List<IDisposable>();
-            var eventBus = new ServerEventBus();
+            var eventBus = new ServerMessageBus();
 
             var movementHandler = new PlayerMovementTileUpdater(eventBus);
             var tileConentHandler = new PlayerTileContentHandler(eventBus);
@@ -382,7 +382,7 @@ namespace ClientIntegration
 
             var p1State = new Subject<bool>();
             var p1Gps = new Subject<PlusCode>();
-            var p1Bus = new ClientEventBus();
+            var p1Bus = new ClientMessageBus();
             var player1 = new ObservablePlayer()
             {
                 Name = "Player1",
@@ -394,7 +394,7 @@ namespace ClientIntegration
 
             var p2State = new Subject<bool>();
             var p2Gps = new Subject<PlusCode>();
-            var p2Bus = new ClientEventBus();
+            var p2Bus = new ClientMessageBus();
             var player2 = new ObservablePlayer()
             {
                 Name = "Player2",
@@ -405,7 +405,7 @@ namespace ClientIntegration
 
             var p3State = new Subject<bool>();
             var p3Gps = new Subject<PlusCode>();
-            var p3Bus = new ClientEventBus();
+            var p3Bus = new ClientMessageBus();
             var player3 = new ObservablePlayer()
             {
                 Name = "Player3",
@@ -417,7 +417,7 @@ namespace ClientIntegration
 
             //Setup Bus & Handlers
             var cleanUp = new List<IDisposable>();
-            var eventBus = new ServerEventBus();
+            var eventBus = new ServerMessageBus();
 
             var movementHandler = new PlayerMovementTileUpdater(eventBus);
             var tileConentHandler = new PlayerTileContentHandler(eventBus);
@@ -518,7 +518,7 @@ namespace ClientIntegration
 
             var p1State = new Subject<bool>();
             var p1Gps = new Subject<PlusCode>();
-            var p1Bus = new ClientEventBus();
+            var p1Bus = new ClientMessageBus();
             var player1 = new ObservablePlayer()
             {
                 Name = "Player1",
@@ -530,7 +530,7 @@ namespace ClientIntegration
 
             var p2State = new Subject<bool>();
             var p2Gps = new Subject<PlusCode>();
-            var p2Bus = new ClientEventBus();
+            var p2Bus = new ClientMessageBus();
             var player2 = new ObservablePlayer()
             {
                 Name = "Player2",
@@ -541,7 +541,7 @@ namespace ClientIntegration
 
             var p3State = new Subject<bool>();
             var p3Gps = new Subject<PlusCode>();
-            var p3Bus = new ClientEventBus();
+            var p3Bus = new ClientMessageBus();
             var player3 = new ObservablePlayer()
             {
                 Name = "Player3",
@@ -553,7 +553,7 @@ namespace ClientIntegration
 
             //Setup Bus & Handlers
             var cleanUp = new List<IDisposable>();
-            var eventBus = new ServerEventBus();
+            var eventBus = new ServerMessageBus();
 
             var movementHandler = new PlayerMovementTileUpdater(eventBus);
             var tileConentHandler = new PlayerTileContentHandler(eventBus);
@@ -717,7 +717,7 @@ namespace ClientIntegration
             //Setup Players:
             var p1State = new Subject<bool>();
             var p1Gps = new Subject<PlusCode>();
-            var p1Bus = new ClientEventBus();
+            var p1Bus = new ClientMessageBus();
             var player1 = new ObservablePlayer()
             {
                 Name = "Player1",
@@ -729,7 +729,7 @@ namespace ClientIntegration
 
             var p2State = new Subject<bool>();
             var p2Gps = new Subject<PlusCode>();
-            var p2Bus = new ClientEventBus();
+            var p2Bus = new ClientMessageBus();
             var player2 = new ObservablePlayer()
             {
                 Name = "Player2",
@@ -741,7 +741,7 @@ namespace ClientIntegration
 
             var p3State = new Subject<bool>();
             var p3Gps = new Subject<PlusCode>();
-            var p3Bus = new ClientEventBus();
+            var p3Bus = new ClientMessageBus();
             var player3 = new ObservablePlayer()
             {
                 Name = "Player3",
@@ -754,7 +754,7 @@ namespace ClientIntegration
 
             //Setup Bus & Handlers
             var cleanUp = new List<IDisposable>();
-            var eventBus = new ServerEventBus();
+            var eventBus = new ServerMessageBus();
 
             var movementHandler = new PlayerMovementTileUpdater(eventBus);
             var tileConentHandler = new PlayerTileContentHandler(eventBus);

@@ -17,9 +17,9 @@ namespace DataModel.Server
 {
     public class RessourceSpawnHandler
     {
-        readonly IEventBus eventBus;
+        readonly IMessageBus eventBus;
         const int spawnPeriodInSeconds = 5;
-        public RessourceSpawnHandler(IEventBus serverBus)
+        public RessourceSpawnHandler(IMessageBus serverBus)
         {
             
         }

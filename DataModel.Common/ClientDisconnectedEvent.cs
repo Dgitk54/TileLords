@@ -5,7 +5,7 @@ using System.Text;
 
 namespace DataModel.Common
 {
-    public class ClientDisconnectedEvent : IEvent
+    public class ClientDisconnectedEvent : IMessage
     {
         
         public string DebugData { get; }

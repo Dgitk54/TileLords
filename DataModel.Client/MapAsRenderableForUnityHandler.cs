@@ -9,8 +9,8 @@ namespace DataModel.Client
     public class MapAsRenderableForUnityHandler
     {
 
-        readonly IEventBus eventBus;
-        public MapAsRenderableForUnityHandler(IEventBus bus)
+        readonly IMessageBus eventBus;
+        public MapAsRenderableForUnityHandler(IMessageBus bus)
         {
             eventBus = bus;
         }

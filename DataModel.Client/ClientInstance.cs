@@ -23,7 +23,7 @@ namespace DataModel.Client
     public class ClientInstance
     {
 
-        public IEventBus EventBus { get => eventBus; }
+        public IMessageBus EventBus { get => eventBus; }
 
 
         ServerHandler ServerHandler { get; }
@@ -40,12 +40,12 @@ namespace DataModel.Client
 
         readonly CancellationTokenSource cancelTokenSource = new CancellationTokenSource();
         private static readonly AutoResetEvent closingEvent = new AutoResetEvent(false);
-        private readonly IEventBus eventBus;
-        public ClientInstance(IEventBus bus)
+        private readonly IMessageBus eventBus;
+        public ClientInstance(IMessageBus bus)
         {
             ServerHandler = new ServerHandler(bus);
             eventBus = bus;
-            disposables.Add(ClientFunctions.DebugEventToConsoleSink(eventBus.GetEventStream<IEvent>()));
+            disposables.Add(ClientFunctions.DebugEventToConsoleSink(eventBus.GetEventStream<IMessage>()));
         }
 
 

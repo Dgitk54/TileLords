@@ -20,14 +20,14 @@ namespace DataModel.Server
     // Hash and salt from https://stackoverflow.com/questions/2138429/hash-and-salt-passwords-in-c-sharp
     public class ClientAccountRegisterHandler
     {
-        readonly IEventBus eventBus;
+        readonly IMessageBus eventBus;
         
 
         readonly JsonSerializerSettings settings = new JsonSerializerSettings
         {
             TypeNameHandling = TypeNameHandling.All
         };
-        public ClientAccountRegisterHandler(IEventBus clientBus, IEventBus serverBus)
+        public ClientAccountRegisterHandler(IMessageBus clientBus, IMessageBus serverBus)
         {
             eventBus = clientBus;
         }

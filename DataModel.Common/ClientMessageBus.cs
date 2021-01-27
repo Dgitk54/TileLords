@@ -7,17 +7,17 @@ using System.Text;
 
 namespace DataModel.Common
 {
-    public class ClientEventBus: IEventBus
+    public class ClientMessageBus: IMessageBus
     {
 
-        private readonly Subject<IEvent> subject = new Subject<IEvent>();
+        private readonly Subject<IMessage> subject = new Subject<IMessage>();
 
-        public IObservable<T> GetEventStream<T>() where T : IEvent
+        public IObservable<T> GetEventStream<T>() where T : IMessage
         {
             return subject.OfType<T>();
         }
 
-        public void Publish<T>(T @event) where T : IEvent
+        public void Publish<T>(T @event) where T : IMessage
         {
             subject.OnNext(@event);
         }

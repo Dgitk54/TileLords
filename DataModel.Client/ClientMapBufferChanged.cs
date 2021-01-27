@@ -5,7 +5,7 @@ using System.Text;
 
 namespace DataModel.Client
 {
-    public class ClientMapBufferChanged : IEvent
+    public class ClientMapBufferChanged : IMessage
     {
         public Dictionary<PlusCode,MiniTile> TilesToRenderForUnity { get; set; }
         public ClientMapBufferChanged(Dictionary<PlusCode,MiniTile> tiles) => TilesToRenderForUnity = tiles;

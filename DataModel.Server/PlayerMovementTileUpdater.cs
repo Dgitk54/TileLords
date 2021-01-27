@@ -19,9 +19,9 @@ namespace DataModel.Server
     /// </summary>
     public class PlayerMovementTileUpdater
     {
-        readonly IEventBus eventBus;
+        readonly IMessageBus eventBus;
 
-        public PlayerMovementTileUpdater(IEventBus serverBus)
+        public PlayerMovementTileUpdater(IMessageBus serverBus)
         {
             eventBus = serverBus;
         }

@@ -16,8 +16,8 @@ namespace DataModel.Server
 {
     public class PlayerToPlayerHandler
     {
-        readonly IEventBus serverBus;
-        public PlayerToPlayerHandler(IEventBus eventBus)
+        readonly IMessageBus serverBus;
+        public PlayerToPlayerHandler(IMessageBus eventBus)
         {
             serverBus = eventBus;
         }

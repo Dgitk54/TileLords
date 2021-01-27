@@ -12,7 +12,7 @@ namespace DataModel.Server
 
         public int Id { get; set; }
 
-        public IEventBus ClientBus { get; set; }
+        public IMessageBus ClientBus { get; set; }
 
         public IChannel ClientChannel { get; set; }
 

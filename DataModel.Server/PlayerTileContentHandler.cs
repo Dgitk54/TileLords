@@ -17,8 +17,8 @@ namespace DataModel.Server
     public class PlayerTileContentHandler
     {
 
-        readonly IEventBus eventBus;
-        public PlayerTileContentHandler(IEventBus serverBus)
+        readonly IMessageBus eventBus;
+        public PlayerTileContentHandler(IMessageBus serverBus)
         {
             eventBus = serverBus;
         }

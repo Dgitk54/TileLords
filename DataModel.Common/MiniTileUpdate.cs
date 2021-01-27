@@ -4,7 +4,7 @@ using System.Text;
 
 namespace DataModel.Common
 {
-    public class MiniTileUpdate : IEvent
+    public class MiniTileUpdate : IMessage
     {
         public static readonly string type = "MINITILEUPDATE";
         public MiniTile UpdatedTile { get; set; }

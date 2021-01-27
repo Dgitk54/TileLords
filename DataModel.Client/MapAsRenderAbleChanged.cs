@@ -7,7 +7,7 @@ using System.Linq;
 
 namespace DataModel.Client
 {
-    public class MapAsRenderAbleChanged : IEvent
+    public class MapAsRenderAbleChanged : IMessage
     {
         public List<MiniTile> Map { get; set; }
         public PlusCode Location { get; set; }

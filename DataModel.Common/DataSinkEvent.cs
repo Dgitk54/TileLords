@@ -5,7 +5,7 @@ using System.Text;
 
 namespace DataModel.Common
 {
-    public class DataSinkEvent : IEvent
+    public class DataSinkEvent : IMessage
     {
         public string SerializedData { get; }
 

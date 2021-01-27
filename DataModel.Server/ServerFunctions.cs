@@ -32,7 +32,7 @@ namespace DataModel.Server
             }
         }
 
-        public static IDisposable DebugEventToConsoleSink<T>(IObservable<T> events) where T : IEvent
+        public static IDisposable DebugEventToConsoleSink<T>(IObservable<T> events) where T : IMessage
             => events.Subscribe(v => Console.WriteLine("Event occured:" + v.ToString()));
 
         public static IDisposable EventStreamSink<T>(IObservable<T> objStream, IChannelHandlerContext context) where T : DataSinkEvent
@@ -49,7 +49,7 @@ namespace DataModel.Server
 
 
 
-        public static IObservable<PlusCode> ExtractPlusCodeLocationStream(IEventBus clientBus, int precision)
+        public static IObservable<PlusCode> ExtractPlusCodeLocationStream(IMessageBus clientBus, int precision)
         {
             var onlyValid = ParseOnlyValidUsingErrorHandler<UserGpsEvent>(clientBus.GetEventStream<DataSourceEvent>(), PrintConsoleErrorHandler);
 
@@ -74,7 +74,7 @@ namespace DataModel.Server
             return strings.Select(v => new PlusCode(v, code.Precision)).ToList();
         }
 
-        public static IObservable<T> ParseOnlyValidUsingErrorHandler<T>(IObservable<DataSourceEvent> observable, EventHandler<ErrorEventArgs> eventHandler) where T : IEvent
+        public static IObservable<T> ParseOnlyValidUsingErrorHandler<T>(IObservable<DataSourceEvent> observable, EventHandler<ErrorEventArgs> eventHandler) where T : IMessage
 
         {
             var settings = new JsonSerializerSettings

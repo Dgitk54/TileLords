@@ -4,7 +4,7 @@ using System.Text;
 
 namespace DataModel.Common
 {
-    public class ServerMapEvent : IEvent
+    public class ServerMapEvent : IMessage
     {
 
         public int UpdateSize { get; set; }

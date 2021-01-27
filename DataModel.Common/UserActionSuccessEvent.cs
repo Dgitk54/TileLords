@@ -4,7 +4,7 @@ using System.Text;
 
 namespace DataModel.Common
 {
-    public class UserActionSuccessEvent : IEvent
+    public class UserActionSuccessEvent : IMessage
     {
         public int UserAction { get; set; } 
     }

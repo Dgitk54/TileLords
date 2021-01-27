@@ -18,12 +18,12 @@ namespace DataModel.Server
 
     public class PlayerTileContentSender
     {
-        readonly IEventBus clientBus;
+        readonly IMessageBus clientBus;
         readonly JsonSerializerSettings settings = new JsonSerializerSettings
         {
             TypeNameHandling = TypeNameHandling.Auto
         };
-        public PlayerTileContentSender(IEventBus clientBus)
+        public PlayerTileContentSender(IMessageBus clientBus)
         {
             this.clientBus = clientBus;
         }

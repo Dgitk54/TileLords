@@ -12,12 +12,12 @@ namespace DataModel.Client
     /// </summary>
     public class ClientGPSHandler
     {
-        readonly IEventBus eventBus;
+        readonly IMessageBus eventBus;
         readonly JsonSerializerSettings settings = new JsonSerializerSettings
         {
             TypeNameHandling = TypeNameHandling.All
         };
-        public ClientGPSHandler(IEventBus bus)
+        public ClientGPSHandler(IMessageBus bus)
         {
             eventBus = bus;
         }

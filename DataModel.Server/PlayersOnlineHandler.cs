@@ -9,8 +9,8 @@ namespace DataModel.Server
     public class PlayersOnlineHandler
     {
 
-        readonly IEventBus eventBus;
-        public PlayersOnlineHandler(IEventBus serverBus)
+        readonly IMessageBus eventBus;
+        public PlayersOnlineHandler(IMessageBus serverBus)
         {
             eventBus = serverBus;
         }

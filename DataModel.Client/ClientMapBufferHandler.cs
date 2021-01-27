@@ -12,8 +12,8 @@ namespace DataModel.Client
 {
     public class ClientMapBufferHandler
     {
-        readonly IEventBus eventBus;
-        public ClientMapBufferHandler(IEventBus bus) => eventBus = bus;
+        readonly IMessageBus eventBus;
+        public ClientMapBufferHandler(IMessageBus bus) => eventBus = bus;
 
         public IDisposable AttachToBus()
         {

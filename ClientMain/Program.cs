@@ -189,7 +189,7 @@ namespace ClientMain
         }
 
 
-        static async Task<T> GetsEvent<T, T2>(ClientInstance instance, T2 input, int timeOutInSeconds) where T : IEvent where T2 : IEvent
+        static async Task<T> GetsEvent<T, T2>(ClientInstance instance, T2 input, int timeOutInSeconds) where T : IMessage where T2 : IMessage
         {
             var observeOn = Scheduler.CurrentThread;
 
@@ -262,13 +262,13 @@ namespace ClientMain
 
 
 
-        static async Task<(IEventBus, ClientInstance, Task)> StartClient()
+        static async Task<(IMessageBus, ClientInstance, Task)> StartClient()
         {
-            var bus = new ClientEventBus();
+            var bus = new ClientMessageBus();
             var instance = new ClientInstance(bus);
             var observeOn = Scheduler.CurrentThread;
             //.ObserveOn(observeOn)
-            ClientFunctions.DebugEventsToDebugSink(instance.EventBus.GetEventStream<IEvent>());
+            ClientFunctions.DebugEventsToDebugSink(instance.EventBus.GetEventStream<IMessage>());
 
 
             var waitForConnection = Task.Run(() =>

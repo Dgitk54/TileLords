@@ -4,7 +4,7 @@ using System.Text;
 
 namespace DataModel.Common
 {
-    public class UserRegisterEvent : IEvent
+    public class UserRegisterEvent : IMessage
     {
         public string Name { get; set; }
         public string Password { get; set; }

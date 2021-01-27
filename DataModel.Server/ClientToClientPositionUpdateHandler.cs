@@ -10,8 +10,8 @@ namespace DataModel.Server
     public class ClientToClientPositionUpdateHandler
     {
 
-        readonly IEventBus serverBus;
-        public ClientToClientPositionUpdateHandler(IEventBus serverBus)
+        readonly IMessageBus serverBus;
+        public ClientToClientPositionUpdateHandler(IMessageBus serverBus)
         {
             this.serverBus = serverBus;
         }

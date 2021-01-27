@@ -9,10 +9,10 @@ namespace DataModel.Client
     class ClientActionErrorHandler
     {
 
-        readonly IEventBus eventBus;
+        readonly IMessageBus eventBus;
 
 
-        public ClientActionErrorHandler(IEventBus bus)
+        public ClientActionErrorHandler(IMessageBus bus)
         {
             this.eventBus = bus;
 

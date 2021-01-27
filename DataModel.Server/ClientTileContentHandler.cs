@@ -15,8 +15,8 @@ namespace DataModel.Server
         {
             TypeNameHandling = TypeNameHandling.Auto
         };
-        readonly IEventBus eventBus;
-        public ClientTileContentHandler(IEventBus clientBus)
+        readonly IMessageBus eventBus;
+        public ClientTileContentHandler(IMessageBus clientBus)
         {
             eventBus = clientBus;
         }

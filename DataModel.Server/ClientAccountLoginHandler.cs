@@ -12,8 +12,8 @@ namespace DataModel.Server
 {
     public class ClientAccountLoginHandler
     {
-        readonly IEventBus eventBus;
-        readonly IEventBus serverBus;
+        readonly IMessageBus eventBus;
+        readonly IMessageBus serverBus;
         readonly IObservable<bool> isActive;
 
         readonly IChannel channel;
@@ -22,7 +22,7 @@ namespace DataModel.Server
         {
             TypeNameHandling = TypeNameHandling.All
         };
-        public ClientAccountLoginHandler(IEventBus bus, IEventBus serverBus, IChannel channel, IObservable<bool> connectionActive)
+        public ClientAccountLoginHandler(IMessageBus bus, IMessageBus serverBus, IChannel channel, IObservable<bool> connectionActive)
         {
             eventBus = bus;
             this.channel = channel;

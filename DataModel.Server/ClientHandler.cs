@@ -25,17 +25,17 @@ namespace DataModel.Server
         
         readonly List<IDisposable> disposables = new List<IDisposable>();
 
-        readonly IEventBus serverBus; // eventbus for serverwide messages
-        readonly IEventBus clientBus; // eventbus for clientwide messages
+        readonly IMessageBus serverBus; // eventbus for serverwide messages
+        readonly IMessageBus clientBus; // eventbus for clientwide messages
 
         readonly ClientChunkUpdateHandler gpsClientLocationHandler;
         readonly ClientAccountRegisterHandler registerHandler;
         readonly ClientTileContentHandler clientTileContentHandler;
 
-        public ClientHandler(IEventBus serverBus)
+        public ClientHandler(IMessageBus serverBus)
         {
             this.serverBus = serverBus;
-            clientBus = new ClientEventBus();
+            clientBus = new ClientMessageBus();
 
 
             gpsClientLocationHandler = new ClientChunkUpdateHandler(clientBus);

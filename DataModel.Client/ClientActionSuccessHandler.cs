@@ -8,10 +8,10 @@ namespace DataModel.Client
 {
     public class ClientActionSuccessHandler
     {
-        readonly IEventBus eventBus;
+        readonly IMessageBus eventBus;
 
 
-        public ClientActionSuccessHandler(IEventBus bus)
+        public ClientActionSuccessHandler(IMessageBus bus)
         {
             eventBus = bus;
         }

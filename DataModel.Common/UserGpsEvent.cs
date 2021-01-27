@@ -4,7 +4,7 @@ using System.Text;
 
 namespace DataModel.Common
 {
-    public class UserGpsEvent : IEvent
+    public class UserGpsEvent : IMessage
     {
         public GPS GpsData { get; set; }
         public UserGpsEvent(GPS gps) => GpsData = gps;

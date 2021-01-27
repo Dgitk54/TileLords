@@ -27,10 +27,10 @@ namespace DataModel.Client
          e => Debug.WriteLine("Error occured writing" + objStream),
          () => Debug.WriteLine("StreamSink Write Sequence Completed"));
 
-        public static IDisposable DebugEventToConsoleSink<T>(IObservable<T> events) where T : IEvent
+        public static IDisposable DebugEventToConsoleSink<T>(IObservable<T> events) where T : IMessage
             => events.Subscribe(v => Console.WriteLine("Event occured:" + v.ToString()));
 
-        public static IDisposable DebugEventsToDebugSink<T>(IObservable<T> events) where T : IEvent
+        public static IDisposable DebugEventsToDebugSink<T>(IObservable<T> events) where T : IMessage
             => events.Subscribe(v => Debug.WriteLine("Event:" + v.ToString()));
 
         public static IObservable<PlusCode> LatestClientLocation(IObservable<UserGpsEvent> observable) => from e in observable
@@ -39,7 +39,7 @@ namespace DataModel.Client
         public static IObservable<PlusCode> LatestClientAreaChange(IObservable<UserGpsEvent> observable) => from e in observable
                                                                                                             select DataModelFunctions.GetPlusCode(e.GpsData, 8);
 
-        public static IObservable<T> ParseOnlyValidUsingErrorHandler<T>(this IObservable<DataSourceEvent> observable, EventHandler<ErrorEventArgs> eventHandler) where T : IEvent
+        public static IObservable<T> ParseOnlyValidUsingErrorHandler<T>(this IObservable<DataSourceEvent> observable, EventHandler<ErrorEventArgs> eventHandler) where T : IMessage
 
         {
             var settings = new JsonSerializerSettings

@@ -23,13 +23,13 @@ namespace DataModel.Client
 
         static readonly IInternalLogger Logger = InternalLoggerFactory.GetInstance<ServerHandler>();
         readonly List<IDisposable> disposables = new List<IDisposable>();
-        readonly IEventBus eventBus;
+        readonly IMessageBus eventBus;
         
 
 
 
 
-        public ServerHandler(IEventBus bus) => eventBus = bus;
+        public ServerHandler(IMessageBus bus) => eventBus = bus;
 
 
         public override void ChannelActive(IChannelHandlerContext context)

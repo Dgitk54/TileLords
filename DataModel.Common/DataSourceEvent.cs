@@ -5,7 +5,7 @@ using System.Text;
 
 namespace DataModel.Common
 {
-    public class DataSourceEvent : IEvent
+    public class DataSourceEvent : IMessage
     {
         public string Data { get; }
         public DataSourceEvent(string data) => Data = data;

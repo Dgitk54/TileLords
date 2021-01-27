@@ -16,7 +16,7 @@ namespace DataModel.Server
 {
     public class ServerInstance
     {
-        readonly IEventBus bus = new ServerEventBus();
+        readonly IMessageBus bus = new ServerMessageBus();
         
         readonly List<IDisposable> disposables = new List<IDisposable>();
         MultithreadEventLoopGroup bossGroup;//  accepts an incoming connection
@@ -25,7 +25,7 @@ namespace DataModel.Server
         IChannel bootstrapChannel;
         public ServerInstance()
         {
-            ServerFunctions.DebugEventToConsoleSink(bus.GetEventStream<IEvent>());
+            ServerFunctions.DebugEventToConsoleSink(bus.GetEventStream<IMessage>());
 
 
             //disposables.Add(new ClientToClientPositionUpdateHandler(bus).AttachToBus());

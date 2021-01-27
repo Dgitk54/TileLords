@@ -15,12 +15,12 @@ namespace DataModel.Server
     /// </summary>
     public class ClientChunkUpdateHandler
     {
-        readonly IEventBus cEventBus;
+        readonly IMessageBus cEventBus;
         readonly JsonSerializerSettings settings = new JsonSerializerSettings
         {
             TypeNameHandling = TypeNameHandling.None
         };
-        public ClientChunkUpdateHandler(IEventBus clientBus)
+        public ClientChunkUpdateHandler(IMessageBus clientBus)
         {
             cEventBus = clientBus;
         }

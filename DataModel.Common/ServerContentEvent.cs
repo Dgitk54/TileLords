@@ -4,7 +4,7 @@ using System.Text;
 
 namespace DataModel.Common
 {
-    public class ServerContentEvent : IEvent
+    public class ServerContentEvent : IMessage
     {
         public KeyValuePair<PlusCode, ITileContent> Content { get; set; }
     }

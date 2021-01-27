@@ -4,7 +4,7 @@ using System.Text;
 
 namespace DataModel.Common
 {
-    public class ServerTileContentEvent : IEvent
+    public class ServerTileContentEvent : IMessage
     {
            public List<KeyValuePair<PlusCode, List<ITileContent>>> VisibleContent { get; set; }
     }

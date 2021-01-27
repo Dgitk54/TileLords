@@ -5,7 +5,7 @@ using System.Text;
 
 namespace DataModel.Server
 {
-    public class PlayerVisibleEvent : IEvent
+    public class PlayerVisibleEvent : IMessage
     {
         public Player VisiblePlayer {get; set;}
     }

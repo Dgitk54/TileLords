@@ -5,7 +5,7 @@ using System.Text;
 
 namespace DataModel.Server
 {
-    public class PlayerLoggedInEvent : IEvent
+    public class PlayerLoggedInEvent : IMessage
     {
         public ObservablePlayer Player { get; set; }
 

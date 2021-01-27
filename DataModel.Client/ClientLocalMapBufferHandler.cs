@@ -13,10 +13,10 @@ namespace DataModel.Client
     public class ClientLocalMapBufferHandler
     {
 
-        IEventBus clientBus;
+        IMessageBus clientBus;
 
 
-        public ClientLocalMapBufferHandler(IEventBus bus)
+        public ClientLocalMapBufferHandler(IMessageBus bus)
         {
             clientBus = bus;
 

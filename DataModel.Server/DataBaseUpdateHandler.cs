@@ -18,8 +18,8 @@ namespace DataModel.Server
     /// </summary>
     public class DatabaseUpdateHandler
     {
-        readonly IEventBus eventBus;
-        public DatabaseUpdateHandler(IEventBus serverBus)
+        readonly IMessageBus eventBus;
+        public DatabaseUpdateHandler(IMessageBus serverBus)
         {
             eventBus = serverBus;
         }

@@ -6,7 +6,7 @@ using System.Text;
 
 namespace DataModel.Server
 {
-    public class ServerClientConnectedEvent : IEvent
+    public class ServerClientConnectedEvent : IMessage
     {
         public IChannel Channel { get; set; }
     }
