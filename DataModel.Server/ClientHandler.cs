@@ -52,7 +52,8 @@ namespace DataModel.Server
             disposables.Add(gpsClientLocationHandler.AttachToBus());
             disposables.Add(registerHandler.AttachToBus());
             disposables.Add(loginHandler.AttachToBus());
-            disposables.Add(clientTileContentHandler.AttachToBus());
+            //disposables.Add(clientTileContentHandler.AttachToBus());
+            disposables.Add(new PlayerTileContentSender(clientBus).AttachToBus());
             ctx.Channel.CloseCompletion.ContinueWith((x) => Console.WriteLine("Channel Closed"));
         }
 

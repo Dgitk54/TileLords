@@ -4,11 +4,13 @@ using System.Text;
 
 namespace DataModel.Common
 {
-    public class Player : ITileContent
+    public class ObservableTileContent : ITileContent
     {
         public int Id { get; set; }
+
         public string Name { get; set; }
-        
-        public PlusCode Location { get; set; }
+
+        public IObservable<PlusCode> Location { get; set; }
+
     }
 }

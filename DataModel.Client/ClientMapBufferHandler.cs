@@ -22,7 +22,9 @@ namespace DataModel.Client
             //var onlyValid = eventBus.GetEventStream<DataSourceEvent>()
             //                        .ParseOnlyValidUsingErrorHandler<ServerMapEvent>(ClientFunctions.PrintConsoleErrorHandler);
             var onlyValid = eventBus.GetEventStream<ServerMapEvent>();
-
+            var serverContent = eventBus.GetEventStream<DataSourceEvent>()
+                                        .ParseOnlyValidUsingErrorHandler<ServerContentEvent>(ClientFunctions.PrintConsoleErrorHandler)
+                                        .Do(v => Console.WriteLine("RECEIVED" +  v.Content.Key + "    " + v.Content.Value));
 
             var bigTiles = from e in onlyValid
                            where e.Tiles != null

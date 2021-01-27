@@ -25,12 +25,12 @@ namespace DataModel.Client
 
         public IDisposable AttachToBus()
         {
-            return ClientFunctions.LatestClientAreaChange(clientBus.GetEventStream<UserGpsEvent>())
+            return ClientFunctions.LatestClientAreaChange(clientBus.GetEventStream<UserGpsEvent>()) // client gps position
                                   .DistinctUntilChanged()
-                                  .Select(v => LocationCodeTileUtility.GetTileSection(v.Code, 1, v.Precision))
-                                  .Select(v => v.ConvertAll(e => new PlusCode(e, 8)))
-                                  .Select(v => v.ConvertAll(e => WorldGenerator.GenerateTile(e)))
-                                  .Select(v => new ServerMapEvent() { Tiles = v})
+                                  .Select(v => LocationCodeTileUtility.GetTileSection(v.Code, 1, v.Precision)) //List of local area strings
+                                  .Select(v => v.ConvertAll(e => new PlusCode(e, 8))) //transform into pluscodes
+                                  .Select(v => v.ConvertAll(e => WorldGenerator.GenerateTile(e))) //transform each pluscode into world tile
+                                  .Select(v => new ServerMapEvent() { Tiles = v}) // transform into new map
                                   .DistinctUntilChanged()
                                   .Subscribe(v => clientBus.Publish(v));
         }
