@@ -45,8 +45,8 @@ namespace DataModel.Server.Tests
             gateway.GatewayResponse.Subscribe(v => responses.Add(v));
             Subject<IMsgPackMsg> testInput = new Subject<IMsgPackMsg>();
             gateway.AttachGateway(testInput);
-            IMsgPackMsg registerRequest = new RegisterMessage() { Name = "test1", Password = "test1" };
-            IMsgPackMsg loginRequest = new LoginMessage() { Name = "test1", Password = "test1" };
+            IMsgPackMsg registerRequest = new AccountMessage() { Name = "test1", Password = "test1", Context = MessageContext.REGISTER };
+            IMsgPackMsg loginRequest = new AccountMessage() { Name = "test1", Password = "test1", Context = MessageContext.REGISTER };
 
             //One register request:
             testInput.OnNext(registerRequest);

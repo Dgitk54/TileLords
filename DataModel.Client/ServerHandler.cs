@@ -40,15 +40,13 @@ namespace DataModel.Client
 
         public override void ChannelActive(IChannelHandlerContext context)
         {
-            outBoundManager = instance.OutboundTraffic.Subscribe(v =>
+            var lz4Options = MessagePackSerializerOptions.Standard.WithCompression(MessagePackCompression.Lz4BlockArray);
+            outBoundManager = instance.OutboundTraffic.Select(v=> v.ToJsonPayload()).Subscribe(v =>
             {
-                var lz4Options = MessagePackSerializerOptions.Standard.WithCompression(MessagePackCompression.Lz4BlockArray);
-                var data = MessagePackSerializer.Serialize(v, lz4Options);
-                Console.WriteLine("PUSHING: DATA" + data.GetLength(0));
-                context.WriteAndFlushAsync(Unpooled.WrappedBuffer(data));
+                Console.WriteLine("PUSHING: DATA" + v.GetLength(0));
+                context.WriteAndFlushAsync(Unpooled.WrappedBuffer(v));
             });
             connectionState.OnNext(true);
-
         }
 
         public override void ChannelRead(IChannelHandlerContext context, object message)
@@ -56,21 +54,9 @@ namespace DataModel.Client
             var byteBuffer = message as IByteBuffer;
             if (byteBuffer != null)
             {
-                var lz4Options = MessagePackSerializerOptions.Standard.WithCompression(MessagePackCompression.Lz4BlockArray);
-                IMsgPackMsg data = null;
-                try
-                {
-                    data = MessagePackSerializer.Deserialize<IMsgPackMsg>(byteBuffer.Array, lz4Options);
-
-                }
-                catch (MessagePackSerializationException e)
-                {
-                    Console.WriteLine("Error Deserializing" + e.ToString());
-                }
-                if (data != null)
-                {
-                    inboundTraffic.OnNext(data);
-                }
+                Console.WriteLine("Received" + byteBuffer.ToString(Encoding.UTF8));
+                var msgpack = byteBuffer.ToString(Encoding.UTF8).FromString();
+                inboundTraffic.OnNext(msgpack);
             }
         }
 

@@ -7,11 +7,37 @@ using System.Reactive.PlatformServices;
 using System.Linq;
 using System.Reactive.Subjects;
 using System.Collections.Generic;
+using DataModel.Common.Messages;
+using Newtonsoft.Json;
+using System.Text;
 
 namespace DataModel.Common
 {
     public static class DataModelFunctions
     {
+
+
+        public static byte[] ToJsonPayload(this IMsgPackMsg msg)
+        {
+            return Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(msg, new JsonSerializerSettings()
+            {
+                TypeNameHandling = TypeNameHandling.All
+            }));
+        }
+        public static IMsgPackMsg FromJsonPayload(this byte[] payload)
+        {
+            return JsonConvert.DeserializeObject<IMsgPackMsg>(Encoding.UTF8.GetString(payload));
+        }
+        public static IMsgPackMsg FromString(this string payload)
+        {
+            return JsonConvert.DeserializeObject<IMsgPackMsg>(payload, new JsonSerializerSettings()
+            {
+                TypeNameHandling = TypeNameHandling.All
+            });
+            
+        }
+        
+
 
         public static IObservable<PlusCode> GetPlusCode(this IObservable<GPS> gps, IObservable<int> precision)
             => from i in gps
@@ -53,7 +79,7 @@ namespace DataModel.Common
         public static GPS AddOFfset(this GPS gps, double latOffset, double lonOffset)
             => new GPS(gps.Lat + latOffset, gps.Lon + lonOffset);
 
-
+        
 
         public static List<GPS> GPSNodesWithOffsets(GPS startPos, double latNodeOffset, double lonNodeOffset, int nodeAmount)
         {

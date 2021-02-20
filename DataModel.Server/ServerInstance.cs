@@ -39,7 +39,7 @@ namespace DataModel.Server
 
 
             bossGroup = new MultithreadEventLoopGroup(1); //  accepts an incoming connection
-            workerGroup = new MultithreadEventLoopGroup(10); // handles the traffic of the accepted connection once the boss accepts the connection and registers the accepted connection to the worker
+            workerGroup = new MultithreadEventLoopGroup(1); // handles the traffic of the accepted connection once the boss accepts the connection and registers the accepted connection to the worker
 
          //   X509Certificate2 tlsCertificate = new X509Certificate2("tilelordss.com.pfx", "mach_irgendwas_random_und_schreibs_auf_XD");
 
@@ -53,7 +53,10 @@ namespace DataModel.Server
                     .ChildHandler(new ActionChannelInitializer<ISocketChannel>(channel =>
                     {
                         IChannelPipeline pipeline = channel.Pipeline;
-                      //  pipeline.AddLast(TlsHandler.Server(tlsCertificate));
+                        //  pipeline.AddLast(TlsHandler.Server(tlsCertificate));
+                        pipeline.AddLast("framing-enc", new LengthFieldPrepender(2));
+                        pipeline.AddLast("framing-dec", new LengthFieldBasedFrameDecoder(short.MaxValue, 0, 2, 0, 2));
+                        //pipeline.AddLast(new DotNettyByteToMessageDecoder());
                         pipeline.AddLast(new ClientHandler());
                     }));
 

@@ -24,7 +24,7 @@ namespace DataModel.Server
         static readonly IInternalLogger Logger = InternalLoggerFactory.GetInstance<ClientHandler>();
 
         readonly Subject<IMsgPackMsg> clientInboundTraffic = new Subject<IMsgPackMsg>();
-
+        readonly ISubject<IMsgPackMsg> synchronizedInboundTraffic;
         readonly UserAccountService userAccountService;
         readonly MapContentService mapContentService;
         readonly APIGatewayService apiGatewayService;
@@ -34,36 +34,30 @@ namespace DataModel.Server
             userAccountService = new UserAccountService(DataBaseFunctions.FindUserInDatabase, ServerFunctions.PasswordMatches);
             mapContentService = new MapContentService(DataBaseFunctions.AreaContentRequest, DataBaseFunctions.UpdateOrDeleteContent);
             apiGatewayService = new APIGatewayService(userAccountService, mapContentService);
+            synchronizedInboundTraffic = Subject.Synchronize(clientInboundTraffic);
         }
 
         public override void ChannelActive(IChannelHandlerContext ctx)
         {
             Console.WriteLine("Client connected");
-            apiGatewayService.AttachGateway(clientInboundTraffic);
-            responseDisposable = ServerFunctions.EventStreamSink(apiGatewayService.GatewayResponse, ctx);
+            apiGatewayService.AttachGateway(synchronizedInboundTraffic);
+
+            responseDisposable = apiGatewayService.GatewayResponse.Select(v => v.ToJsonPayload()).Subscribe(v =>
+            {
+                Console.WriteLine("PUSHING: DATA" + v.GetLength(0));
+                ctx.WriteAndFlushAsync(Unpooled.WrappedBuffer(v));
+            });
         }
 
         public override void ChannelRead(IChannelHandlerContext context, object message)
         {
+            ;
             var byteBuffer = message as IByteBuffer;
             if (byteBuffer != null)
             {
-                Console.WriteLine("Received bytes!");
-                var lz4Options = MessagePackSerializerOptions.Standard.WithCompression(MessagePackCompression.Lz4BlockArray);
-                IMsgPackMsg data = null;
-                try
-                {
-                    data = MessagePackSerializer.Deserialize<IMsgPackMsg>(byteBuffer.Array, lz4Options);
-
-                }
-                catch (MessagePackSerializationException e)
-                {
-                    Console.WriteLine("Error Deserializing" + e.ToString());
-                }
-                if (data != null)
-                {
-                    clientInboundTraffic.OnNext(data);
-                }
+                Console.WriteLine("Received" + byteBuffer.ToString(Encoding.UTF8));
+                var msgpack = byteBuffer.ToString(Encoding.UTF8).FromString();
+                synchronizedInboundTraffic.OnNext(msgpack);
             }
         }
 

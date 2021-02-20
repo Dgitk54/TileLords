@@ -92,7 +92,6 @@ namespace DataModel.Server
 
                     var nearbyCodes = LocationCodeTileUtility.GetTileSection(location, ServerFunctions.CLIENTVISIBILITY, ServerFunctions.CLIENTLOCATIONPRECISION);
 
-                    
                     var enumerable = col.Find(v => nearbyCodes.Any(v2 => v2.Equals(v.Location)));
 
                     var list = enumerable.ToList().ConvertAll(v => v.AsMessage());
@@ -178,9 +177,6 @@ namespace DataModel.Server
                 }
 
             }
-
-
-
         }
 
         public static bool NameTaken(string name, ILiteCollection<User> col)

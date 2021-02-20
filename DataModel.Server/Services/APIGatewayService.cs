@@ -7,6 +7,7 @@ using System.Text;
 using System.Reactive.Linq;
 using DataModel.Common;
 using System.Diagnostics;
+using MessagePack;
 
 namespace DataModel.Server.Services
 {
@@ -56,7 +57,7 @@ namespace DataModel.Server.Services
         public void AttachGateway(IObservable<IMsgPackMsg> inboundtraffic)
         {
             disposables.Add(HandleRegister(inboundtraffic));
-
+        
             LoggedInUser(inboundtraffic).Take(1).Subscribe(v =>
             {
                 var mapServiceUpdate = mapService.AddMapContent(v.AsMapContent(), LatestClientLocation(inboundtraffic));
@@ -73,7 +74,8 @@ namespace DataModel.Server.Services
 
         IObservable<IUser> LoggedInUser(IObservable<IMsgPackMsg> inboundtraffic)
         {
-            return inboundtraffic.OfType<LoginMessage>()
+            return inboundtraffic.OfType<AccountMessage>()
+                          .Where(v=> v.Context == MessageContext.LOGIN)
                           .SelectMany(v => userService.LoginUser(v.Name, v.Password))
                           .Catch<IUser, Exception>(tx =>
                           {
@@ -89,7 +91,8 @@ namespace DataModel.Server.Services
 
         IDisposable HandleRegister(IObservable<IMsgPackMsg> inboundtraffic)
         {
-            return inboundtraffic.OfType<RegisterMessage>()
+            return inboundtraffic.OfType<AccountMessage>()
+                                .Where(v=> v.Context == MessageContext.REGISTER)
                                 .Select(v => userService.RegisterUser(v.Name, v.Password))
                                 .Switch()
                                 .Catch<bool, Exception>(tx =>

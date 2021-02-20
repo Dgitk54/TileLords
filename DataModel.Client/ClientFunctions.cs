@@ -12,6 +12,7 @@ using MessagePack;
 using DataModel.Common.Messages;
 using System.Threading.Tasks;
 using System.Threading;
+using System.Reactive.Concurrency;
 
 namespace DataModel.Client
 {
@@ -56,5 +57,52 @@ namespace DataModel.Client
 
             } while (!ct.IsCancellationRequested);
         }
+
+
+        public static async Task<Tout> GetsEvent<Tout, Tin>(ClientInstance instance, Tin input, int timeOutInSeconds) where Tout : IMsgPackMsg where Tin : IMsgPackMsg
+        {
+            var observeOn = Scheduler.CurrentThread;
+            var received = Task.Run(() =>
+            {
+                var result = instance.InboundTraffic.OfType<Tout>().Take(1).Timeout(DateTime.Now.AddSeconds(timeOutInSeconds)).ObserveOn(observeOn).Wait();
+                return result;
+            });
+            Thread.Sleep(200);
+            var publish = Task.Run(() => instance.SendMessage(input));
+            await received;
+            await publish;
+            return received.Result;
+        }
+
+        public static void LoginOrRegister(ClientInstance instance, string name, string password)
+        {
+            var tryLogin = GetsEvent<UserActionMessage, AccountMessage>(instance, new AccountMessage() { Name = name, Password = password, Context = MessageContext.LOGIN }, 5);
+            tryLogin.Wait();
+            var loginResponse = tryLogin.Result;
+            tryLogin.Dispose();
+            if (loginResponse.MessageContext == MessageContext.LOGIN && loginResponse.MessageState == MessageState.ERROR)
+            {
+                //Login Failed, try register with name password
+                var tryRegister = GetsEvent<UserActionMessage, AccountMessage>(instance, new AccountMessage() { Name = name, Password = password, Context = MessageContext.REGISTER }, 5);
+                tryRegister.Wait();
+                var registerResponse = tryRegister.Result;
+                tryRegister.Dispose();
+                if (!(registerResponse.MessageState == MessageState.SUCCESS && registerResponse.MessageContext == MessageContext.REGISTER))
+                {
+                    throw new Exception("Error logging in and registering");
+                }
+                //Log in after register:
+                tryLogin = GetsEvent<UserActionMessage, AccountMessage>(instance, new AccountMessage() { Name = name, Password = password, Context = MessageContext.LOGIN }, 5);
+                tryLogin.Wait();
+                loginResponse = tryLogin.Result;
+                tryLogin.Dispose();
+                if (!(registerResponse.MessageState == MessageState.SUCCESS && registerResponse.MessageContext == MessageContext.LOGIN))
+                {
+                    throw new Exception("Error logging in after registering");
+                }
+            }
+
+        }
+
     }
 }

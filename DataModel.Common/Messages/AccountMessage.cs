@@ -6,12 +6,13 @@ using System.Text;
 namespace DataModel.Common.Messages
 {
     [MessagePackObject]
-    public class RegisterMessage : IMsgPackMsg
+    public class AccountMessage : IMsgPackMsg
     {
         [Key(0)]
-        public string Name { get; set; }
-
+        public MessageContext Context { get; set; }
         [Key(1)]
+        public string Name { get; set; }
+        [Key(2)]
         public string Password { get; set; }
     }
 }

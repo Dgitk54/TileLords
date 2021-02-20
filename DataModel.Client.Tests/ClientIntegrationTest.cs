@@ -52,9 +52,14 @@ namespace ClientIntegration
             instance.ClientConnectionState.Subscribe(v => connectionState.Add(v));
             var startedClientTask = ClientFunctions.StartClient(instance);
 
-            instance.SendMessage(new RegisterMessage() { Name = "a", Password = "a" });
-            Thread.Sleep(500);
-            instance.SendMessage(new LoginMessage() { Name = "a", Password = "a" });
+            var regMsg = new AccountMessage() { Name = "a", Password = "a", Context = MessageContext.REGISTER };
+            var logMsg = new AccountMessage() { Name = "a", Password = "a", Context = MessageContext.LOGIN };
+            var ctMsg = new ContentMessage() { Id = new byte[] { 5, 12, 3 }, Location = "dbg", Name = "dbgname", ResourceType = DataModel.Common.Messages.ResourceType.APPLE, Type = ContentType.RESSOURCE };
+            instance.SendMessage(regMsg);
+            Thread.Sleep(1500);
+            instance.SendMessage(logMsg);
+            Thread.Sleep(1000);
+            instance.SendMessage(ctMsg);
             Thread.Sleep(1000);
             ;
         }

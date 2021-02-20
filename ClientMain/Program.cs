@@ -50,57 +50,17 @@ namespace ClientMain
             }
         }
         
-        static async Task<Tout> GetsEvent<Tout, Tin>(ClientInstance instance, Tin input, int timeOutInSeconds) where Tout : IMsgPackMsg where Tin : IMsgPackMsg
-        {
-            var observeOn = Scheduler.CurrentThread;
-            var received = Task.Run(() =>
-            {
-                var result = instance.InboundTraffic.OfType<Tout>().Take(1).Timeout(DateTime.Now.AddSeconds(timeOutInSeconds)).ObserveOn(observeOn).Wait();
-                return result;
-            });
-            Thread.Sleep(200);
-            var publish = Task.Run(() => instance.SendMessage(input));
-            await received;
-            await publish;
-            return received.Result;
-        }
+        
 
         static void DebugLoginAndRunAroundClient(string name, string password, List<GPS> path, CancellationToken cancellationToken)
         {
             var instance = new ClientInstance();
             var result = ClientFunctions.StartClient(instance);
-            //result.Wait();
-            ;
             var tokenSrc = new CancellationTokenSource();
-            instance.SendLoginRequest("test1", "test2");
+
             //Try to log in, create account if cant log in:
-            var tryLogin = GetsEvent<UserActionMessage, LoginMessage>(instance, new LoginMessage() { Name = name, Password = password }, 5);
-            tryLogin.Wait();
-            var loginResponse = tryLogin.Result;
-            tryLogin.Dispose();
-            if (loginResponse.MessageContext == MessageContext.LOGIN && loginResponse.MessageState == MessageState.ERROR)
-            {
-                //Login Failed, try register with name password
-                var tryRegister = GetsEvent<UserActionMessage, RegisterMessage>(instance, new RegisterMessage() { Name = name, Password = password }, 5);
-                tryRegister.Wait();
-                var registerResponse = tryRegister.Result;
-                tryRegister.Dispose();
-                if (!(registerResponse.MessageState == MessageState.SUCCESS && registerResponse.MessageContext == MessageContext.REGISTER))
-                {
-                    throw new Exception("Error logging in and registering");
-                }
-                //Log in after register:
-                tryLogin = GetsEvent<UserActionMessage, LoginMessage>(instance, new LoginMessage() { Name = name, Password = password }, 5);
-                tryLogin.Wait();
-                loginResponse = tryLogin.Result;
-                tryLogin.Dispose();
-                if (!(registerResponse.MessageState == MessageState.SUCCESS && registerResponse.MessageContext == MessageContext.LOGIN))
-                {
-                    throw new Exception("Error logging in after registering");
-                }
-            }
+            ClientFunctions.LoginOrRegister(instance, name, password);
             ;
-            Thread.Sleep(3000);
             var sendPath = Task.Run(() => ClientFunctions.SendGpsPath(instance, tokenSrc.Token, path, 4000));
             do
             {
