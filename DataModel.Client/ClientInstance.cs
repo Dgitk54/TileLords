@@ -10,6 +10,7 @@ using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Net;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
@@ -31,7 +32,7 @@ namespace DataModel.Client
         readonly MultithreadEventLoopGroup group = new MultithreadEventLoopGroup();
         readonly List<IDisposable> disposables = new List<IDisposable>();
 
-        readonly Subject<ServerMapEvent> mapSubject = new Subject<ServerMapEvent>();
+        readonly Subject<UnityMapMessage> mapSubject = new Subject<UnityMapMessage>();
         readonly Subject<IMsgPackMsg> outboundTraffic = new Subject<IMsgPackMsg>();
 
         static readonly AutoResetEvent closingEvent = new AutoResetEvent(false);
@@ -39,11 +40,12 @@ namespace DataModel.Client
         public ClientInstance()
         {
             serverHandler = new ServerHandler(this);
-            var localMapUpdate = GetMapStream(outboundTraffic.OfType<UserGpsMessage>()).Subscribe(v=>mapSubject.OnNext(v));
-            disposables.Add(localMapUpdate);
+            var localMapUpdate = GetBigMapStream(outboundTraffic.OfType<UserGpsMessage>());
+
+            disposables.Add(GetSmallUnityMap(outboundTraffic.OfType<UserGpsMessage>(), localMapUpdate).Subscribe(v => mapSubject.OnNext(v)));
         }
 
-        public IObservable<ServerMapEvent> ClientMapStream => mapSubject.AsObservable();
+        public IObservable<UnityMapMessage> ClientMapStream => mapSubject.AsObservable();
 
         public IObservable<IMsgPackMsg> OutboundTraffic => outboundTraffic.AsObservable();
 
@@ -120,10 +122,27 @@ namespace DataModel.Client
                 //Task.WaitAll(group.ShutdownGracefullyAsync());
             }
         }
-        IObservable<ServerMapEvent> GetMapStream(IObservable<UserGpsMessage> messageStream)
+
+        IObservable<UnityMapMessage> GetSmallUnityMap(IObservable<UserGpsMessage> gpsStream, IObservable<ServerMapEvent> bigMapStream)
+        {
+            return gpsStream.Select(v => new GPS(v.Lat, v.Lon))
+                            .Select(v => v.GetPlusCode(10))
+                            .DistinctUntilChanged()
+                            .Select(v => (v, LocationCodeTileUtility.GetTileSection(v.Code, 10, 10)))
+                            .WithLatestFrom(bigMapStream.Select(v => v.Tiles), (loc, map) => new { loc, map })
+                            .Select(v =>
+                            {
+                                return (v.loc.v, v.map.ToList().SelectMany(v2 => v2.MiniTiles).Where(v2 => v.loc.Item2.Contains(v2.MiniTileId.Code)).ToList());
+                            })
+                            .Select(v => (v.v, LocationCodeTileUtility.SortList(v.Item2)))
+                            .Select(v => new UnityMapMessage() { ClientLocation = v.v, VisibleMap = v.Item2 });
+        }
+
+
+        IObservable<ServerMapEvent> GetBigMapStream(IObservable<UserGpsMessage> messageStream)
         {
             return messageStream.Select(v => new GPS(v.Lat, v.Lon))
-                                .Select(v => v.GetPlusCode(10))
+                                .Select(v => v.GetPlusCode(8))
                                 .DistinctUntilChanged()
                                 .Select(v => LocationCodeTileUtility.GetTileSection(v.Code, 1, v.Precision)) //List of local area strings
                                 .Select(v => v.ConvertAll(e => new PlusCode(e, 8))) //transform into pluscodes
