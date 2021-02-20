@@ -34,7 +34,6 @@ namespace DataModel.Server
             };
         }
 
-
         /// <summary>
         /// Updates or deletes the content in the database if no location is provided
         /// </summary>
@@ -115,9 +114,6 @@ namespace DataModel.Server
                 }
                
             }
-
-
-
         }
 
         public static bool CreateAccount(string name, string password)

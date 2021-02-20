@@ -47,27 +47,17 @@ namespace ClientIntegration
             var inbound = new List<IMsgPackMsg>();
             var outbound = new List<IMsgPackMsg>();
             var connectionState = new List<bool>();
-           // instance.OutboundTraffic.Subscribe(v => outbound.Add(v));
-           // instance.InboundTraffic.Subscribe(v => inbound.Add(v));
-           // instance.ClientConnectionState.Subscribe(v => connectionState.Add(v));
-            var startedClientTask = StartClient(instance);
+            instance.OutboundTraffic.Subscribe(v => outbound.Add(v));
+            instance.InboundTraffic.Subscribe(v => inbound.Add(v));
+            instance.ClientConnectionState.Subscribe(v => connectionState.Add(v));
+            var startedClientTask = ClientFunctions.StartClient(instance);
 
+            instance.SendMessage(new RegisterMessage() { Name = "a", Password = "a" });
+            Thread.Sleep(500);
             instance.SendMessage(new LoginMessage() { Name = "a", Password = "a" });
+            Thread.Sleep(1000);
             ;
         }
-        static Task StartClient(ClientInstance instance)
-        {
-            var waitForConnection = Task.Run(() =>
-            {
-                var result = instance.ClientConnectionState.Do(v => Console.WriteLine(v)).Where(v => v).Take(1)
-                            .Timeout(DateTime.Now.AddSeconds(5)).Wait();
-                return result;
-            });
-
-            Thread.Sleep(300);
-            var run = Task.Run(() => instance.RunClientAsyncWithIP());
-            waitForConnection.Wait();
-            return run;
-        }
+       
     }
 }

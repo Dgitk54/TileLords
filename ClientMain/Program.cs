@@ -14,25 +14,9 @@ namespace ClientMain
     {
         static void Main(string[] args)
         {
-            /* var bus = new ClientEventBus();
-             var instance = new ClientInstance(bus);
-             var task = instance.RunClientAsync(); */
-
-
-
-
-
-            //LoginTests(instance);
-            //SendDebugGps(instance);
-            //SendDebugCircle(instance);
-
-
             var token = new CancellationTokenSource();
-
-
             for (; ; )
             {
-
                 Console.WriteLine("Enter your RegisterUsername:");
                 var name = Console.ReadLine();
                 if (string.IsNullOrEmpty(name))
@@ -63,55 +47,9 @@ namespace ClientMain
                               Task.Run(() => DebugLoginAndRunAroundClient(name, password, debugJumpListc, token.Token));
                         break;
                 }
-
-
             }
-
         }
-        static Task StartClient(ClientInstance instance)
-        {
-            var waitForConnection = Task.Run(() =>
-            {
-                var result = instance.ClientConnectionState.Do(v=>Console.WriteLine(v)).Where(v=> v).Take(1)
-                            .Timeout(DateTime.Now.AddSeconds(5)).Wait();
-                return result;
-            });
-            
-            Thread.Sleep(300);
-            var run = Task.Run(() => instance.RunClientAsyncWithIP());
-            waitForConnection.Wait();
-            return run;
-        }
-
-        static void SendDebugCircle(ClientInstance instance)
-        {
-            var circleCenter = new GPS(49.000000, 7.900000);
-            var nodesAmount = 20;
-            var list = DataModelFunctions.GPSNodesInCircle(circleCenter, nodesAmount, 0.001);
-            var src = new CancellationTokenSource();
-            var runCircle = Task.Run(() => SendGpsPath(instance, src.Token, list, 4000), src.Token);
-            Thread.Sleep(120 * 1000);
-            src.Cancel();
-            runCircle.Wait();
-
-        }
-
-        static void SendGpsPath(ClientInstance instance, CancellationToken ct, List<GPS> gps, int sleeptime)
-        {
-            int i = 0;
-            do
-            {
-                instance.SendGps(gps[i % gps.Count]);
-                Thread.Sleep(sleeptime);
-                i++;
-                if (ct.IsCancellationRequested)
-                    break;
-
-            } while (!ct.IsCancellationRequested);
-
-
-        }
-
+        
         static async Task<Tout> GetsEvent<Tout, Tin>(ClientInstance instance, Tin input, int timeOutInSeconds) where Tout : IMsgPackMsg where Tin : IMsgPackMsg
         {
             var observeOn = Scheduler.CurrentThread;
@@ -130,7 +68,7 @@ namespace ClientMain
         static void DebugLoginAndRunAroundClient(string name, string password, List<GPS> path, CancellationToken cancellationToken)
         {
             var instance = new ClientInstance();
-            var result = StartClient(instance);
+            var result = ClientFunctions.StartClient(instance);
             //result.Wait();
             ;
             var tokenSrc = new CancellationTokenSource();
@@ -161,8 +99,9 @@ namespace ClientMain
                     throw new Exception("Error logging in after registering");
                 }
             }
+            ;
             Thread.Sleep(3000);
-            var sendPath = Task.Run(() => SendGpsPath(instance, tokenSrc.Token, path, 4000));
+            var sendPath = Task.Run(() => ClientFunctions.SendGpsPath(instance, tokenSrc.Token, path, 4000));
             do
             {
                 if (cancellationToken.IsCancellationRequested)
@@ -176,17 +115,5 @@ namespace ClientMain
             instance.DisconnectClient();
         }
 
-
-        static void SendSameGps(ClientInstance instance, CancellationToken ct, GPS gps, int sleeptime)
-        {
-            do
-            {
-                instance.SendGps(gps);
-                Thread.Sleep(sleeptime);
-                if (ct.IsCancellationRequested)
-                    break;
-
-            } while (!ct.IsCancellationRequested);
-        }
     }
 }

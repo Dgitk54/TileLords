@@ -53,7 +53,7 @@ namespace DataModel.Server
                 IMsgPackMsg data = null;
                 try
                 {
-                    data = MessagePackSerializer.Deserialize<IMsgPackMsg>(byteBuffer.Array);
+                    data = MessagePackSerializer.Deserialize<IMsgPackMsg>(byteBuffer.Array, lz4Options);
 
                 }
                 catch (MessagePackSerializationException e)
@@ -62,7 +62,7 @@ namespace DataModel.Server
                 }
                 if (data != null)
                 {
-                    clientInboundTraffic.Publish(data);
+                    clientInboundTraffic.OnNext(data);
                 }
             }
         }

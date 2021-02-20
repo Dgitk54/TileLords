@@ -58,7 +58,6 @@ namespace DataModel.Server
         public static IMsgPackMsg AsMessage(this MapContent content)
         => new ContentMessage() { Id = content.Id, Location = content.Location, Name = content.Name, ResourceType = content.ResourceType, Type = content.Type };
 
-
         public static IObservable<PlusCode> ExtractPlusCodeLocationStream(IMessageBus clientBus, int precision)
         {
             var onlyValid = ParseOnlyValidUsingErrorHandler<UserGpsEvent>(clientBus.GetEventStream<DataSourceEvent>(), PrintConsoleErrorHandler);
@@ -104,10 +103,7 @@ namespace DataModel.Server
             errorArgs.ErrorContext.Handled = true;
         }
 
-
-
         public static byte[] Hash(string value, byte[] salt) => Hash(Encoding.UTF8.GetBytes(value), salt);
-
 
         public static byte[] Hash(byte[] value, byte[] salt)
         {
@@ -121,28 +117,6 @@ namespace DataModel.Server
             var result = pbkdf2.GetBytes(20);
             return result.SequenceEqual(originalPassword);
         }
-
-        static T DeepClone<T>(this T obj)
-        {
-            using (var ms = new System.IO.MemoryStream())
-            {
-                var formatter = new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter();
-                formatter.Serialize(ms, obj);
-                ms.Position = 0;
-                return (T)formatter.Deserialize(ms);
-            }
-        }
-
-
-        /// <summary>
-        /// Creates a deep copy of the minitile with the added content.
-        /// </summary>
-        /// <param name="tile"></param>
-        /// <param name="content"></param>
-        /// <returns>Updated Minitile</returns>
-
-
-
 
     }
 }
