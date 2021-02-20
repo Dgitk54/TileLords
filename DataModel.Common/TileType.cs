@@ -15,9 +15,5 @@ namespace DataModel.Common
         Jungle,
         Mountains,
         Savanna,
-
-
-     
-
     }
 }

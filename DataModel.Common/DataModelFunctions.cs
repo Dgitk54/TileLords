@@ -32,7 +32,7 @@ namespace DataModel.Common
         {
             return JsonConvert.DeserializeObject<IMsgPackMsg>(payload, new JsonSerializerSettings()
             {
-                TypeNameHandling = TypeNameHandling.All
+                TypeNameHandling = TypeNameHandling.Auto
             });
             
         }
@@ -54,26 +54,6 @@ namespace DataModel.Common
         public static PlusCode GetPlusCode(this GPS gps, int precision)
              => new PlusCode(new OpenLocationCode(gps.Lat, gps.Lon, precision).Code, precision);
 
-
-
-        /// <summary>
-        /// Helper function for obtaining a new gps node with added lattitude from a given GPS node.
-        /// </summary>
-        /// <param name="gps">GPS start point</param>
-        /// <param name="amount">added lat amount</param>
-        /// <returns>a new GPS node</returns>
-        public static GPS AddLat(GPS gps, double amount)
-            => new GPS(gps.Lat + amount, gps.Lon);
-
-
-        /// <summary>
-        /// Helper function for obtaining a new gps node with added longitute from a given GPS node.
-        /// </summary>
-        /// <param name="gps"></param>
-        /// <param name="amount"></param>
-        /// <returns></returns>
-        public static GPS AddLon(this GPS gps, double amount)
-            => new GPS(gps.Lat, gps.Lon + amount);
 
 
         public static GPS AddOFfset(this GPS gps, double latOffset, double lonOffset)
@@ -103,7 +83,6 @@ namespace DataModel.Common
             }
             return nodes;
         }
-
 
         public static PlusCode ToLowerResolution(this PlusCode code, int target)
             => new PlusCode(string.Concat(code.Code.Take(target+1)), target);
