@@ -13,6 +13,9 @@ using System.Reactive.Subjects;
 using System.Diagnostics;
 using System.Reactive.Concurrency;
 using LiteDB;
+using DataModel.Common.Messages;
+using MessagePack;
+using DataModel.Server.Services;
 
 namespace DataModel.Server
 {
@@ -20,41 +23,24 @@ namespace DataModel.Server
     {
         static readonly IInternalLogger Logger = InternalLoggerFactory.GetInstance<ClientHandler>();
 
-        readonly Subject<string> jsonClientSource = new Subject<string>();
-        readonly Subject<bool> connectionActive = new Subject<bool>();
-        
-        readonly List<IDisposable> disposables = new List<IDisposable>();
+        readonly Subject<IMsgPackMsg> clientInboundTraffic = new Subject<IMsgPackMsg>();
 
-        readonly IMessageBus serverBus; // eventbus for serverwide messages
-        readonly IMessageBus clientBus; // eventbus for clientwide messages
-
-        readonly ClientChunkUpdateHandler gpsClientLocationHandler;
-        readonly ClientAccountRegisterHandler registerHandler;
-        readonly ClientTileContentHandler clientTileContentHandler;
-
-        public ClientHandler(IMessageBus serverBus)
+        readonly UserAccountService userAccountService;
+        readonly MapContentService mapContentService;
+        readonly APIGatewayService apiGatewayService;
+        IDisposable responseDisposable;
+        public ClientHandler()
         {
-            this.serverBus = serverBus;
-            clientBus = new ClientMessageBus();
-
-
-            gpsClientLocationHandler = new ClientChunkUpdateHandler(clientBus);
-            registerHandler = new ClientAccountRegisterHandler(clientBus,serverBus);
-            clientTileContentHandler = new ClientTileContentHandler(clientBus);
+            userAccountService = new UserAccountService(DataBaseFunctions.FindUserInDatabase, ServerFunctions.PasswordMatches);
+            mapContentService = new MapContentService(DataBaseFunctions.AreaContentRequest, DataBaseFunctions.UpdateOrDeleteContent);
+            apiGatewayService = new APIGatewayService(userAccountService, mapContentService);
         }
 
         public override void ChannelActive(IChannelHandlerContext ctx)
         {
-            var loginHandler = new ClientAccountLoginHandler(clientBus, serverBus, ctx.Channel, connectionActive);
-            serverBus.Publish(new ServerClientConnectedEvent() { Channel = ctx.Channel });
-            disposables.Add(ServerFunctions.EventStreamSink(clientBus.GetEventStream<DataSinkEvent>(), ctx));
-            disposables.Add(jsonClientSource.Subscribe(v => clientBus.Publish(new DataSourceEvent(v))));
-            disposables.Add(gpsClientLocationHandler.AttachToBus());
-            disposables.Add(registerHandler.AttachToBus());
-            disposables.Add(loginHandler.AttachToBus());
-            //disposables.Add(clientTileContentHandler.AttachToBus());
-            disposables.Add(new PlayerTileContentSender(clientBus).AttachToBus());
-            ctx.Channel.CloseCompletion.ContinueWith((x) => Console.WriteLine("Channel Closed"));
+            Console.WriteLine("Client connected");
+            apiGatewayService.AttachGateway(clientInboundTraffic);
+            responseDisposable = ServerFunctions.EventStreamSink(apiGatewayService.GatewayResponse, ctx);
         }
 
         public override void ChannelRead(IChannelHandlerContext context, object message)
@@ -62,22 +48,32 @@ namespace DataModel.Server
             var byteBuffer = message as IByteBuffer;
             if (byteBuffer != null)
             {
-                Console.WriteLine("Received from client: " + byteBuffer.ToString(Encoding.UTF8));
-                jsonClientSource.OnNext(byteBuffer.ToString(Encoding.UTF8));
+                Console.WriteLine("Received bytes!");
+                var lz4Options = MessagePackSerializerOptions.Standard.WithCompression(MessagePackCompression.Lz4BlockArray);
+                IMsgPackMsg data = null;
+                try
+                {
+                    data = MessagePackSerializer.Deserialize<IMsgPackMsg>(byteBuffer.Array);
+
+                }
+                catch (MessagePackSerializationException e)
+                {
+                    Console.WriteLine("Error Deserializing" + e.ToString());
+                }
+                if (data != null)
+                {
+                    clientInboundTraffic.Publish(data);
+                }
             }
         }
 
         // The Channel is closed hence the connection is closed
         public override void ChannelInactive(IChannelHandlerContext ctx)
         {
-            serverBus.Publish(new ServerClientDisconnectedEvent() { Channel = ctx.Channel});
-            connectionActive.OnNext(false);
-            disposables.ForEach(v => v.Dispose());
+            apiGatewayService.DetachGateway();
+            responseDisposable.Dispose();
             Console.WriteLine("Cleaned up ClientHandler");
         }
-
-        
-
 
         public override bool IsSharable => true;
     }

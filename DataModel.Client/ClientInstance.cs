@@ -1,4 +1,5 @@
 ﻿using DataModel.Common;
+using DataModel.Common.Messages;
 using DotNetty.Buffers;
 using DotNetty.Codecs;
 using DotNetty.Common.Internal.Logging;
@@ -22,71 +23,64 @@ namespace DataModel.Client
 
     public class ClientInstance
     {
-
-        public IMessageBus EventBus { get => eventBus; }
-
-
-        ServerHandler ServerHandler { get; }
         Bootstrap Bootstrap { get; set; }
         IChannel BootstrapChannel { get; set; }
 
+        readonly ServerHandler serverHandler;
 
         readonly MultithreadEventLoopGroup group = new MultithreadEventLoopGroup();
         readonly List<IDisposable> disposables = new List<IDisposable>();
-        readonly JsonSerializerSettings settings = new JsonSerializerSettings
-        {
-            TypeNameHandling = TypeNameHandling.All
-        };
 
-        readonly CancellationTokenSource cancelTokenSource = new CancellationTokenSource();
-        private static readonly AutoResetEvent closingEvent = new AutoResetEvent(false);
-        private readonly IMessageBus eventBus;
-        public ClientInstance(IMessageBus bus)
+        readonly Subject<ServerMapEvent> mapSubject = new Subject<ServerMapEvent>();
+        readonly Subject<IMsgPackMsg> outboundTraffic = new Subject<IMsgPackMsg>();
+
+        static readonly AutoResetEvent closingEvent = new AutoResetEvent(false);
+
+        public ClientInstance()
         {
-            ServerHandler = new ServerHandler(bus);
-            eventBus = bus;
-            disposables.Add(ClientFunctions.DebugEventToConsoleSink(eventBus.GetEventStream<IMessage>()));
+            serverHandler = new ServerHandler(this);
+            var localMapUpdate = GetMapStream(outboundTraffic.OfType<UserGpsMessage>()).Subscribe(v=>mapSubject.OnNext(v));
+            disposables.Add(localMapUpdate);
         }
 
+        public IObservable<ServerMapEvent> ClientMapStream => mapSubject.AsObservable();
 
-        public void SendDebugGPS(GPS gps) => eventBus.Publish(new UserGpsEvent(gps));
+        public IObservable<IMsgPackMsg> OutboundTraffic => outboundTraffic.AsObservable();
 
-        public void SendFlawedData() => eventBus.Publish(new DataSinkEvent("TEST123ää²³"));
+        public IObservable<IMsgPackMsg> InboundTraffic => serverHandler.InboundTraffic;
 
-        
+        public IObservable<bool> ClientConnectionState => serverHandler.ConnctionState;
+
+        public void SendGps(GPS gps) => SendMessage(new UserGpsMessage() {Lat = gps.Lat, Lon = gps.Lon });
+
 
         public void SendRegisterRequest(string username, string password)
         {
-            var e = new UserRegisterEvent() { Name = username, Password = password };
-            SendTyped(e);
+            var e = new RegisterMessage() { Name = username, Password = password };
+            SendMessage(e);
         }
 
         public void SendLoginRequest(string username, string password)
         {
 
-            var e = new UserLoginEvent() { Name = username, Password = password };
-            SendTyped(e);
+            var e = new LoginMessage() { Name = username, Password = password };
+            SendMessage(e);
         }
 
-        public void SendTyped<T>(T data)
+        public void SendMessage(IMsgPackMsg msg)
         {
-            var toSend = new DataSinkEvent(JsonConvert.SerializeObject(data, typeof(T), settings));
-            eventBus.Publish(toSend);
-
+            outboundTraffic.OnNext(msg);
         }
 
         public void DisconnectClient()
         {
-            ServerHandler.ShutDown();
+            serverHandler.ShutDown();
             closingEvent.Set();
+            disposables.ForEach(v => v.Dispose());
             if(BootstrapChannel != null)
                 BootstrapChannel.CloseAsync().Wait();
             Task.WaitAll(group.ShutdownGracefullyAsync(TimeSpan.FromMilliseconds(200), TimeSpan.FromMilliseconds(400)));
         }
-
-
-        
-
         public async Task RunClientAsyncWithIP(string ipAdress = "127.0.0.1", int port = 8080)
         {
             try
@@ -98,13 +92,6 @@ namespace DataModel.Client
                 }
                 var serverIP = IPAddress.Parse(ipAdress);
                 int serverPort = port;
-
-
-
-                
-
-                
-
 
             //    X509Certificate2 cert = null;
             //    string targetHost = null;
@@ -121,7 +108,7 @@ namespace DataModel.Client
                         IChannelPipeline pipeline = channel.Pipeline;
                         pipeline.AddLast("framing-enc", new LengthFieldPrepender(2));
                         pipeline.AddLast("framing-dec", new LengthFieldBasedFrameDecoder(ushort.MaxValue, 0, 2, 0, 2));
-                        pipeline.AddLast(ServerHandler);
+                        pipeline.AddLast(serverHandler);
                     }));
 
                 BootstrapChannel = await Bootstrap.ConnectAsync(new IPEndPoint(serverIP, serverPort));
@@ -132,13 +119,17 @@ namespace DataModel.Client
 
                 //Task.WaitAll(group.ShutdownGracefullyAsync());
             }
-
-
-
-
-
         }
-
+        IObservable<ServerMapEvent> GetMapStream(IObservable<UserGpsMessage> messageStream)
+        {
+            return messageStream.Select(v => new GPS(v.Lat, v.Lon))
+                                .Select(v => v.GetPlusCode(10))
+                                .DistinctUntilChanged()
+                                .Select(v => LocationCodeTileUtility.GetTileSection(v.Code, 1, v.Precision)) //List of local area strings
+                                .Select(v => v.ConvertAll(e => new PlusCode(e, 8))) //transform into pluscodes
+                                .Select(v => v.ConvertAll(e => WorldGenerator.GenerateTile(e))) //transform each pluscode into world tile
+                                .Select(v => new ServerMapEvent() { Tiles = v });
+        }
     }
 }
 

@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using DataModel.Client;
 using DataModel.Common;
+using DataModel.Common.Messages;
 
 namespace ClientMain
 {
@@ -13,9 +14,9 @@ namespace ClientMain
     {
         static void Main(string[] args)
         {
-           /* var bus = new ClientEventBus();
-            var instance = new ClientInstance(bus);
-            var task = instance.RunClientAsync(); */
+            /* var bus = new ClientEventBus();
+             var instance = new ClientInstance(bus);
+             var task = instance.RunClientAsync(); */
 
 
 
@@ -53,26 +54,33 @@ namespace ClientMain
                 switch (locationChar[0])
                 {
                     case 'a':
-                        Task.Run(() => DebugLoginAndRunAroundClient(name, password, debugJumpLista, token.Token));
+                              Task.Run(() => DebugLoginAndRunAroundClient(name, password, debugJumpLista, token.Token));
                         break;
                     case 'b':
-                        Task.Run(() => DebugLoginAndRunAroundClient(name, password, debugJumpListb, token.Token));
+                              Task.Run(() => DebugLoginAndRunAroundClient(name, password, debugJumpListb, token.Token));
                         break;
                     case 'c':
-                        Task.Run(() => DebugLoginAndRunAroundClient(name, password, debugJumpListc, token.Token));
+                              Task.Run(() => DebugLoginAndRunAroundClient(name, password, debugJumpListc, token.Token));
                         break;
                 }
 
-               
+
             }
 
-
-
-
-
-
-           // task.Wait();
-
+        }
+        static Task StartClient(ClientInstance instance)
+        {
+            var waitForConnection = Task.Run(() =>
+            {
+                var result = instance.ClientConnectionState.Do(v=>Console.WriteLine(v)).Where(v=> v).Take(1)
+                            .Timeout(DateTime.Now.AddSeconds(5)).Wait();
+                return result;
+            });
+            
+            Thread.Sleep(300);
+            var run = Task.Run(() => instance.RunClientAsyncWithIP());
+            waitForConnection.Wait();
+            return run;
         }
 
         static void SendDebugCircle(ClientInstance instance)
@@ -93,7 +101,7 @@ namespace ClientMain
             int i = 0;
             do
             {
-                instance.SendDebugGPS(gps[i % gps.Count]);
+                instance.SendGps(gps[i % gps.Count]);
                 Thread.Sleep(sleeptime);
                 i++;
                 if (ct.IsCancellationRequested)
@@ -104,103 +112,16 @@ namespace ClientMain
 
         }
 
-        static void SendSameGps(ClientInstance instance, CancellationToken ct, GPS gps, int sleeptime)
-        {
-
-            do
-            {
-                instance.SendDebugGPS(gps);
-                Thread.Sleep(sleeptime);
-                if (ct.IsCancellationRequested)
-                    break;
-
-            } while (!ct.IsCancellationRequested);
-
-        }
-
-
-        static void SendDebugGps(ClientInstance instance)
-        {
-            const int periodInSec = 2;
-            var obs = Observable.Interval(TimeSpan.FromSeconds(periodInSec),
-                                          Scheduler.Default);
-            var start = new GPS(49.000000, 7.900000);
-            double step = 0.000150;
-            var list = DataModelFunctions.GPSNodesWithOffsets(start, 0.000350, 0.000150, 60);
-            var counter = 0;
-            obs.Subscribe(v =>
-            {
-                instance.SendDebugGPS(list[counter]);
-                counter++;
-                if (counter == 10)
-                    instance.SendFlawedData();
-            });
-            Console.ReadLine();
-        }
-        static void LoginTests(ClientInstance instance)
-        {
-            Console.WriteLine("1: Create new User,  2: Log in");
-            string mode;
-            int modeInt;
-            do
-            {
-                mode = Console.ReadLine();
-            } while (!Int32.TryParse(mode, out modeInt));
-
-
-
-            if (modeInt == 1)
-            {
-                for (; ; )
-                {
-
-                    Console.WriteLine("Enter your RegisterUsername:");
-                    var name = Console.ReadLine();
-                    if (string.IsNullOrEmpty(name))
-                        continue;
-                    Console.WriteLine("Enter your RegisterPassword");
-                    var password = Console.ReadLine();
-                    if (string.IsNullOrEmpty(password))
-                        continue;
-
-                    instance.SendRegisterRequest(name, password);
-
-                }
-            }
-            if (modeInt == 2)
-            {
-                for (; ; )
-                {
-                    Console.WriteLine("Enter your LoginUsername:");
-                    var name = Console.ReadLine();
-                    if (string.IsNullOrEmpty(name))
-                        continue;
-                    Console.WriteLine("Enter your LoginPassword");
-                    var password = Console.ReadLine();
-                    if (string.IsNullOrEmpty(password))
-                        continue;
-
-                    instance.SendLoginRequest(name, password);
-
-                }
-
-
-            }
-        }
-
-
-        static async Task<T> GetsEvent<T, T2>(ClientInstance instance, T2 input, int timeOutInSeconds) where T : IMessage where T2 : IMessage
+        static async Task<Tout> GetsEvent<Tout, Tin>(ClientInstance instance, Tin input, int timeOutInSeconds) where Tout : IMsgPackMsg where Tin : IMsgPackMsg
         {
             var observeOn = Scheduler.CurrentThread;
-
             var received = Task.Run(() =>
             {
-                var result = instance.EventBus.GetEventStream<T>().Take(1).Timeout(DateTime.Now.AddSeconds(timeOutInSeconds)).ObserveOn(observeOn).Wait();
+                var result = instance.InboundTraffic.OfType<Tout>().Take(1).Timeout(DateTime.Now.AddSeconds(timeOutInSeconds)).ObserveOn(observeOn).Wait();
                 return result;
             });
             Thread.Sleep(200);
-
-            var publish = Task.Run(() => instance.SendTyped(input));
+            var publish = Task.Run(() => instance.SendMessage(input));
             await received;
             await publish;
             return received.Result;
@@ -208,44 +129,39 @@ namespace ClientMain
 
         static void DebugLoginAndRunAroundClient(string name, string password, List<GPS> path, CancellationToken cancellationToken)
         {
-            var result = StartClient();
-            result.Wait();
-            var instance = result.Result.Item2;
-            var nodesAmount = 20;
+            var instance = new ClientInstance();
+            var result = StartClient(instance);
+            //result.Wait();
+            ;
             var tokenSrc = new CancellationTokenSource();
-            //var list = DataModelFunctions.GPSNodesInCircle(circleCenter, nodesAmount, 0.001);
-
-
-            
-
+            instance.SendLoginRequest("test1", "test2");
             //Try to log in, create account if cant log in:
-
-            Task tryLogin;
-            try
+            var tryLogin = GetsEvent<UserActionMessage, LoginMessage>(instance, new LoginMessage() { Name = name, Password = password }, 5);
+            tryLogin.Wait();
+            var loginResponse = tryLogin.Result;
+            tryLogin.Dispose();
+            if (loginResponse.MessageContext == MessageContext.LOGIN && loginResponse.MessageState == MessageState.ERROR)
             {
-                tryLogin = GetsEvent<UserActionSuccessEvent, UserLoginEvent>(instance, new UserLoginEvent() { Name = name, Password = password }, 5);
-                tryLogin.Wait();
-            }
-            catch (AggregateException exception)
-            {
-                var tryRegister = GetsEvent<UserActionSuccessEvent, UserRegisterEvent>(instance, new UserRegisterEvent() { Name = name, Password = password }, 5);
+                //Login Failed, try register with name password
+                var tryRegister = GetsEvent<UserActionMessage, RegisterMessage>(instance, new RegisterMessage() { Name = name, Password = password }, 5);
                 tryRegister.Wait();
-                if (tryRegister.IsFaulted)
+                var registerResponse = tryRegister.Result;
+                tryRegister.Dispose();
+                if (!(registerResponse.MessageState == MessageState.SUCCESS && registerResponse.MessageContext == MessageContext.REGISTER))
                 {
-                    throw new Exception("Can not log in nor register");
+                    throw new Exception("Error logging in and registering");
                 }
-
-                var tryLoginAfterRegister = GetsEvent<UserActionSuccessEvent, UserLoginEvent>(instance, new UserLoginEvent() { Name = name, Password = password }, 5);
-                tryLoginAfterRegister.Wait();
-                if (tryLoginAfterRegister.IsFaulted)
-                    throw new Exception("Can not log in after register");
+                //Log in after register:
+                tryLogin = GetsEvent<UserActionMessage, LoginMessage>(instance, new LoginMessage() { Name = name, Password = password }, 5);
+                tryLogin.Wait();
+                loginResponse = tryLogin.Result;
+                tryLogin.Dispose();
+                if (!(registerResponse.MessageState == MessageState.SUCCESS && registerResponse.MessageContext == MessageContext.LOGIN))
+                {
+                    throw new Exception("Error logging in after registering");
+                }
             }
-
-            //var runCircle = Task.Run(() => SendGpsPath(instance, tokenSrc.Token, list, 4000), tokenSrc.Token);
-
             Thread.Sleep(3000);
-            //var sendSame = Task.Run(() => SendSameGps(instance, tokenSrc.Token, circleCenter, 4000));
-
             var sendPath = Task.Run(() => SendGpsPath(instance, tokenSrc.Token, path, 4000));
             do
             {
@@ -261,26 +177,16 @@ namespace ClientMain
         }
 
 
-
-        static async Task<(IMessageBus, ClientInstance, Task)> StartClient()
+        static void SendSameGps(ClientInstance instance, CancellationToken ct, GPS gps, int sleeptime)
         {
-            var bus = new ClientMessageBus();
-            var instance = new ClientInstance(bus);
-            var observeOn = Scheduler.CurrentThread;
-            //.ObserveOn(observeOn)
-            ClientFunctions.DebugEventsToDebugSink(instance.EventBus.GetEventStream<IMessage>());
-
-
-            var waitForConnection = Task.Run(() =>
+            do
             {
-                ClientConnectedEvent result = bus.GetEventStream<ClientConnectedEvent>().Take(1)
-                            .Timeout(DateTime.Now.AddSeconds(5)).Wait();
-                return result;
-            });
-            Thread.Sleep(300);
-            var startClient = Task.Run(() => instance.RunClientAsyncWithIP());
-            await waitForConnection;
-            return (bus, instance, startClient);
+                instance.SendGps(gps);
+                Thread.Sleep(sleeptime);
+                if (ct.IsCancellationRequested)
+                    break;
+
+            } while (!ct.IsCancellationRequested);
         }
     }
 }

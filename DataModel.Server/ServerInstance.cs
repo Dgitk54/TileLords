@@ -16,28 +16,14 @@ namespace DataModel.Server
 {
     public class ServerInstance
     {
-        readonly IMessageBus bus = new ServerMessageBus();
         
-        readonly List<IDisposable> disposables = new List<IDisposable>();
         MultithreadEventLoopGroup bossGroup;//  accepts an incoming connection
         MultithreadEventLoopGroup workerGroup;
         ServerBootstrap bootstrap;
         IChannel bootstrapChannel;
         public ServerInstance()
         {
-            ServerFunctions.DebugEventToConsoleSink(bus.GetEventStream<IMessage>());
-
-
-            //disposables.Add(new ClientToClientPositionUpdateHandler(bus).AttachToBus());
-
-            disposables.Add(new PlayersOnlineHandler(bus).AttachToBus());
-            //disposables.Add(new DatabaseUpdateHandler(bus).AttachToBus());
-            //var movementUpdater = new PlayerMovementTileUpdater(bus);
-            //disposables.Add(movementUpdater.AttachToBus());
-            //disposables.Add(movementUpdater.AttachCleanup());
-            //
-            //disposables.Add(new PlayerTileContentHandler(bus).AttachToBus());
-            disposables.Add(new PlayerToPlayerHandler(bus).AttachToBus());
+           
             
         }
         public async Task RunServerAsync()
@@ -70,7 +56,7 @@ namespace DataModel.Server
                       //  pipeline.AddLast(TlsHandler.Server(tlsCertificate));
                         pipeline.AddLast("framing-enc", new LengthFieldPrepender(2));
                         pipeline.AddLast("framing-dec", new LengthFieldBasedFrameDecoder(ushort.MaxValue, 0, 2, 0, 2));
-                        pipeline.AddLast(new ClientHandler(bus));
+                        pipeline.AddLast(new ClientHandler());
                     }));
 
                 bootstrapChannel = await bootstrap.BindAsync(serverPort);

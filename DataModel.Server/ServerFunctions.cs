@@ -14,7 +14,9 @@ using DotNetty.Buffers;
 using LiteDB;
 using Newtonsoft.Json.Serialization;
 using System.Security.Cryptography;
-
+using DataModel.Common.Messages;
+using MessagePack;
+using DataModel.Server.Services;
 
 namespace DataModel.Server
 {
@@ -31,22 +33,30 @@ namespace DataModel.Server
                 return System.IO.Directory.GetParent(Environment.CurrentDirectory).Parent.Parent.Parent.FullName + @"\DataModel.Common\BiomeConfigs\";
             }
         }
-
+        public readonly static int CLIENTVISIBILITY = 10;
+        public readonly static int CLIENTLOCATIONPRECISION = 10;
+        
         public static IDisposable DebugEventToConsoleSink<T>(IObservable<T> events) where T : IMessage
             => events.Subscribe(v => Console.WriteLine("Event occured:" + v.ToString()));
 
-        public static IDisposable EventStreamSink<T>(IObservable<T> objStream, IChannelHandlerContext context) where T : DataSinkEvent
+        public static IDisposable EventStreamSink<T>(IObservable<T> objStream, IChannelHandlerContext context) where T : IMsgPackMsg
             => objStream.Subscribe(v =>
             {
-                var asByteMessage = Encoding.UTF8.GetBytes(v.SerializedData);
-                Console.WriteLine("PUSHING: DATA" + asByteMessage.GetLength(0));
-                context.WriteAndFlushAsync(Unpooled.WrappedBuffer(asByteMessage));
+                var lz4Options = MessagePackSerializerOptions.Standard.WithCompression(MessagePackCompression.Lz4BlockArray);
+                var data = MessagePackSerializer.Serialize(v, lz4Options);
+                Console.WriteLine("PUSHING: DATA" + data.GetLength(0));
+                context.WriteAndFlushAsync(Unpooled.WrappedBuffer(data));
             },
              e => Console.WriteLine("Error occured writing" + objStream),
              () => Console.WriteLine("StreamSink Write Sequence Completed"));
 
+        public static MapContent AsMapContent(this IUser user)
+        {
+            return new MapContent() { Id = user.UserId, Name = user.UserName, ResourceType = Common.Messages.ResourceType.NONE, Type = ContentType.PLAYER, Location = null, MapContentId = null };
+        }
 
-
+        public static IMsgPackMsg AsMessage(this MapContent content)
+        => new ContentMessage() { Id = content.Id, Location = content.Location, Name = content.Name, ResourceType = content.ResourceType, Type = content.Type };
 
 
         public static IObservable<PlusCode> ExtractPlusCodeLocationStream(IMessageBus clientBus, int precision)
@@ -62,16 +72,6 @@ namespace DataModel.Server
 
             return from e in gpsExtracted
                    select e.GetPlusCode(precision);
-        }
-
-
-
-
-
-        public static List<PlusCode> NeighborsIn8(PlusCode code)
-        {
-            var strings = LocationCodeTileUtility.GetTileSection(code.Code, 1, code.Precision);
-            return strings.Select(v => new PlusCode(v, code.Precision)).ToList();
         }
 
         public static IObservable<T> ParseOnlyValidUsingErrorHandler<T>(IObservable<DataSourceEvent> observable, EventHandler<ErrorEventArgs> eventHandler) where T : IMessage
@@ -122,69 +122,6 @@ namespace DataModel.Server
             return result.SequenceEqual(originalPassword);
         }
 
-        public static MiniTile LookUpMiniTile(PlusCode code, ILiteDatabase db)
-        {
-            var tile = DataBaseFunctions.LookUpWithGenerateTile(code);
-            var miniTile = from e in tile.MiniTiles
-                           where e.MiniTileId.Code == code.Code
-                           select e;
-            return miniTile.First();
-        }
-
-        public static bool AddContent<T>(this MiniTile tile, T newtileContent, ILiteDatabase database) where T : ITileContent
-        {
-            if (newtileContent == null)
-                return false;
-            if (database == null)
-                return false;
-
-            var updated = tile.AddTileContent(newtileContent);
-            return UpdateMiniTile(updated, database);
-        }
-
-        public static bool RemoveContent<T>(this MiniTile tile, T contentToRemove, ILiteDatabase database) where T : ITileContent
-        {
-            if (contentToRemove == null)
-                return false;
-            if (database == null)
-                return false;
-
-            var updated = tile.RemoveTileContent(contentToRemove);
-            return UpdateMiniTile(updated, database);
-
-        }
-
-
-        static bool UpdateTile(Tile newTile, ILiteDatabase database)
-        {
-            var col = database.GetCollection<Tile>("tiles");
-            col.EnsureIndex(v => v.MiniTiles);
-            col.EnsureIndex(v => v.PlusCode);
-            col.EnsureIndex(v => v.Ttype);
-            var results = col.Find(v => v.PlusCode.Code == newTile.PlusCode.Code);
-            if (results.Count() > 1)
-                throw new Exception("More than one object for same index!");
-
-            return col.Update(newTile);
-        }
-
-        static bool UpdateMiniTile(MiniTile tileWithNewValues, ILiteDatabase database)
-        {
-            var old = LookUpMiniTile(tileWithNewValues.MiniTileId, database);
-            Debug.Assert(old.Id == tileWithNewValues.Id);
-            Debug.Assert(old.MiniTileId.Code == tileWithNewValues.MiniTileId.Code);
-
-            Tile t = DataBaseFunctions.LookUpWithGenerateTile(tileWithNewValues.MiniTileId);
-
-            var removed = t.MiniTiles.Remove(old);
-            Debug.Assert(removed);
-            t.MiniTiles.Add(tileWithNewValues);
-
-            return UpdateTile(t, database);
-        }
-
-
-
         static T DeepClone<T>(this T obj)
         {
             using (var ms = new System.IO.MemoryStream())
@@ -203,38 +140,7 @@ namespace DataModel.Server
         /// <param name="tile"></param>
         /// <param name="content"></param>
         /// <returns>Updated Minitile</returns>
-        static MiniTile AddTileContent(this MiniTile tile, ITileContent content)
-        {
-            List<ITileContent> collection;
-            if (tile.Content != null)
-            {
-                collection = tile.Content.Concat(new[] { content }).ToList();
-            }
-            else
-            {
-                collection = new List<ITileContent>() { content };
-            }
-            var copy = tile.DeepClone();
-            copy.Content = collection;
-            return copy;
-        }
 
-        static MiniTile RemoveTileContent(this MiniTile tile, ITileContent content)
-        {
-            List<ITileContent> collection;
-            if (tile.Content != null)
-            {
-                collection = tile.Content.Except(new[] { content }).ToList();
-            }
-            else
-            {
-                collection = new List<ITileContent>();
-            }
-            var copy = tile.DeepClone();
-            copy.Content = collection;
-            return copy;
-
-        }
 
 
 
