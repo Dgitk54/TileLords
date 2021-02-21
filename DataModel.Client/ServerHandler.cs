@@ -39,11 +39,11 @@ namespace DataModel.Client
 
         public override void ChannelActive(IChannelHandlerContext context)
         {
-            outBoundManager = instance.OutboundTraffic.Select(v=> v.ToJsonPayload()).Subscribe(v =>
-            {
-                Console.WriteLine("PUSHING: DATA" + v.GetLength(0));
-                context.WriteAndFlushAsync(Unpooled.WrappedBuffer(v));
-            });
+            outBoundManager = instance.OutboundTraffic.Select(v => v.ToJsonPayload()).Subscribe(v =>
+             {
+                 Console.WriteLine("PUSHING: DATA" + v.GetLength(0));
+                 context.WriteAndFlushAsync(Unpooled.WrappedBuffer(v));
+             });
             connectionState.OnNext(true);
         }
 
@@ -64,7 +64,13 @@ namespace DataModel.Client
             outBoundManager.Dispose();
         }
 
-        public void ShutDown() => outBoundManager.Dispose();
+        public void ShutDown() 
+        { 
+            if (outBoundManager != null) 
+            { 
+                outBoundManager.Dispose(); 
+            } 
+        }
 
         public override bool IsSharable => true;
     }

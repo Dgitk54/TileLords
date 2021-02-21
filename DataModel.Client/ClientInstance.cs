@@ -35,14 +35,20 @@ namespace DataModel.Client
         readonly Subject<UnityMapMessage> mapSubject = new Subject<UnityMapMessage>();
         readonly Subject<IMsgPackMsg> outboundTraffic = new Subject<IMsgPackMsg>();
 
+        readonly ActionChannelInitializer<ISocketChannel> actionChannelInitializer;
+
         static readonly AutoResetEvent closingEvent = new AutoResetEvent(false);
 
         public ClientInstance()
         {
             serverHandler = new ServerHandler(this);
-            var localMapUpdate = GetBigMapStream(outboundTraffic.OfType<UserGpsMessage>());
-
-            disposables.Add(GetSmallUnityMap(outboundTraffic.OfType<UserGpsMessage>(), localMapUpdate).Subscribe(v => mapSubject.OnNext(v)));
+            actionChannelInitializer = new ActionChannelInitializer<ISocketChannel>(channel =>
+            {
+                IChannelPipeline pipeline = channel.Pipeline;
+                pipeline.AddLast("framing-enc", new LengthFieldPrepender(2));
+                pipeline.AddLast("framing-dec", new LengthFieldBasedFrameDecoder(ushort.MaxValue, 0, 2, 0, 2));
+                pipeline.AddLast(serverHandler);
+            });
         }
 
         public IObservable<UnityMapMessage> ClientMapStream => mapSubject.AsObservable();
@@ -74,7 +80,16 @@ namespace DataModel.Client
             outboundTraffic.OnNext(msg);
         }
 
-        public void DisconnectClient()
+        public void DisconnectClient() 
+        {
+            serverHandler.ShutDown();
+            closingEvent.Set();
+            disposables.ForEach(v => v.Dispose());
+            if (BootstrapChannel != null)
+                BootstrapChannel.DisconnectAsync().Wait();
+            closingEvent.Reset();
+        }
+        public void CloseClient()
         {
             serverHandler.ShutDown();
             closingEvent.Set();
@@ -82,9 +97,12 @@ namespace DataModel.Client
             if(BootstrapChannel != null)
                 BootstrapChannel.CloseAsync().Wait();
             Task.WaitAll(group.ShutdownGracefullyAsync(TimeSpan.FromMilliseconds(200), TimeSpan.FromMilliseconds(400)));
+            closingEvent.Reset();
         }
         public async Task RunClientAsyncWithIP(string ipAdress = "127.0.0.1", int port = 8080)
         {
+            var localMapUpdate = GetBigMapStream(outboundTraffic.OfType<UserGpsMessage>());
+            disposables.Add(GetSmallUnityMap(outboundTraffic.OfType<UserGpsMessage>(), localMapUpdate).Subscribe(v => mapSubject.OnNext(v)));
             try
             {
 
@@ -105,13 +123,7 @@ namespace DataModel.Client
                     .Group(group)
                     .Channel<TcpSocketChannel>()
                     .Option(ChannelOption.TcpNodelay, true) // Do not buffer and send packages right away
-                    .Handler(new ActionChannelInitializer<ISocketChannel>(channel =>
-                    {
-                        IChannelPipeline pipeline = channel.Pipeline;
-                        pipeline.AddLast("framing-enc", new LengthFieldPrepender(2));
-                        pipeline.AddLast("framing-dec", new LengthFieldBasedFrameDecoder(ushort.MaxValue, 0, 2, 0, 2));
-                        pipeline.AddLast(serverHandler);
-                    }));
+                    .Handler(actionChannelInitializer);
 
                 BootstrapChannel = await Bootstrap.ConnectAsync(new IPEndPoint(serverIP, serverPort));
                 closingEvent.WaitOne();

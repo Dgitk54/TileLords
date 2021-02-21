@@ -41,9 +41,8 @@ namespace DataModel.Server
             Console.WriteLine("Client connected");
             apiGatewayService.AttachGateway(synchronizedInboundTraffic);
 
-            responseDisposable = apiGatewayService.GatewayResponse.Select(v => v.ToJsonPayload()).Subscribe(v =>
+            responseDisposable = apiGatewayService.GatewayResponse.Do(v=>Console.WriteLine(v) ).Select(v => v.ToJsonPayload()).Subscribe(v =>
             {
-                Console.WriteLine("PUSHING: DATA" + v.GetLength(0));
                 ctx.WriteAndFlushAsync(Unpooled.WrappedBuffer(v));
             });
         }

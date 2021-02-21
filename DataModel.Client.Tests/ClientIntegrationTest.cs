@@ -61,6 +61,13 @@ namespace ClientIntegration
             Thread.Sleep(1000);
             instance.SendMessage(ctMsg);
             Thread.Sleep(1000);
+
+            instance.DisconnectClient();
+            startedClientTask.Wait();
+
+            ;
+            var client = ClientFunctions.StartClient(instance);
+            Thread.Sleep(1500);
             ;
         }
        

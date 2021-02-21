@@ -53,7 +53,14 @@ namespace DataModel.Server
                 var enumerable = col.Find(v => v.Id == content.Id);
                 if (enumerable.Count() > 1)
                     throw new Exception("Multiple objects with same ID in database");
+                
+                //No database entry and no location given, skip/ignore update
+                if (enumerable.Count() == 0 && location == null)
+                {
+                    return;
+                }
 
+                //received mapcontent with location but its not in database, insert into database
                 if (enumerable.Count() == 0 && location != null)
                 {
                     content.Location = location;
@@ -62,7 +69,8 @@ namespace DataModel.Server
                 }
 
                 var first = enumerable.First();
-                if (location == null)
+                //Delte value out of database
+                if (enumerable.Count() != 0 && location == null) 
                 {
                     var deletedAmount = col.DeleteMany(v => v.Id == first.Id);
                     Debug.Assert(deletedAmount == 1);
