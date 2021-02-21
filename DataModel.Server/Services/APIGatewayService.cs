@@ -7,7 +7,6 @@ using System.Text;
 using System.Reactive.Linq;
 using DataModel.Common;
 using System.Diagnostics;
-using MessagePack;
 
 namespace DataModel.Server.Services
 {

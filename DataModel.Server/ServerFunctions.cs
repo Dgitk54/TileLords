@@ -15,7 +15,6 @@ using LiteDB;
 using Newtonsoft.Json.Serialization;
 using System.Security.Cryptography;
 using DataModel.Common.Messages;
-using MessagePack;
 using DataModel.Server.Services;
 
 namespace DataModel.Server

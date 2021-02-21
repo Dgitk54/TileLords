@@ -7,8 +7,6 @@ using NUnit.Framework;
 using System.Reactive;
 using System.Reactive.Linq;
 using System.Reactive.Joins;
-using MessagePack;
-using MessagePack.Resolvers;
 
 namespace DataModel.Server.Tests
 {

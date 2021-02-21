@@ -14,7 +14,6 @@ using System.Diagnostics;
 using System.Reactive.Concurrency;
 using LiteDB;
 using DataModel.Common.Messages;
-using MessagePack;
 using DataModel.Server.Services;
 
 namespace DataModel.Server

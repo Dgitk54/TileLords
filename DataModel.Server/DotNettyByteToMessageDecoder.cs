@@ -2,7 +2,6 @@
 using DotNetty.Buffers;
 using DotNetty.Codecs;
 using DotNetty.Transport.Channels;
-using MessagePack;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -18,8 +17,8 @@ namespace DataModel.Server
             try
             {
                 ;
-                var obj = MessagePackSerializer.Deserialize<IMsgPackMsg>(input.ReadBytes(input.ReadableBytes).Array);
-                output.Add(obj);
+              //  var obj = MessagePackSerializer.Deserialize<IMsgPackMsg>(input.ReadBytes(input.ReadableBytes).Array);
+              //  output.Add(obj);
             } catch(Exception e)
             {
                 ;

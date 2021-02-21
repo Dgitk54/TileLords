@@ -13,7 +13,6 @@ using System.Reactive.Subjects;
 using System.Diagnostics;
 using Newtonsoft.Json;
 using System.Reactive.Concurrency;
-using MessagePack;
 using DataModel.Common.Messages;
 
 namespace DataModel.Client
@@ -40,7 +39,6 @@ namespace DataModel.Client
 
         public override void ChannelActive(IChannelHandlerContext context)
         {
-            var lz4Options = MessagePackSerializerOptions.Standard.WithCompression(MessagePackCompression.Lz4BlockArray);
             outBoundManager = instance.OutboundTraffic.Select(v=> v.ToJsonPayload()).Subscribe(v =>
             {
                 Console.WriteLine("PUSHING: DATA" + v.GetLength(0));
