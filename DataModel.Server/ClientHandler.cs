@@ -22,8 +22,8 @@ namespace DataModel.Server
     {
         static readonly IInternalLogger Logger = InternalLoggerFactory.GetInstance<ClientHandler>();
 
-        readonly Subject<IMsgPackMsg> clientInboundTraffic = new Subject<IMsgPackMsg>();
-        readonly ISubject<IMsgPackMsg> synchronizedInboundTraffic;
+        readonly Subject<IMessage> clientInboundTraffic = new Subject<IMessage>();
+        readonly ISubject<IMessage> synchronizedInboundTraffic;
         readonly UserAccountService userAccountService;
         readonly MapContentService mapContentService;
         readonly APIGatewayService apiGatewayService;

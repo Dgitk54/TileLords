@@ -37,14 +37,14 @@ namespace DataModel.Server.Tests
             var accountservice = new UserAccountService(DataBaseFunctions.FindUserInDatabase, ServerFunctions.PasswordMatches);
             var mapservice = new MapContentService(DataBaseFunctions.AreaContentRequest, DataBaseFunctions.UpdateOrDeleteContent);
 
-            var responses = new List<IMsgPackMsg>();
+            var responses = new List<IMessage>();
             var gateway = new APIGatewayService(accountservice, mapservice);
 
             gateway.GatewayResponse.Subscribe(v => responses.Add(v));
-            Subject<IMsgPackMsg> testInput = new Subject<IMsgPackMsg>();
+            Subject<IMessage> testInput = new Subject<IMessage>();
             gateway.AttachGateway(testInput);
-            IMsgPackMsg registerRequest = new AccountMessage() { Name = "test1", Password = "test1", Context = MessageContext.REGISTER };
-            IMsgPackMsg loginRequest = new AccountMessage() { Name = "test1", Password = "test1", Context = MessageContext.REGISTER };
+            IMessage registerRequest = new AccountMessage() { Name = "test1", Password = "test1", Context = MessageContext.REGISTER };
+            IMessage loginRequest = new AccountMessage() { Name = "test1", Password = "test1", Context = MessageContext.REGISTER };
 
             //One register request:
             testInput.OnNext(registerRequest);

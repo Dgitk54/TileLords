@@ -49,7 +49,7 @@ namespace DataModel.Client
         }
 
 
-        public static async Task<Tout> GetsEvent<Tout, Tin>(ClientInstance instance, Tin input, int timeOutInSeconds) where Tout : IMsgPackMsg where Tin : IMsgPackMsg
+        public static async Task<Tout> GetsEvent<Tout, Tin>(ClientInstance instance, Tin input, int timeOutInSeconds) where Tout : IMessage where Tin : IMessage
         {
             var observeOn = Scheduler.CurrentThread;
             var received = Task.Run(() =>

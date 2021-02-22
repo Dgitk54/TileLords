@@ -40,7 +40,7 @@ namespace DataModel.Server
             return new MapContent() { Id = user.UserId, Name = user.UserName, ResourceType = Common.Messages.ResourceType.NONE, Type = ContentType.PLAYER, Location = null, MapContentId = null };
         }
 
-        public static IMsgPackMsg AsMessage(this MapContent content)
+        public static IMessage AsMessage(this MapContent content)
         => new ContentMessage() { Id = content.Id, Location = content.Location, Name = content.Name, ResourceType = content.ResourceType, Type = content.Type };
 
         public static void PrintConsoleErrorHandler(object sender, ErrorEventArgs errorArgs)

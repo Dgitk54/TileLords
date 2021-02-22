@@ -5,7 +5,7 @@ using System.Text;
 
 namespace DataModel.Common.Messages
 {
-    public class AccountMessage : IMsgPackMsg
+    public class AccountMessage : IMessage
     {
         public MessageContext Context { get; set; }
       

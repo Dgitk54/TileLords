@@ -6,7 +6,7 @@ namespace DataModel.Common.Messages
 {
    
     
-    public interface IMsgPackMsg 
+    public interface IMessage 
     {
 
     }
