@@ -51,7 +51,10 @@ namespace DataModel.Client
         public IObservable<bool> ClientConnectionState => connectionState.AsObservable();
 
         public IObservable<bool> ReconnectionState => reconnectinonState.AsObservable();
-
+        public void SendMessage(IMessage msg)
+        {
+            outboundTraffic.OnNext(msg);
+        }
         public void ShutDown()
         {
             reconnectionDisposable.Dispose();
@@ -68,13 +71,14 @@ namespace DataModel.Client
             var disp2 = instance.InboundTraffic.Subscribe(v => inboundTraffic.OnNext(v));
             var disp3 = instance.ClientConnectionState.Subscribe(v => connectionState.OnNext(v));
             var disp4 = instance.ClientMapStream.Subscribe(v => mapForwarding.OnNext(v));
-
+            var disp5 = instance.AddOutBoundTraffic(outboundTraffic.AsObservable());
             
 
             forwardDisposables.Add(disp1);
             forwardDisposables.Add(disp2);
             forwardDisposables.Add(disp3);
             forwardDisposables.Add(disp4);
+            forwardDisposables.Add(disp5);
 
             runningClient = Task.Run(() => instance.RunClientAsyncWithIP());
 

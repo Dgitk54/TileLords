@@ -50,7 +50,10 @@ namespace DataModel.Client
                 pipeline.AddLast(serverHandler);
             });
         }
-
+        public IDisposable AddOutBoundTraffic(IObservable<IMessage> outboundSource) 
+        {
+            return outboundSource.Subscribe(v => outboundTraffic.OnNext(v));
+        }
         public IObservable<UnityMapMessage> ClientMapStream => mapSubject.AsObservable();
 
         public IObservable<IMessage> OutboundTraffic => outboundTraffic.AsObservable();
