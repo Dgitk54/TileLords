@@ -42,8 +42,11 @@ namespace DataModel.Client
                                                          .Subscribe(v =>
                                                          {
                                                              outboundTraffic.OnNext(v.account);
-                                                             reconnectionState.OnNext(false);
                                                          });
+
+            var activateReconnectionState = GetWorkingAccountDetails(InboundTraffic, outboundTraffic).CombineLatest(connectionState, (account, connection) => new { account, connection })
+                                                                                                     .Where(v => !v.connection)
+                                                                                                     .Subscribe(v => reconnectionState.OnNext(true));
 
             var autoReconnect = Observable.Interval(TimeSpan.FromSeconds(RECONNECTWAITTIME)).WithLatestFrom(connectionState, (timer, state) => new { timer, state })
                                                                         .Where(v => !v.state)
@@ -64,6 +67,7 @@ namespace DataModel.Client
             reconnectDisposables.Add(autoRelog);
             reconnectDisposables.Add(autoReconnect);
             reconnectDisposables.Add(outboundTrafficForward);
+            reconnectDisposables.Add(activateReconnectionState);
 
 
         }
