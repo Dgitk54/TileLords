@@ -59,10 +59,14 @@ namespace DataModel.Server.Services
         
             LoggedInUser(inboundtraffic).Take(1).Subscribe(v =>
             {
-                var mapServiceUpdate = mapService.AddMapContent(v.AsMapContent(), LatestClientLocation(inboundtraffic));
-                var clientMapUpdate = LatestClientLocation(inboundtraffic).Throttle(TimeSpan.FromSeconds(3)).Select(v2 => mapService.GetMapUpdate(v2.Code)).Switch().Subscribe(v2 => responses.OnNext(v2));
-                disposables.Add(mapServiceUpdate);
-                disposables.Add(clientMapUpdate);
+                var mapServicePlayerUpdate = mapService.AddMapContent(v.AsMapContent(), LatestClientLocation(inboundtraffic));
+                var mapDataRequests = Observable.Interval(TimeSpan.FromSeconds(3)).WithLatestFrom(LatestClientLocation(inboundtraffic), (time, location) => new { time, location })
+                                                                                  .Select(v2 => v2.location)
+                                                                                  .Select(v2 => mapService.GetMapUpdate(v2.Code))
+                                                                                  .Switch()
+                                                                                  .Subscribe(v2 => responses.OnNext(v2));
+                disposables.Add(mapServicePlayerUpdate);
+                disposables.Add(mapDataRequests);
             });
         }
 
@@ -71,6 +75,7 @@ namespace DataModel.Server.Services
             disposables.ForEach(v => v.Dispose());
         }
 
+        //TODO: Check for multiple logins via accumulator function on inboundtraffic
         IObservable<IUser> LoggedInUser(IObservable<IMessage> inboundtraffic)
         {
             return inboundtraffic.OfType<AccountMessage>()
