@@ -47,13 +47,19 @@ namespace ClientIntegration
             var inbound = new List<IMsgPackMsg>();
             var outbound = new List<IMsgPackMsg>();
             var connectionState = new List<bool>();
+            var minimapupdate = new List<UnityMapMessage>();
             instance.OutboundTraffic.Subscribe(v => outbound.Add(v));
             instance.InboundTraffic.Subscribe(v => inbound.Add(v));
             instance.ClientConnectionState.Subscribe(v => connectionState.Add(v));
+            instance.ClientMapStream.Subscribe(v => minimapupdate.Add(v));
+
             var startedClientTask = ClientFunctions.StartClient(instance);
 
             var regMsg = new AccountMessage() { Name = "a", Password = "a", Context = MessageContext.REGISTER };
             var logMsg = new AccountMessage() { Name = "a", Password = "a", Context = MessageContext.LOGIN };
+            var gpsMsg = new UserGpsMessage() { Lat = 49.000000, Lon = 50.00000 };
+            var gspMsg2 = new UserGpsMessage() { Lat = 49.000050, Lon = 50.0000050 };
+
             var ctMsg = new ContentMessage() { Id = new byte[] { 5, 12, 3 }, Location = "dbg", Name = "dbgname", ResourceType = DataModel.Common.Messages.ResourceType.APPLE, Type = ContentType.RESSOURCE };
             instance.SendMessage(regMsg);
             Thread.Sleep(1500);
@@ -62,6 +68,13 @@ namespace ClientIntegration
             instance.SendMessage(ctMsg);
             Thread.Sleep(1000);
 
+            instance.SendMessage(gpsMsg);
+
+
+            Thread.Sleep(1000);
+            instance.SendMessage(gspMsg2);
+
+            ;
             instance.DisconnectClient();
             startedClientTask.Wait();
 
