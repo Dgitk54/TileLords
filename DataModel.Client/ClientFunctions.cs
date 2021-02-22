@@ -20,7 +20,19 @@ namespace DataModel.Client
     /// </summary>
     public static class ClientFunctions
     {
-        
+        public static Task StartClient(ClientInstance instance, string ip, int port)
+        {
+            var waitForConnection = Task.Run(() =>
+            {
+                var result = instance.ClientConnectionState.Do(v => Console.WriteLine(v)).Where(v => v).Take(1)
+                            .Timeout(DateTime.Now.AddSeconds(5)).Wait();
+                return result;
+            });
+            Thread.Sleep(300);
+            var run = Task.Run(() => instance.RunClientAsyncWithIP(ip, port));
+            waitForConnection.Wait();
+            return run;
+        }
         public static Task StartClient(ClientInstance instance)
         {
             var waitForConnection = Task.Run(() =>

@@ -23,65 +23,82 @@ namespace DataModel.Client
         readonly string ip;
         readonly int port;
         readonly List<IDisposable> forwardDisposables = new List<IDisposable>();
-        IDisposable reconnectionDisposable;
-        IDisposable reconnectionResetDisposable;
+        readonly List<IDisposable> reconnectDisposables = new List<IDisposable>();
+        
         ClientInstance instance;
         Task runningClient;
+        bool hasBeenRunningFlag = false;
+
         public ClientInstanceManager(string ipAdress = "127.0.0.1", int port = 8080)
         {
-
-            CreateNewInstanceAndSubscribe();
-
-            reconnectionDisposable = connectionState.Where(v => !v)
+            ip = ipAdress;
+            this.port = port;
+            var reconnectionDisposable = connectionState.Where(v => !v)
                                                     .WithLatestFrom(GetWorkingAccountDetails(inboundTraffic, outboundTraffic), (state, account) => new { state, account })
                                                     .Do(v => reconnectinonState.OnNext(true))
                                                     .Do(v => CreateNewInstanceAndSubscribe())
                                                     .Delay(TimeSpan.FromSeconds(SENDLOGINMESSAGEDELAY))
                                                     .Subscribe(v => outboundTraffic.OnNext(v.account));
 
-            reconnectionResetDisposable = connectionState.Where(v => v).Subscribe(v => reconnectinonState.OnNext(false));
+            var reconnectionResetDisposable = connectionState.Where(v => v).Subscribe(v => reconnectinonState.OnNext(false));
+
+            var outboundTrafficForward = outboundTraffic.Subscribe(v =>
+            {
+                
+                if (instance != null)
+                    instance.SendMessage(v);
+            });
+
+            reconnectDisposables.Add(reconnectionResetDisposable);
+            reconnectDisposables.Add(reconnectionDisposable);
+            reconnectDisposables.Add(outboundTrafficForward);
+
+
         }
 
         public IObservable<UnityMapMessage> ClientMapStream => mapForwarding.AsObservable();
-
-        public IObservable<IMessage> OutboundTraffic => outboundTraffic.AsObservable();
 
         public IObservable<IMessage> InboundTraffic => inboundTraffic.AsObservable();
 
         public IObservable<bool> ClientConnectionState => connectionState.AsObservable();
 
         public IObservable<bool> ReconnectionState => reconnectinonState.AsObservable();
+
         public void SendMessage(IMessage msg)
         {
             outboundTraffic.OnNext(msg);
         }
+        public void StartClient()
+        {
+            if (hasBeenRunningFlag)
+                throw new Exception("Can not start a ClientInstanceManager once it has been shut down!");
+            CreateNewInstanceAndSubscribe();
+            hasBeenRunningFlag = true;
+        }
+
         public void ShutDown()
         {
-            reconnectionDisposable.Dispose();
-            reconnectionResetDisposable.Dispose();
+            reconnectDisposables.ForEach(v => v.Dispose());
             StopRunningClientInstance();
         }
+
         void CreateNewInstanceAndSubscribe()
         {
             StopRunningClientInstance();
-
-            //Create new Instance
             instance = new ClientInstance();
-            var disp1 = instance.OutboundTraffic.Subscribe(v => outboundTraffic.OnNext(v));
-            var disp2 = instance.InboundTraffic.Subscribe(v => inboundTraffic.OnNext(v));
-            var disp3 = instance.ClientConnectionState.Subscribe(v => connectionState.OnNext(v));
-            var disp4 = instance.ClientMapStream.Subscribe(v => mapForwarding.OnNext(v));
-            var disp5 = instance.AddOutBoundTraffic(outboundTraffic.AsObservable());
-            
 
+            
+            var disp1 = instance.InboundTraffic.Subscribe(v => inboundTraffic.OnNext(v));
+
+            var disp2 = instance.ClientConnectionState.Subscribe(v => connectionState.OnNext(v));
+
+            var disp3 = instance.ClientMapStream.Subscribe(v => mapForwarding.OnNext(v));
+           
             forwardDisposables.Add(disp1);
             forwardDisposables.Add(disp2);
             forwardDisposables.Add(disp3);
-            forwardDisposables.Add(disp4);
-            forwardDisposables.Add(disp5);
-
-            runningClient = Task.Run(() => instance.RunClientAsyncWithIP());
-
+          
+            runningClient = ClientFunctions.StartClient(instance,ip,port);
         }
         void StopRunningClientInstance()
         {

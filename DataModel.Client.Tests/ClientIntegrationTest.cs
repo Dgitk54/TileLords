@@ -37,7 +37,45 @@ namespace ClientIntegration
             }
             server.ShutDownServer().Wait();
         }
+        [Test]
+        public void ClientInstanceManagerReconnectTest()
+        {
 
+            var instance = new ClientInstanceManager();
+
+            var inbound = new List<IMessage>();
+            var connectionState = new List<bool>();
+            var minimapupdate = new List<UnityMapMessage>();
+
+            instance.InboundTraffic.Subscribe(v => inbound.Add(v));
+            instance.ClientConnectionState.Subscribe(v => connectionState.Add(v));
+            instance.ClientMapStream.Subscribe(v => minimapupdate.Add(v));
+
+
+            instance.StartClient();
+            var regMsg = new AccountMessage() { Name = "a", Password = "a", Context = MessageContext.REGISTER };
+            var logMsg = new AccountMessage() { Name = "a", Password = "a", Context = MessageContext.LOGIN };
+            var gpsMsg = new UserGpsMessage() { Lat = 49.000000, Lon = 50.00000 };
+            var gspMsg2 = new UserGpsMessage() { Lat = 49.000050, Lon = 50.0000050 };
+
+            var ctMsg = new ContentMessage() { Id = new byte[] { 5, 12, 3 }, Location = "dbg", Name = "dbgname", ResourceType = DataModel.Common.Messages.ResourceType.APPLE, Type = ContentType.RESSOURCE };
+            
+            instance.SendMessage(regMsg);
+            Thread.Sleep(300);
+            instance.SendMessage(logMsg);
+            Thread.Sleep(300);
+            instance.SendMessage(ctMsg);
+            Thread.Sleep(300);
+
+            instance.SendMessage(gpsMsg);
+
+
+            Thread.Sleep(300);
+            instance.SendMessage(gspMsg2);
+
+            Assert.IsTrue(minimapupdate.Count != 0);
+            Assert.IsTrue(inbound.Count != 0);
+        }
 
         [Test]
         public void ClientCanSend()
