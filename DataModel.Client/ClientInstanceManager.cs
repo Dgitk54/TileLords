@@ -14,12 +14,13 @@ namespace DataModel.Client
     public class ClientInstanceManager
     {
         const int SENDLOGINMESSAGEDELAY = 2;
-
+        const int RECONNECTWAITTIME = 5;
+        const int RECONNECTSTATERESET = 5;
         readonly Subject<UnityMapMessage> mapForwarding = new Subject<UnityMapMessage>();
         readonly Subject<IMessage> outboundTraffic = new Subject<IMessage>();
         readonly Subject<IMessage> inboundTraffic = new Subject<IMessage>();
         readonly Subject<bool> connectionState = new Subject<bool>();
-        readonly BehaviorSubject<bool> reconnectinonState = new BehaviorSubject<bool>(false);
+        readonly BehaviorSubject<bool> reconnectionState = new BehaviorSubject<bool>(false);
         readonly string ip;
         readonly int port;
         readonly List<IDisposable> forwardDisposables = new List<IDisposable>();
@@ -33,14 +34,24 @@ namespace DataModel.Client
         {
             ip = ipAdress;
             this.port = port;
-            var reconnectionDisposable = connectionState.Where(v => !v)
-                                                    .WithLatestFrom(GetWorkingAccountDetails(inboundTraffic, outboundTraffic), (state, account) => new { state, account })
-                                                    .Do(v => reconnectinonState.OnNext(true))
-                                                    .Do(v => CreateNewInstanceAndSubscribe())
-                                                    .Delay(TimeSpan.FromSeconds(SENDLOGINMESSAGEDELAY))
-                                                    .Subscribe(v => outboundTraffic.OnNext(v.account));
+                                   
 
-            var reconnectionResetDisposable = connectionState.Where(v => v).Subscribe(v => reconnectinonState.OnNext(false));
+            var autoRelog = connectionState.Where(v => v).WithLatestFrom(reconnectionState, (connection, reconnect) => new { connection, reconnect })
+                                                         .Where(v => v.reconnect)
+                                                         .WithLatestFrom(GetWorkingAccountDetails(inboundTraffic, outboundTraffic), (states, account) => new { states, account })
+                                                         .Subscribe(v =>
+                                                         {
+                                                             outboundTraffic.OnNext(v.account);
+                                                             reconnectionState.OnNext(false);
+                                                         });
+
+            var autoReconnect = Observable.Interval(TimeSpan.FromSeconds(RECONNECTWAITTIME)).WithLatestFrom(connectionState, (timer, state) => new { timer, state })
+                                                                        .Where(v => !v.state)
+                                                                        .Where(v => hasBeenRunningFlag)
+                                                                        .Subscribe(v => CreateNewInstanceAndSubscribe());
+
+
+            var reconnectionResetDisposable = connectionState.Where(v => v).Delay(TimeSpan.FromSeconds(RECONNECTSTATERESET)).Subscribe(v => reconnectionState.OnNext(false));
 
             var outboundTrafficForward = outboundTraffic.Subscribe(v =>
             {
@@ -50,7 +61,8 @@ namespace DataModel.Client
             });
 
             reconnectDisposables.Add(reconnectionResetDisposable);
-            reconnectDisposables.Add(reconnectionDisposable);
+            reconnectDisposables.Add(autoRelog);
+            reconnectDisposables.Add(autoReconnect);
             reconnectDisposables.Add(outboundTrafficForward);
 
 
@@ -62,7 +74,7 @@ namespace DataModel.Client
 
         public IObservable<bool> ClientConnectionState => connectionState.AsObservable();
 
-        public IObservable<bool> ReconnectionState => reconnectinonState.AsObservable();
+        public IObservable<bool> ReconnectionState => reconnectionState.AsObservable();
 
         public void SendMessage(IMessage msg)
         {
