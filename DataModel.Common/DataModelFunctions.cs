@@ -17,20 +17,20 @@ namespace DataModel.Common
     {
 
 
-        public static byte[] ToJsonPayload(this IMsgPackMsg msg)
+        public static byte[] ToJsonPayload(this IMessage msg)
         {
             return Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(msg, new JsonSerializerSettings()
             {
                 TypeNameHandling = TypeNameHandling.All
             }));
         }
-        public static IMsgPackMsg FromJsonPayload(this byte[] payload)
+        public static IMessage FromJsonPayload(this byte[] payload)
         {
-            return JsonConvert.DeserializeObject<IMsgPackMsg>(Encoding.UTF8.GetString(payload));
+            return JsonConvert.DeserializeObject<IMessage>(Encoding.UTF8.GetString(payload));
         }
-        public static IMsgPackMsg FromString(this string payload)
+        public static IMessage FromString(this string payload)
         {
-            return JsonConvert.DeserializeObject<IMsgPackMsg>(payload, new JsonSerializerSettings()
+            return JsonConvert.DeserializeObject<IMessage>(payload, new JsonSerializerSettings()
             {
                 TypeNameHandling = TypeNameHandling.Auto
             });

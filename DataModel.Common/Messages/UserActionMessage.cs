@@ -6,7 +6,7 @@ using System.Text;
 namespace DataModel.Common.Messages
 {
     
-    public class UserActionMessage : IMsgPackMsg
+    public class UserActionMessage : IMessage
     {
         
         public MessageType MessageType { get; set; }

@@ -22,7 +22,7 @@ namespace DataModel.Client
 
         static readonly IInternalLogger Logger = InternalLoggerFactory.GetInstance<ServerHandler>();
 
-        readonly Subject<IMsgPackMsg> inboundTraffic = new Subject<IMsgPackMsg>();
+        readonly Subject<IMessage> inboundTraffic = new Subject<IMessage>();
         readonly BehaviorSubject<bool> connectionState = new BehaviorSubject<bool>(false);
         readonly ClientInstance instance;
         IDisposable outBoundManager;
@@ -33,7 +33,7 @@ namespace DataModel.Client
             this.instance = instance;
 
         }
-        public IObservable<IMsgPackMsg> InboundTraffic => inboundTraffic.AsObservable();
+        public IObservable<IMessage> InboundTraffic => inboundTraffic.AsObservable();
 
         public IObservable<bool> ConnctionState => connectionState.AsObservable();
 

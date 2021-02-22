@@ -33,7 +33,7 @@ namespace DataModel.Client
         readonly List<IDisposable> disposables = new List<IDisposable>();
 
         readonly Subject<UnityMapMessage> mapSubject = new Subject<UnityMapMessage>();
-        readonly Subject<IMsgPackMsg> outboundTraffic = new Subject<IMsgPackMsg>();
+        readonly Subject<IMessage> outboundTraffic = new Subject<IMessage>();
 
         readonly ActionChannelInitializer<ISocketChannel> actionChannelInitializer;
 
@@ -53,9 +53,9 @@ namespace DataModel.Client
 
         public IObservable<UnityMapMessage> ClientMapStream => mapSubject.AsObservable();
 
-        public IObservable<IMsgPackMsg> OutboundTraffic => outboundTraffic.AsObservable();
+        public IObservable<IMessage> OutboundTraffic => outboundTraffic.AsObservable();
 
-        public IObservable<IMsgPackMsg> InboundTraffic => serverHandler.InboundTraffic;
+        public IObservable<IMessage> InboundTraffic => serverHandler.InboundTraffic;
 
         public IObservable<bool> ClientConnectionState => serverHandler.ConnctionState;
 
@@ -75,7 +75,7 @@ namespace DataModel.Client
             SendMessage(e);
         }
 
-        public void SendMessage(IMsgPackMsg msg)
+        public void SendMessage(IMessage msg)
         {
             outboundTraffic.OnNext(msg);
         }

@@ -41,7 +41,7 @@ namespace DataModel.Server.Tests
             var givenThree = new PlusCode("8FX9XW2F+7X", 10);
             var givenFour = new PlusCode("8FX9XW2F+2X", 10);
 
-            var responseList = new List<IMsgPackMsg>();
+            var responseList = new List<IMessage>();
 
             IUser user1 = new User()
             {

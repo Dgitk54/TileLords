@@ -6,7 +6,7 @@ using System.Text;
 namespace DataModel.Common.Messages
 {
   
-    public class UserGpsMessage : IMsgPackMsg
+    public class UserGpsMessage : IMessage
     {
      
         public double Lat { get; set; }

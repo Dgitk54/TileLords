@@ -12,7 +12,7 @@ namespace DataModel.Server.Services
 {
     public class APIGatewayService
     {
-        readonly Subject<IMsgPackMsg> responses = new Subject<IMsgPackMsg>();
+        readonly Subject<IMessage> responses = new Subject<IMessage>();
         readonly UserAccountService userService;
         readonly MapContentService mapService;
         readonly List<IDisposable> disposables = new List<IDisposable>();
@@ -52,17 +52,21 @@ namespace DataModel.Server.Services
             this.userService = userService;
             this.mapService = mapService;
         }
-        public IObservable<IMsgPackMsg> GatewayResponse => responses.AsObservable();
-        public void AttachGateway(IObservable<IMsgPackMsg> inboundtraffic)
+        public IObservable<IMessage> GatewayResponse => responses.AsObservable();
+        public void AttachGateway(IObservable<IMessage> inboundtraffic)
         {
             disposables.Add(HandleRegister(inboundtraffic));
         
             LoggedInUser(inboundtraffic).Take(1).Subscribe(v =>
             {
-                var mapServiceUpdate = mapService.AddMapContent(v.AsMapContent(), LatestClientLocation(inboundtraffic));
-                var clientMapUpdate = LatestClientLocation(inboundtraffic).Throttle(TimeSpan.FromSeconds(3)).Select(v2 => mapService.GetMapUpdate(v2.Code)).Switch().Subscribe(v2 => responses.OnNext(v2));
-                disposables.Add(mapServiceUpdate);
-                disposables.Add(clientMapUpdate);
+                var mapServicePlayerUpdate = mapService.AddMapContent(v.AsMapContent(), LatestClientLocation(inboundtraffic));
+                var mapDataRequests = Observable.Interval(TimeSpan.FromSeconds(3)).WithLatestFrom(LatestClientLocation(inboundtraffic), (time, location) => new { time, location })
+                                                                                  .Select(v2 => v2.location)
+                                                                                  .Select(v2 => mapService.GetMapUpdate(v2.Code))
+                                                                                  .Switch()
+                                                                                  .Subscribe(v2 => responses.OnNext(v2));
+                disposables.Add(mapServicePlayerUpdate);
+                disposables.Add(mapDataRequests);
             });
         }
 
@@ -71,7 +75,8 @@ namespace DataModel.Server.Services
             disposables.ForEach(v => v.Dispose());
         }
 
-        IObservable<IUser> LoggedInUser(IObservable<IMsgPackMsg> inboundtraffic)
+        //TODO: Check for multiple logins via accumulator function on inboundtraffic
+        IObservable<IUser> LoggedInUser(IObservable<IMessage> inboundtraffic)
         {
             return inboundtraffic.OfType<AccountMessage>()
                           .Where(v=> v.Context == MessageContext.LOGIN)
@@ -88,7 +93,7 @@ namespace DataModel.Server.Services
                           });
         }
 
-        IDisposable HandleRegister(IObservable<IMsgPackMsg> inboundtraffic)
+        IDisposable HandleRegister(IObservable<IMessage> inboundtraffic)
         {
             return inboundtraffic.OfType<AccountMessage>()
                                 .Where(v=> v.Context == MessageContext.REGISTER)
@@ -108,7 +113,7 @@ namespace DataModel.Server.Services
                                 });
         }
         
-        IObservable<PlusCode> LatestClientLocation(IObservable<IMsgPackMsg> inboundtraffic)
+        IObservable<PlusCode> LatestClientLocation(IObservable<IMessage> inboundtraffic)
         {
             return inboundtraffic.OfType<UserGpsMessage>()
                           .Select(v => { return new GPS(v.Lat, v.Lon); })

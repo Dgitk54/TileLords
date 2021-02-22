@@ -4,7 +4,7 @@ using System.Text;
 
 namespace DataModel.Common.Messages
 {
-    public class ContentMessage : IMsgPackMsg
+    public class ContentMessage : IMessage
     {
         
         public ContentType Type { get; set; }

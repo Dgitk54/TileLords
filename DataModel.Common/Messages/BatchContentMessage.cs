@@ -5,8 +5,8 @@ using System.Text;
 
 namespace DataModel.Common.Messages
 {
-    public class BatchContentMessage : IMsgPackMsg
+    public class BatchContentMessage : IMessage
     {
-        public List<IMsgPackMsg> ContentList { get; set; }
+        public List<IMessage> ContentList { get; set; }
     }
 }

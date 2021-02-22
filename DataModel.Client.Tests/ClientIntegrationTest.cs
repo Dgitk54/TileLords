@@ -44,8 +44,8 @@ namespace ClientIntegration
         {
             ClientInstance instance = new ClientInstance();
 
-            var inbound = new List<IMsgPackMsg>();
-            var outbound = new List<IMsgPackMsg>();
+            var inbound = new List<IMessage>();
+            var outbound = new List<IMessage>();
             var connectionState = new List<bool>();
             var minimapupdate = new List<UnityMapMessage>();
             instance.OutboundTraffic.Subscribe(v => outbound.Add(v));
