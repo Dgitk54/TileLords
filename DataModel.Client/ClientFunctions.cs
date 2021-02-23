@@ -46,12 +46,13 @@ namespace DataModel.Client
             waitForConnection.Wait();
             return run;
         }
-        public static void SendGpsPath(ClientInstance instance, CancellationToken ct, List<GPS> gps, int sleeptime)
+        public static void SendGpsPath(ClientInstanceManager instance, CancellationToken ct, List<GPS> gps, int sleeptime)
         {
             int i = 0;
             do
             {
-                instance.SendGps(gps[i % gps.Count]);
+                var gpsNode = gps[i % gps.Count];
+                instance.SendMessage(new UserGpsMessage() {Lat = gpsNode.Lat, Lon = gpsNode.Lon });
                 Thread.Sleep(sleeptime);
                 i++;
                 if (ct.IsCancellationRequested)
@@ -61,7 +62,7 @@ namespace DataModel.Client
         }
 
 
-        public static async Task<Tout> GetsEvent<Tout, Tin>(ClientInstance instance, Tin input, int timeOutInSeconds) where Tout : IMessage where Tin : IMessage
+        public static async Task<Tout> GetsEvent<Tout, Tin>(ClientInstanceManager instance, Tin input, int timeOutInSeconds) where Tout : IMessage where Tin : IMessage
         {
             var observeOn = Scheduler.CurrentThread;
             var received = Task.Run(() =>
@@ -76,7 +77,7 @@ namespace DataModel.Client
             return received.Result;
         }
 
-        public static void LoginOrRegister(ClientInstance instance, string name, string password)
+        public static void LoginOrRegister(ClientInstanceManager instance, string name, string password)
         {
             var tryLogin = GetsEvent<UserActionMessage, AccountMessage>(instance, new AccountMessage() { Name = name, Password = password, Context = MessageContext.LOGIN }, 5);
             tryLogin.Wait();

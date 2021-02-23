@@ -39,6 +39,7 @@ namespace DataModel.Client
             var autoRelog = connectionState.Where(v => v).WithLatestFrom(reconnectionState, (connection, reconnect) => new { connection, reconnect })
                                                          .Where(v => v.reconnect)
                                                          .WithLatestFrom(GetWorkingAccountDetails(inboundTraffic, outboundTraffic), (states, account) => new { states, account })
+                                                         .Do(v => Console.WriteLine("OutBoundTrafficOnNext ACCOUNTMESSAGE"))
                                                          .Subscribe(v =>
                                                          {
                                                              outboundTraffic.OnNext(v.account);
@@ -46,15 +47,30 @@ namespace DataModel.Client
 
             var activateReconnectionState = GetWorkingAccountDetails(InboundTraffic, outboundTraffic).CombineLatest(connectionState, (account, connection) => new { account, connection })
                                                                                                      .Where(v => !v.connection)
+                                                                                                     .Do(v => Console.WriteLine("reconnectionStateOnNext true"))
                                                                                                      .Subscribe(v => reconnectionState.OnNext(true));
 
             var autoReconnect = Observable.Interval(TimeSpan.FromSeconds(RECONNECTWAITTIME)).WithLatestFrom(connectionState, (timer, state) => new { timer, state })
-                                                                        .Where(v => !v.state)
-                                                                        .Where(v => hasBeenRunningFlag)
-                                                                        .Subscribe(v => CreateNewInstanceAndSubscribe());
+                                                                                            .Where(v => !v.state)
+                                                                                            .Where(v => hasBeenRunningFlag)
+                                                                                            .Do(v => Console.WriteLine("CreateNewInstanceAndSubscribe"))
+                                                                                            .Subscribe(v => 
+                                                                                            {
+                                                                                                try
+                                                                                                {
+                                                                                                CreateNewInstanceAndSubscribe();
+                                                                                                }
+                                                                                                catch (Exception e)
+                                                                                                {
+                                                                                                    Console.WriteLine("Could not connect with the client instance");
+                                                                                                }
+                                                                                            });
 
 
-            var reconnectionResetDisposable = connectionState.Where(v => v).Delay(TimeSpan.FromSeconds(RECONNECTSTATERESET)).Subscribe(v => reconnectionState.OnNext(false));
+            var reconnectionResetDisposable = connectionState.Where(v => v)
+                                                             .Delay(TimeSpan.FromSeconds(RECONNECTSTATERESET))
+                                                             .Do(v => Console.WriteLine("reconnectionStateOnNext False"))
+                                                             .Subscribe(v => reconnectionState.OnNext(false));
 
             var outboundTrafficForward = outboundTraffic.Subscribe(v =>
             {

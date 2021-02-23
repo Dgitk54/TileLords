@@ -54,8 +54,10 @@ namespace ClientMain
 
         static void DebugLoginAndRunAroundClient(string name, string password, List<GPS> path, CancellationToken cancellationToken)
         {
-            var instance = new ClientInstance();
-            var result = ClientFunctions.StartClient(instance);
+            
+            var instance = new ClientInstanceManager();
+            instance.StartClient();
+            
             var tokenSrc = new CancellationTokenSource();
 
             //Try to log in, create account if cant log in:
@@ -72,7 +74,7 @@ namespace ClientMain
 
             tokenSrc.Cancel();
             sendPath.Wait();
-            instance.DisconnectClient();
+            instance.ShutDown();
         }
 
     }
