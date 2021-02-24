@@ -84,6 +84,23 @@ namespace DataModel.Server
                     throw new Exception("Could not update entity");
             }
         }
+        public static int DeleteAllDatabaseResources()
+        {
+            using (var dataBase = new LiteDatabase(DataBasePath()))
+            {
+                var col = dataBase.GetCollection<MapContent>("mapcontent");
+                col.EnsureIndex(v => v.Id);
+                col.EnsureIndex(v => v.Location);
+                col.EnsureIndex(v => v.Name);
+                col.EnsureIndex(v => v.ResourceType);
+                col.EnsureIndex(v => v.Type);
+
+                int players = col.DeleteMany(v => v.Type == ContentType.PLAYER);
+                int resources = col.DeleteMany(v => v.Type == ContentType.RESSOURCE);
+                return players + resources;
+            }
+
+        }
 
         public static List<MapContent> AreaContentAsListRequest(string location)
         {

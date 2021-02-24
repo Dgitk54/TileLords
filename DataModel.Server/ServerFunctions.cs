@@ -51,6 +51,18 @@ namespace DataModel.Server
             return new Services.Resource() { Id = id, Location = null, Name = randomType.ToString(), ResourceType = randomType, Type = ContentType.RESSOURCE };
         }
 
+        public static IObservable<bool> SpawnConditionMet(this IObservable<PlusCode> code, MapContentService service, List<Func<List<MapContent>, bool>> spawnCheckFunctions)
+        {
+            
+            return code.Select(v => service.GetListMapUpdate(v.Code)).Switch().Select(v =>
+            {
+                return spawnCheckFunctions.All(v2 =>
+                {
+                    return v2.Invoke(v);
+                });
+            });
+        }
+
         public static MapContent AsMapContent(this IUser user)
         {
             return new MapContent() { Id = user.UserId, Name = user.UserName, ResourceType = Common.Messages.ResourceType.NONE, Type = ContentType.PLAYER, Location = null, MapContentId = null };

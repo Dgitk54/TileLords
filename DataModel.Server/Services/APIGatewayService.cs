@@ -71,12 +71,14 @@ namespace DataModel.Server.Services
                                                                                   .Switch()
                                                                                   .Subscribe(v2 => responses.OnNext(v2));
 
-                resourceSpawnService.AddMovableRessourceSpawnArea(v.UserId, LatestClientLocation(inboundtraffic));
+
+                var spawnDisposable = resourceSpawnService.AddMovableRessourceSpawnArea(v.UserId, LatestClientLocation(inboundtraffic));
                                     
                 
                 
                 disposables.Add(mapServicePlayerUpdate);
                 disposables.Add(mapDataRequests);
+                disposables.Add(spawnDisposable);
             });
         }
 

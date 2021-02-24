@@ -21,6 +21,7 @@ namespace DataModel.Server.Services
     public class ResourceSpawnService
     {
         const int RESOURCEALIVEINSEC = 60;
+        const int RESOURCESPAWNCHECKINTERVAL = 15;
         readonly MapContentService service;
         readonly List<IDisposable> disposables = new List<IDisposable>();
         readonly Action<MapContent, string> userContentStorage;
@@ -36,63 +37,48 @@ namespace DataModel.Server.Services
 
             resourceSpawnRequests = Subject.Synchronize(storedMapResources);
 
-            //var disposable = resourceSpawnRequests.Select(v => AddOnMapWithDespose(Observable.Return(v)))
-            //                                      .Subscribe(v=> disposables.Add(v));
+            //Handling spawn requests
+            var disposable = resourceSpawnRequests.Do(v => Console.WriteLine("Spawning content!"))
+                                                  .Subscribe(v => userContentStorage(v.Item1.AsMapContent(), v.Item2));
+            
+            //Handling delete requests
+            var deleteRequests = resourceSpawnRequests.Delay(TimeSpan.FromSeconds(RESOURCEALIVEINSEC))
+                                                      .Do(v => Console.WriteLine("Despawning content!"))
+                                                      .Subscribe(v => userContentStorage(v.Item1.AsMapContent(), null));
 
-            var disposable = resourceSpawnRequests.Subscribe(v => userContentStorage(v.Item1.AsMapContent(), v.Item2));
             disposables.Add(disposable);
+            disposables.Add(deleteRequests);
         }
 
         public void ShutDownService()
         {
             disposables.ForEach(v => v.Dispose());
         }
-        
-       
-        //TODO: ERRORPRONE! Propagate location downstream via touples
+
+        //TODO: minor bugprone: Propagate location downstream via touples
         public IDisposable AddMovableRessourceSpawnArea(byte[] moveableOwnerId, IObservable<PlusCode> location)
         {
-
-            return location.Throttle(TimeSpan.FromSeconds(20)) //Throttle location
-                           .Select(v => SpawnConditionMet(v)) //Check if spawn condition applies
-                           .Switch()
-                           .Where(v => v)               //Stream of where spawn conditions are true 
-                           .Select(v => GetRandomResource(moveableOwnerId))  //Grab a spawnable ressource for the id
-                           .Switch()
-                           .WithLatestFrom(location, (res, loc) => new { res, loc }) //merge with latest location
-                           .Subscribe(v =>
-                           {
-                               resourceSpawnRequests.OnNext((v.res, v.loc.Code));
-                           });
+            return Observable.Interval(TimeSpan.FromSeconds(RESOURCESPAWNCHECKINTERVAL))
+                             .WithLatestFrom(location, (_, loc) => new { _, loc})
+                             .Select(v=> v.loc)
+                             .SpawnConditionMet(service,spawnCheckFunctions)
+                             .Where(v=> v)
+                             .Select(v=> GetRandomResource(moveableOwnerId))
+                             .Switch()
+                             .WithLatestFrom(location, (res, loc) => new { res, loc })
+                             .Subscribe(v =>
+                             {
+                                 var randomNearbyLocation = GetNearbyRandomSpawn(v.res, v.loc.Code).Code;
+                                 resourceSpawnRequests.OnNext((v.res, randomNearbyLocation));
+                             });
         }
 
-        
-
-
-
-        IDisposable AddOnMapWithDespose(IObservable<(Resource, string)> resourceWithLocation)
+        PlusCode GetNearbyRandomSpawn(Resource resource, string vicinity)
         {
-            return resourceWithLocation.Select(v => service.AddMapContent(v.Item1.AsMapContent(), GetNearbyRandomSpawn(v.Item1, v.Item2)))
-                                       .Delay(TimeSpan.FromSeconds(RESOURCEALIVEINSEC))
-                                       .Subscribe(v => v.Dispose());
-
+            var list = LocationCodeTileUtility.GetTileSection(vicinity, 10, 10);
+            var randomSpot = new Random().Next(list.Count);
+            return new PlusCode(list[randomSpot], 10);
         }
-
-        
-
-
-        IObservable<PlusCode> GetNearbyRandomSpawn(Resource resource, string vicinity)
-        {
-            return Observable.Create<PlusCode>(v =>
-            {
-                var list = LocationCodeTileUtility.GetTileSection(vicinity, 10, 10);
-                var randomSpot = new Random().Next(list.Count);
-                v.OnNext(new PlusCode(list[randomSpot], 10));
-                v.OnCompleted();
-                return Disposable.Empty;
-            });
-        }
-
 
         IObservable<Resource> GetRandomResource(byte[] requestId)
         {
@@ -102,23 +88,7 @@ namespace DataModel.Server.Services
                 v.OnCompleted();
                 return Disposable.Empty;
             });
-            
-        }
 
-        IObservable<Resource> GetRandomQuestResource(byte[] requestId)
-        {
-            throw new NotImplementedException();
-        }
-
-        IObservable<bool> SpawnConditionMet(PlusCode code)
-        {
-            return service.GetListMapUpdate(code.Code).Select(v =>
-            {
-                return spawnCheckFunctions.All(v2 =>
-                {
-                    return v2.Invoke(v);
-                });
-            });
         }
     }
 }

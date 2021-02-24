@@ -33,11 +33,12 @@ namespace DataModel.Server.Services
                                });
         }
 
+        
         public IObservable<List<MapContent>> GetListMapUpdate(string userLocation)
         {
-
             return Observable.Create<List<MapContent>>(v =>
             {
+                
                 List<MapContent> result = null;
                 try
                 {
@@ -48,7 +49,7 @@ namespace DataModel.Server.Services
                     v.OnError(e);
                     return Disposable.Empty;
                 }
-
+                ;
                 if (result != null)
                 {
                     v.OnNext(result);
