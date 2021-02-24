@@ -46,7 +46,7 @@ namespace DataModel.Server
         {
             Array values = Enum.GetValues(typeof(Common.Messages.ResourceType));
             Random random = new Random();
-            Common.Messages.ResourceType randomType = (Common.Messages.ResourceType)values.GetValue(random.Next(values.Length));
+            Common.Messages.ResourceType randomType = (Common.Messages.ResourceType)values.GetValue(random.Next(1, values.Length));
             var id = ObjectId.NewObjectId().ToByteArray();
             return new Services.Resource() { Id = id, Location = null, Name = randomType.ToString(), ResourceType = randomType, Type = ContentType.RESSOURCE };
         }

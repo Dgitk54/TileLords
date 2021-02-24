@@ -16,7 +16,7 @@ namespace DataModel.Server.Services
 {
 
     /// <summary>
-    /// Class responsible for spawning content on the map
+    /// Class responsible for spawning/despawning content on the map
     /// </summary>
     public class ResourceSpawnService
     {
