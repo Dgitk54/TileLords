@@ -35,11 +35,28 @@ namespace DataModel.Server
         public readonly static int CLIENTVISIBILITY = 10;
         public readonly static int CLIENTLOCATIONPRECISION = 10;
         
+
+       
+        public static bool Only5ResourcesInArea(List<MapContent> content)
+        {
+            return content.Where(v => v.Type == ContentType.RESSOURCE).Count() < 5;
+        }
+
+        public static Services.Resource GetRandomNonQuestResource()
+        {
+            Array values = Enum.GetValues(typeof(Common.Messages.ResourceType));
+            Random random = new Random();
+            Common.Messages.ResourceType randomType = (Common.Messages.ResourceType)values.GetValue(random.Next(values.Length));
+            var id = ObjectId.NewObjectId().ToByteArray();
+            return new Services.Resource() { Id = id, Location = null, Name = randomType.ToString(), ResourceType = randomType, Type = ContentType.RESSOURCE };
+        }
+
         public static MapContent AsMapContent(this IUser user)
         {
             return new MapContent() { Id = user.UserId, Name = user.UserName, ResourceType = Common.Messages.ResourceType.NONE, Type = ContentType.PLAYER, Location = null, MapContentId = null };
         }
-
+        public static MapContent AsMapContent(this Services.Resource resource)
+        => new MapContent() { Id = resource.Id, Location = resource.Location, Name = resource.Name, ResourceType = resource.ResourceType, Type = resource.Type };
         public static IMessage AsMessage(this MapContent content)
         => new ContentMessage() { Id = content.Id, Location = content.Location, Name = content.Name, ResourceType = content.ResourceType, Type = content.Type };
 

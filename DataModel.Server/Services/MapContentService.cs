@@ -12,16 +12,19 @@ namespace DataModel.Server.Services
     {
 
         readonly Func<string, BatchContentMessage> areaLookup;
+        readonly Func<string, List<MapContent>> areaLookupAsContent;
         readonly Action<MapContent, string> userContentStorage;
-        public  MapContentService(Func<string, BatchContentMessage> areaLookup, Action<MapContent, string> userContentStorage)
+        
+        public  MapContentService(Func<string, BatchContentMessage> areaLookup, Action<MapContent, string> userContentStorage, Func<string, List<MapContent>> areaLookupAsContent)
         {
             this.areaLookup = areaLookup;
             this.userContentStorage = userContentStorage;
+            this.areaLookupAsContent = areaLookupAsContent;
         }
         
-        public IDisposable AddMapContent(MapContent content, IObservable<PlusCode> userLocation)
+        public IDisposable AddMapContent(MapContent content, IObservable<PlusCode> contentLocation)
         {
-            return userLocation.Finally(()=> userContentStorage(content, null))
+            return contentLocation.Finally(()=> userContentStorage(content, null))
                                .Subscribe(v => 
                                {
                                    userContentStorage(content, v.Code);
@@ -29,6 +32,39 @@ namespace DataModel.Server.Services
                                    () => { userContentStorage(content, null);
                                });
         }
+
+        public IObservable<List<MapContent>> GetListMapUpdate(string userLocation)
+        {
+
+            return Observable.Create<List<MapContent>>(v =>
+            {
+                List<MapContent> result = null;
+                try
+                {
+                    result = areaLookupAsContent.Invoke(userLocation);
+                }
+                catch (Exception e)
+                {
+                    v.OnError(e);
+                    return Disposable.Empty;
+                }
+
+                if (result != null)
+                {
+                    v.OnNext(result);
+                    v.OnCompleted();
+                    return Disposable.Empty;
+                }
+                else
+                {
+                    v.OnCompleted();
+                    return Disposable.Empty;
+                }
+            });
+
+
+        }
+
 
         public IObservable<BatchContentMessage> GetMapUpdate(string userLocation)
         {

@@ -61,7 +61,7 @@ namespace ClientMain
             var tokenSrc = new CancellationTokenSource();
 
             //Try to log in, create account if cant log in:
-            ClientFunctions.LoginOrRegister(instance, name, password);
+            ClientFunctions.LoginOrRegisterAndLogin(instance, name, password);
             ;
             var sendPath = Task.Run(() => ClientFunctions.SendGpsPath(instance, tokenSrc.Token, path, 4000));
             do

@@ -37,8 +37,8 @@ namespace DataModel.Server
         /// <summary>
         /// Updates or deletes the content in the database if no location is provided
         /// </summary>
-        /// <param name="content"></param>
-        /// <param name="location"></param>
+        /// <param name="content">MapContent to insert/update</param>
+        /// <param name="location">The current location of the MapContent, if null this function will delete the mapcontent</param>
         public static void UpdateOrDeleteContent(MapContent content, string location)
         {
             using (var dataBase = new LiteDatabase(DataBasePath()))
@@ -69,13 +69,15 @@ namespace DataModel.Server
                 }
 
                 var first = enumerable.First();
-                //Delte value out of database
+
+                //Delte value out of database, if it is still present.
                 if (enumerable.Count() != 0 && location == null) 
                 {
                     var deletedAmount = col.DeleteMany(v => v.Id == first.Id);
-                    Debug.Assert(deletedAmount == 1);
                     return;
                 }
+
+                //Update value:
                 first.Location = location;
                 var result = col.Update(first);
                 if (!result)
@@ -83,8 +85,50 @@ namespace DataModel.Server
             }
         }
 
-        
-        public static BatchContentMessage AreaContentRequest(string location)
+        public static List<MapContent> AreaContentAsListRequest(string location)
+        {
+            //TODO: FIX BUG, WORKS ONLY IN WRITE ONLY MODE!
+            using (var dataBase = new LiteDatabase(DataBasePath()))
+            {
+                try
+                {
+                    var col = dataBase.GetCollection<MapContent>("mapcontent");
+                    col.EnsureIndex(v => v.Id);
+                    col.EnsureIndex(v => v.Location);
+                    col.EnsureIndex(v => v.Name);
+                    col.EnsureIndex(v => v.ResourceType);
+                    col.EnsureIndex(v => v.Type);
+
+                    var nearbyCodes = LocationCodeTileUtility.GetTileSection(location, ServerFunctions.CLIENTVISIBILITY, ServerFunctions.CLIENTLOCATIONPRECISION);
+
+                    var enumerable = col.Find(v => nearbyCodes.Any(v2 => v2.Equals(v.Location)));
+
+                    return enumerable.ToList();
+                }
+                catch (FileNotFoundException e)
+                {
+
+                    using (var dbwrite = new LiteDatabase(DataBasePath()))
+                    {
+                        var col = dbwrite.GetCollection<MapContent>("mapcontent");
+                        col.EnsureIndex(v => v.Id);
+                        col.EnsureIndex(v => v.Location);
+                        col.EnsureIndex(v => v.Name);
+                        col.EnsureIndex(v => v.ResourceType);
+                        col.EnsureIndex(v => v.Type);
+                        return null;
+                    }
+                }
+
+            }
+
+
+
+
+        }
+
+
+        public static BatchContentMessage AreaContentAsMessageRequest(string location)
         {
             //TODO: FIX BUG, WORKS ONLY IN WRITE ONLY MODE!
             using (var dataBase = new LiteDatabase(DataBasePath()))

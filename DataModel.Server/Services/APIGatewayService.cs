@@ -7,14 +7,18 @@ using System.Text;
 using System.Reactive.Linq;
 using DataModel.Common;
 using System.Diagnostics;
+using System.Collections.Concurrent;
+using System.Reactive.Disposables;
 
 namespace DataModel.Server.Services
 {
     public class APIGatewayService
     {
+        
         readonly Subject<IMessage> responses = new Subject<IMessage>();
         readonly UserAccountService userService;
         readonly MapContentService mapService;
+        readonly ResourceSpawnService resourceSpawnService;
         readonly List<IDisposable> disposables = new List<IDisposable>();
 
         readonly static UserActionMessage loginFail = new UserActionMessage()
@@ -47,10 +51,11 @@ namespace DataModel.Server.Services
             MessageType = MessageType.RESPONSE
         };
 
-        public APIGatewayService(UserAccountService userService, MapContentService mapService)
+        public APIGatewayService(UserAccountService userService, MapContentService mapService, ResourceSpawnService spawnService)
         {
             this.userService = userService;
             this.mapService = mapService;
+            this.resourceSpawnService = spawnService;
         }
         public IObservable<IMessage> GatewayResponse => responses.AsObservable();
         public void AttachGateway(IObservable<IMessage> inboundtraffic)
@@ -65,6 +70,11 @@ namespace DataModel.Server.Services
                                                                                   .Select(v2 => mapService.GetMapUpdate(v2.Code))
                                                                                   .Switch()
                                                                                   .Subscribe(v2 => responses.OnNext(v2));
+
+                resourceSpawnService.AddMovableRessourceSpawnArea(v.UserId, LatestClientLocation(inboundtraffic));
+                                    
+                
+                
                 disposables.Add(mapServicePlayerUpdate);
                 disposables.Add(mapDataRequests);
             });

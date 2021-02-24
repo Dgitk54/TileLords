@@ -26,13 +26,15 @@ namespace DataModel.Server
         readonly ISubject<IMessage> synchronizedInboundTraffic;
         readonly UserAccountService userAccountService;
         readonly MapContentService mapContentService;
+        readonly ResourceSpawnService resourceSpawnService;
         readonly APIGatewayService apiGatewayService;
         IDisposable responseDisposable;
         public ClientHandler()
         {
             userAccountService = new UserAccountService(DataBaseFunctions.FindUserInDatabase, ServerFunctions.PasswordMatches);
-            mapContentService = new MapContentService(DataBaseFunctions.AreaContentRequest, DataBaseFunctions.UpdateOrDeleteContent);
-            apiGatewayService = new APIGatewayService(userAccountService, mapContentService);
+            mapContentService = new MapContentService(DataBaseFunctions.AreaContentAsMessageRequest, DataBaseFunctions.UpdateOrDeleteContent, DataBaseFunctions.AreaContentAsListRequest);
+            resourceSpawnService = new ResourceSpawnService(mapContentService, DataBaseFunctions.UpdateOrDeleteContent, new List<Func<List<MapContent>, bool>>() { ServerFunctions.Only5ResourcesInArea });
+            apiGatewayService = new APIGatewayService(userAccountService, mapContentService, resourceSpawnService);
             synchronizedInboundTraffic = Subject.Synchronize(clientInboundTraffic);
         }
 

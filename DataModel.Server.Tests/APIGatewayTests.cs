@@ -35,10 +35,10 @@ namespace DataModel.Server.Tests
         public void RegisterGetsResponse()
         {
             var accountservice = new UserAccountService(DataBaseFunctions.FindUserInDatabase, ServerFunctions.PasswordMatches);
-            var mapservice = new MapContentService(DataBaseFunctions.AreaContentRequest, DataBaseFunctions.UpdateOrDeleteContent);
-
+            var mapservice = new MapContentService(DataBaseFunctions.AreaContentAsMessageRequest, DataBaseFunctions.UpdateOrDeleteContent, DataBaseFunctions.AreaContentAsListRequest);
+            
             var responses = new List<IMessage>();
-            var gateway = new APIGatewayService(accountservice, mapservice);
+            var gateway = new APIGatewayService(accountservice, mapservice, null);
 
             gateway.GatewayResponse.Subscribe(v => responses.Add(v));
             Subject<IMessage> testInput = new Subject<IMessage>();

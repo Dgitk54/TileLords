@@ -34,7 +34,7 @@ namespace DataModel.Server.Tests
         public void PushedContentIsVisible()
         {
             //Data setup
-            MapContentService service = new MapContentService(DataBaseFunctions.AreaContentRequest, DataBaseFunctions.UpdateOrDeleteContent);
+            MapContentService service = new MapContentService(DataBaseFunctions.AreaContentAsMessageRequest, DataBaseFunctions.UpdateOrDeleteContent, DataBaseFunctions.AreaContentAsListRequest);
             
             var givenOne = new PlusCode("8FX9XW2F+9X", 10);
             var givenTwo = new PlusCode("8FX9XW2F+8X", 10);
