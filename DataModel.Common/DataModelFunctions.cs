@@ -16,13 +16,23 @@ namespace DataModel.Common
     public static class DataModelFunctions
     {
 
-
+        //TODO: Temporary cast  imessage to concrete message
         public static byte[] ToJsonPayload(this IMessage msg)
         {
-            return Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(msg, new JsonSerializerSettings()
+            switch (msg)
             {
-                TypeNameHandling = TypeNameHandling.All
-            }));
+                case BatchContentMessage concreteType:
+                    var serialized = JsonConvert.SerializeObject(concreteType, new JsonSerializerSettings()
+                    {
+                        TypeNameHandling = TypeNameHandling.Objects
+                    });
+                    return Encoding.UTF8.GetBytes(serialized);
+                default:
+                    return Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(msg, new JsonSerializerSettings()
+                    {
+                        TypeNameHandling = TypeNameHandling.All
+                    }));
+            }
         }
         public static IMessage FromJsonPayload(this byte[] payload)
         {
@@ -34,7 +44,6 @@ namespace DataModel.Common
             {
                 TypeNameHandling = TypeNameHandling.Auto
             });
-            
         }
         
 
