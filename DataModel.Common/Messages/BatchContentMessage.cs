@@ -7,6 +7,6 @@ namespace DataModel.Common.Messages
 {
     public class BatchContentMessage : IMessage
     {
-        public List<IMessage> ContentList { get; set; }
+        public List<ContentMessage> ContentList { get; set; }
     }
 }

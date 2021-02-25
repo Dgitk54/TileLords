@@ -41,7 +41,6 @@ namespace DataModel.Client
         {
             outBoundManager = instance.OutboundTraffic.Select(v => v.ToJsonPayload()).Subscribe(v =>
              {
-                 Console.WriteLine("PUSHING: DATA" + v.GetLength(0));
                  context.WriteAndFlushAsync(Unpooled.WrappedBuffer(v));
              });
             connectionState.OnNext(true);
@@ -52,7 +51,6 @@ namespace DataModel.Client
             var byteBuffer = message as IByteBuffer;
             if (byteBuffer != null)
             {
-                Console.WriteLine("Received" + byteBuffer.ToString(Encoding.UTF8));
                 var msgpack = byteBuffer.ToString(Encoding.UTF8).FromString();
                 inboundTraffic.OnNext(msgpack);
             }

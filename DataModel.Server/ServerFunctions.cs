@@ -69,7 +69,7 @@ namespace DataModel.Server
         }
         public static MapContent AsMapContent(this Services.Resource resource)
         => new MapContent() { Id = resource.Id, Location = resource.Location, Name = resource.Name, ResourceType = resource.ResourceType, Type = resource.Type };
-        public static IMessage AsMessage(this MapContent content)
+        public static ContentMessage AsMessage(this MapContent content)
         => new ContentMessage() { Id = content.Id, Location = content.Location, Name = content.Name, ResourceType = content.ResourceType, Type = content.Type };
 
         public static void PrintConsoleErrorHandler(object sender, ErrorEventArgs errorArgs)

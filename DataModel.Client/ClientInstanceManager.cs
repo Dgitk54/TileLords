@@ -1,6 +1,7 @@
 ﻿using DataModel.Common.Messages;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Text;
@@ -39,7 +40,6 @@ namespace DataModel.Client
             var autoRelog = connectionState.Where(v => v).WithLatestFrom(reconnectionState, (connection, reconnect) => new { connection, reconnect })
                                                          .Where(v => v.reconnect)
                                                          .WithLatestFrom(GetWorkingAccountDetails(inboundTraffic, outboundTraffic), (states, account) => new { states, account })
-                                                         .Do(v => Console.WriteLine("OutBoundTrafficOnNext ACCOUNTMESSAGE"))
                                                          .Subscribe(v =>
                                                          {
                                                              outboundTraffic.OnNext(v.account);
@@ -47,7 +47,6 @@ namespace DataModel.Client
 
             var activateReconnectionState = GetWorkingAccountDetails(InboundTraffic, outboundTraffic).CombineLatest(connectionState, (account, connection) => new { account, connection })
                                                                                                      .Where(v => !v.connection)
-                                                                                                     .Do(v => Console.WriteLine("reconnectionStateOnNext true"))
                                                                                                      .Subscribe(v => reconnectionState.OnNext(true));
 
             var autoReconnect = Observable.Interval(TimeSpan.FromSeconds(RECONNECTWAITTIME)).WithLatestFrom(connectionState, (timer, state) => new { timer, state })
@@ -69,7 +68,6 @@ namespace DataModel.Client
 
             var reconnectionResetDisposable = connectionState.Where(v => v)
                                                              .Delay(TimeSpan.FromSeconds(RECONNECTSTATERESET))
-                                                             .Do(v => Console.WriteLine("reconnectionStateOnNext False"))
                                                              .Subscribe(v => reconnectionState.OnNext(false));
 
             var outboundTrafficForward = outboundTraffic.Subscribe(v =>
@@ -79,11 +77,23 @@ namespace DataModel.Client
                     instance.SendMessage(v);
             });
 
+            var consoleContentLogger = inboundTraffic.OfType<BatchContentMessage>().Select(v=> v.ContentList).Subscribe(v => 
+            {
+                string visibleContentString = "\n \n";
+                visibleContentString += "Visible Contentamount:" + v.Count + " \n";
+                var players = v.Where(v2 => v2.Type == ContentType.PLAYER).Select(v2 => "[Player:" + v2.Name + " id:" + v2.Id + " on location " + v2.Location + "] \n").ToList();
+                var resources = v.Where(v2 => v2.Type == ContentType.RESSOURCE).Select(v2 => "[Resource:" + v2.Name + " id:" + v2.Id + " on location " + v2.Location + "] \n").ToList();
+                players.ForEach(v2 => visibleContentString += v2);
+                resources.ForEach(v2 => visibleContentString += v2);
+                Console.WriteLine(visibleContentString);
+            } );
+
             reconnectDisposables.Add(reconnectionResetDisposable);
             reconnectDisposables.Add(autoRelog);
             reconnectDisposables.Add(autoReconnect);
             reconnectDisposables.Add(outboundTrafficForward);
             reconnectDisposables.Add(activateReconnectionState);
+            reconnectDisposables.Add(consoleContentLogger);
 
 
         }
