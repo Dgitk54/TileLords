@@ -1,5 +1,6 @@
 ﻿using DataModel.Common;
 using DataModel.Common.Messages;
+using DataModel.Server.Model;
 using DataModel.Server.Services;
 using LiteDB;
 using System;
@@ -35,6 +36,29 @@ namespace DataModel.Server
         }
 
         /// <summary>
+        /// Function which removes content in the database.
+        /// </summary>
+        /// <param name="contentId">The ID of the content to remove</param>
+        /// <returns>MapContent if successful, null if content could not be removed</returns>
+        public static MapContent RemoveContent(byte[] contentId)
+        {
+            using (var dataBase = new LiteDatabase(DataBasePath()))
+            {
+                var col = dataBase.GetCollection<MapContent>("mapcontent");
+                col.EnsureIndex(v => v.Id);
+                col.EnsureIndex(v => v.Location);
+                col.EnsureIndex(v => v.Name);
+                col.EnsureIndex(v => v.ResourceType);
+                col.EnsureIndex(v => v.Type);
+                var enumerable = col.Find(v => v.Id.SequenceEqual(contentId));
+
+                return null;
+            }
+            
+        }
+
+
+        /// <summary>
         /// Updates or deletes the content in the database if no location is provided
         /// </summary>
         /// <param name="content">MapContent to insert/update</param>
@@ -50,7 +74,7 @@ namespace DataModel.Server
                 col.EnsureIndex(v => v.ResourceType);
                 col.EnsureIndex(v => v.Type);
 
-                var enumerable = col.Find(v => v.Id == content.Id);
+                var enumerable = col.Find(v => v.Id.SequenceEqual(content.Id));
                 if (enumerable.Count() > 1)
                     throw new Exception("Multiple objects with same ID in database");
                 
@@ -84,7 +108,7 @@ namespace DataModel.Server
                     throw new Exception("Could not update entity");
             }
         }
-        public static int DeleteAllDatabaseResources()
+        public static int ResetMapContent()
         {
             using (var dataBase = new LiteDatabase(DataBasePath()))
             {

@@ -7,6 +7,7 @@ using NUnit.Framework;
 using System.Reactive;
 using System.Reactive.Linq;
 using System.Reactive.Joins;
+using DataModel.Server.Model;
 
 namespace DataModel.Server.Tests
 {

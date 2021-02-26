@@ -16,6 +16,7 @@ using Newtonsoft.Json.Serialization;
 using System.Security.Cryptography;
 using DataModel.Common.Messages;
 using DataModel.Server.Services;
+using DataModel.Server.Model;
 
 namespace DataModel.Server
 {
@@ -42,13 +43,13 @@ namespace DataModel.Server
             return content.Where(v => v.Type == ContentType.RESSOURCE).Count() < 5;
         }
 
-        public static Services.Resource GetRandomNonQuestResource()
+        public static Model.Resource GetRandomNonQuestResource()
         {
             Array values = Enum.GetValues(typeof(Common.Messages.ResourceType));
             Random random = new Random();
             Common.Messages.ResourceType randomType = (Common.Messages.ResourceType)values.GetValue(random.Next(1, values.Length));
             var id = ObjectId.NewObjectId().ToByteArray();
-            return new Services.Resource() { Id = id, Location = null, Name = randomType.ToString(), ResourceType = randomType, Type = ContentType.RESSOURCE };
+            return new Model.Resource() { Id = id, Location = null, Name = randomType.ToString(), ResourceType = randomType, Type = ContentType.RESSOURCE };
         }
 
         public static IObservable<bool> SpawnConditionMet(this IObservable<PlusCode> code, MapContentService service, List<Func<List<MapContent>, bool>> spawnCheckFunctions)
@@ -66,7 +67,7 @@ namespace DataModel.Server
         {
             return new MapContent() { Id = user.UserId, Name = user.UserName, ResourceType = Common.Messages.ResourceType.NONE, Type = ContentType.PLAYER, Location = null, MapContentId = null };
         }
-        public static MapContent AsMapContent(this Services.Resource resource)
+        public static MapContent AsMapContent(this Model.Resource resource)
         => new MapContent() { Id = resource.Id, Location = resource.Location, Name = resource.Name, ResourceType = resource.ResourceType, Type = resource.Type };
         public static ContentMessage AsMessage(this MapContent content)
         => new ContentMessage() { Id = content.Id, Location = content.Location, Name = content.Name, ResourceType = content.ResourceType, Type = content.Type };

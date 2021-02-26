@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using LiteDB;
 
-namespace DataModel.Server.Services
+namespace DataModel.Server.Model
 {
     public class User : IUser
     {

@@ -9,6 +9,7 @@ using DataModel.Common;
 using System.Diagnostics;
 using System.Collections.Concurrent;
 using System.Reactive.Disposables;
+using DataModel.Server.Model;
 
 namespace DataModel.Server.Services
 {
