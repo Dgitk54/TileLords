@@ -29,6 +29,7 @@ namespace DataModel.Server.Services
             MessageType = MessageType.RESPONSE
         };
         
+        
         readonly static UserActionMessage loginSuccess = new UserActionMessage()
         {
             MessageContext = MessageContext.LOGIN,
@@ -36,6 +37,13 @@ namespace DataModel.Server.Services
             MessageState = MessageState.SUCCESS,
             MessageType = MessageType.RESPONSE
         };
+        static UserActionMessage loginSuccessWithId(IUser user)
+        {
+            var success = loginSuccess;
+            success.MessageInfo = MessageInfo.USERID;
+            success.AdditionalInfo = user.UserId;
+            return success;
+        }
         readonly static UserActionMessage registerFail = new UserActionMessage()
         {
             MessageContext = MessageContext.REGISTER,
@@ -101,7 +109,7 @@ namespace DataModel.Server.Services
                           .Do(v =>
                           {
                               if(v != null)
-                                  responses.OnNext(loginSuccess);
+                                  responses.OnNext(loginSuccessWithId(v));
                           });
         }
 

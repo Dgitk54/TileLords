@@ -12,7 +12,8 @@ namespace DataModel.Common.Messages
     public enum MessageContext
     {
         REGISTER,
-        LOGIN
+        LOGIN,
+        TRANSACTION
     }
     public enum MessageState
     {
@@ -23,7 +24,8 @@ namespace DataModel.Common.Messages
     {
         NONE,
         NAMETAKEN,
-        LOGINFAIL
+        LOGINFAIL,
+        USERID
     }
     public enum ContentType
     {
@@ -71,7 +73,5 @@ namespace DataModel.Common.Messages
         TOMATO,
         WHEAT,
         WOOL,
-
-
     }
 }

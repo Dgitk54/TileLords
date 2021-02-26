@@ -53,7 +53,6 @@ namespace DataModel.Server
 
         public static IObservable<bool> SpawnConditionMet(this IObservable<PlusCode> code, MapContentService service, List<Func<List<MapContent>, bool>> spawnCheckFunctions)
         {
-            
             return code.Select(v => service.GetListMapUpdate(v.Code)).Switch().Select(v =>
             {
                 return spawnCheckFunctions.All(v2 =>
