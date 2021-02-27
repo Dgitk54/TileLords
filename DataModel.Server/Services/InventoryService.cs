@@ -49,7 +49,15 @@ namespace DataModel.Server.Services
             });
 
         }
+        public IObservable<Inventory> RequestContainerInventory(byte[] playerId, byte[] containerId)
+        {
+            return Observable.Create<Inventory>(v => 
+            {
 
+                return Disposable.Empty; 
+            });
+
+        }
         //TODO: BUG: synchronize properly
         public IObservable<bool> MapContentPickUp(byte[] requestId, byte[] mapContentTarget)
         {
