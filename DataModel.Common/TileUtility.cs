@@ -44,15 +44,7 @@ namespace DataModel.Common
                            select miniTile;
             return minitile.ToList();
         }
-        public static ServerMapEvent GetServerMapEvent(this Tile tile)
-        {
-            var e = new ServerMapEvent();
-            e.Tiles = new List<Tile> { tile };
-            e.MiniTiles = null;
-            e.UpdateSize = tile.MiniTiles.Count;
-            return e;
-
-        }
+       
 
         public static string TileDebugContentString(this Tile t)
         {

@@ -22,10 +22,9 @@ namespace DataModel.Server.Services
     public class ResourceSpawnService
     {
         const int RESOURCEALIVEINSEC = 60;
-        const int RESOURCESPAWNCHECKINTERVAL = 15;
+        const int RESOURCESPAWNCHECKTHROTTLEINSECONDS = 15;
         readonly MapContentService service;
         readonly List<IDisposable> disposables = new List<IDisposable>();
-        readonly Action<MapContent, string> userContentStorage;
         readonly List<Func<List<MapContent>, bool>> spawnCheckFunctions;
         readonly Subject<(Resource, string)> storedMapResources = new Subject<(Resource, string)>();
         readonly ISubject<(Resource, string)> resourceSpawnRequests;
@@ -33,7 +32,6 @@ namespace DataModel.Server.Services
         public ResourceSpawnService(MapContentService service, Action<MapContent, string> userContentStorage, List<Func<List<MapContent>, bool>> spawnCheckFunctions)
         {
             this.service = service;
-            this.userContentStorage = userContentStorage;
             this.spawnCheckFunctions = spawnCheckFunctions;
 
             resourceSpawnRequests = Subject.Synchronize(storedMapResources);
@@ -59,7 +57,7 @@ namespace DataModel.Server.Services
         //TODO: minor bugprone: Propagate location downstream via touples
         public IDisposable AddMovableRessourceSpawnArea(byte[] moveableOwnerId, IObservable<PlusCode> location)
         {
-            return Observable.Interval(TimeSpan.FromSeconds(RESOURCESPAWNCHECKINTERVAL))
+            return Observable.Interval(TimeSpan.FromSeconds(RESOURCESPAWNCHECKTHROTTLEINSECONDS))
                              .WithLatestFrom(location, (_, loc) => new { _, loc})
                              .Select(v=> v.loc)
                              .SpawnConditionMet(service,spawnCheckFunctions)

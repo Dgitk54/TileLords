@@ -18,7 +18,8 @@ namespace DataModel.Common.Messages
     public enum MessageState
     {
         ERROR,
-        SUCCESS
+        SUCCESS,
+        NONE
     }
     public enum MessageInfo
     {

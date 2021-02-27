@@ -35,7 +35,8 @@ namespace DataModel.Server
             userAccountService = new UserAccountService(DataBaseFunctions.FindUserInDatabase, ServerFunctions.PasswordMatches);
             mapContentService = new MapContentService(DataBaseFunctions.AreaContentAsMessageRequest, DataBaseFunctions.UpdateOrDeleteContent, DataBaseFunctions.AreaContentAsListRequest);
             resourceSpawnService = new ResourceSpawnService(mapContentService, DataBaseFunctions.UpdateOrDeleteContent, new List<Func<List<MapContent>, bool>>() { ServerFunctions.Only5ResourcesInArea });
-            apiGatewayService = new APIGatewayService(userAccountService, mapContentService, resourceSpawnService);
+            var InventoryService = new InventoryService();
+            apiGatewayService = new APIGatewayService(userAccountService, mapContentService, resourceSpawnService, InventoryService);
             synchronizedInboundTraffic = Subject.Synchronize(clientInboundTraffic);
         }
 

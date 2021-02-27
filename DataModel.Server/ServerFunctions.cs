@@ -25,31 +25,26 @@ namespace DataModel.Server
     /// </summary>
     public static class ServerFunctions
     {
-
-        public static string BiomeConfigs
-        {
-            get
-            {
-                return System.IO.Directory.GetParent(Environment.CurrentDirectory).Parent.Parent.Parent.FullName + @"\DataModel.Common\BiomeConfigs\";
-            }
-        }
         public readonly static int CLIENTVISIBILITY = 10;
         public readonly static int CLIENTLOCATIONPRECISION = 10;
         
 
-       
         public static bool Only5ResourcesInArea(List<MapContent> content)
         {
             return content.Where(v => v.Type == ContentType.RESSOURCE).Count() < 5;
         }
-
-        public static Model.Resource GetRandomNonQuestResource()
+        public static Dictionary<ResourceType, int> ToResourceDictionary(this MapContent content)
         {
-            Array values = Enum.GetValues(typeof(Common.Messages.ResourceType));
+            return new Dictionary<ResourceType, int>() { { content.ResourceType, 1 } };
+        }
+
+        public static Resource GetRandomNonQuestResource()
+        {
+            Array values = Enum.GetValues(typeof(ResourceType));
             Random random = new Random();
-            Common.Messages.ResourceType randomType = (Common.Messages.ResourceType)values.GetValue(random.Next(1, values.Length));
+            ResourceType randomType = (ResourceType)values.GetValue(random.Next(1, values.Length));
             var id = ObjectId.NewObjectId().ToByteArray();
-            return new Model.Resource() { Id = id, Location = null, Name = randomType.ToString(), ResourceType = randomType, Type = ContentType.RESSOURCE };
+            return new Resource() { Id = id, Location = null, Name = randomType.ToString(), ResourceType = randomType, Type = ContentType.RESSOURCE };
         }
 
         public static IObservable<bool> SpawnConditionMet(this IObservable<PlusCode> code, MapContentService service, List<Func<List<MapContent>, bool>> spawnCheckFunctions)
@@ -65,20 +60,12 @@ namespace DataModel.Server
 
         public static MapContent AsMapContent(this IUser user)
         {
-            return new MapContent() { Id = user.UserId, Name = user.UserName, ResourceType = Common.Messages.ResourceType.NONE, Type = ContentType.PLAYER, Location = null, MapContentId = null };
+            return new MapContent() { Id = user.UserId, Name = user.UserName, ResourceType = ResourceType.NONE, Type = ContentType.PLAYER, Location = null, MapContentId = null };
         }
-        public static MapContent AsMapContent(this Model.Resource resource)
+        public static MapContent AsMapContent(this Resource resource)
         => new MapContent() { Id = resource.Id, Location = resource.Location, Name = resource.Name, ResourceType = resource.ResourceType, Type = resource.Type };
         public static ContentMessage AsMessage(this MapContent content)
         => new ContentMessage() { Id = content.Id, Location = content.Location, Name = content.Name, ResourceType = content.ResourceType, Type = content.Type };
-
-        public static void PrintConsoleErrorHandler(object sender, ErrorEventArgs errorArgs)
-        {
-            var currentError = errorArgs.ErrorContext.Error.Message;
-            //Console.WriteLine(currentError);
-            errorArgs.ErrorContext.Handled = true;
-        }
-
         public static byte[] Hash(string value, byte[] salt) => Hash(Encoding.UTF8.GetBytes(value), salt);
 
         public static byte[] Hash(byte[] value, byte[] salt)

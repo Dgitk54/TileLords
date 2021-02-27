@@ -10,16 +10,18 @@ using System.Diagnostics;
 using System.Collections.Concurrent;
 using System.Reactive.Disposables;
 using DataModel.Server.Model;
+using System.Linq;
 
 namespace DataModel.Server.Services
 {
     public class APIGatewayService
     {
-        
+
         readonly Subject<IMessage> responses = new Subject<IMessage>();
         readonly UserAccountService userService;
         readonly MapContentService mapService;
         readonly ResourceSpawnService resourceSpawnService;
+        readonly InventoryService inventoryService;
         readonly List<IDisposable> disposables = new List<IDisposable>();
 
         readonly static UserActionMessage loginFail = new UserActionMessage()
@@ -29,8 +31,15 @@ namespace DataModel.Server.Services
             MessageState = MessageState.ERROR,
             MessageType = MessageType.RESPONSE
         };
-        
-        
+        readonly static InventoryContentMessage contentRetrievalFail = new InventoryContentMessage()
+        {
+            InventoryContent = null,
+            InventoryOwner = null,
+            Type = MessageType.RESPONSE,
+            MessageState = MessageState.ERROR
+
+        };
+
         readonly static UserActionMessage loginSuccess = new UserActionMessage()
         {
             MessageContext = MessageContext.LOGIN,
@@ -38,13 +47,7 @@ namespace DataModel.Server.Services
             MessageState = MessageState.SUCCESS,
             MessageType = MessageType.RESPONSE
         };
-        static UserActionMessage loginSuccessWithId(IUser user)
-        {
-            var success = loginSuccess;
-            success.MessageInfo = MessageInfo.USERID;
-            success.AdditionalInfo = user.UserId;
-            return success;
-        }
+
         readonly static UserActionMessage registerFail = new UserActionMessage()
         {
             MessageContext = MessageContext.REGISTER,
@@ -59,18 +62,33 @@ namespace DataModel.Server.Services
             MessageState = MessageState.SUCCESS,
             MessageType = MessageType.RESPONSE
         };
-
-        public APIGatewayService(UserAccountService userService, MapContentService mapService, ResourceSpawnService spawnService)
+        static UserActionMessage loginSuccessWithId(IUser user)
+        {
+            var success = loginSuccess;
+            success.MessageInfo = MessageInfo.USERID;
+            success.AdditionalInfo = user.UserId;
+            return success;
+        }
+        static InventoryContentMessage ContentResponse(byte[] ownerId, Dictionary<ResourceType, int> resources)
+        {
+            return new InventoryContentMessage() { InventoryContent = resources.ToList(), InventoryOwner = ownerId, MessageState = MessageState.SUCCESS, Type = MessageType.RESPONSE };
+        }
+        static MapContentTransactionMessage MapContentTransactionFail(byte[] targetId)
+        {
+            return new MapContentTransactionMessage() { MapContentId = targetId, MessageState = MessageState.ERROR, MessageType = MessageType.RESPONSE };
+        }
+        public APIGatewayService(UserAccountService userService, MapContentService mapService, ResourceSpawnService spawnService, InventoryService inventoryService)
         {
             this.userService = userService;
             this.mapService = mapService;
+            this.inventoryService = inventoryService;
             this.resourceSpawnService = spawnService;
         }
         public IObservable<IMessage> GatewayResponse => responses.AsObservable();
         public void AttachGateway(IObservable<IMessage> inboundtraffic)
         {
             disposables.Add(HandleRegister(inboundtraffic));
-        
+
             LoggedInUser(inboundtraffic).Take(1).Subscribe(v =>
             {
                 var mapServicePlayerUpdate = mapService.AddMapContent(v.AsMapContent(), LatestClientLocation(inboundtraffic));
@@ -82,12 +100,16 @@ namespace DataModel.Server.Services
 
 
                 var spawnDisposable = resourceSpawnService.AddMovableRessourceSpawnArea(v.UserId, LatestClientLocation(inboundtraffic));
-                                    
-                
-                
+
+                var handleInventoryRequests = HandleInventoryRequests(v, inboundtraffic);
+                var handlePickupRequests = HandleMapContentPickup(v, inboundtraffic);
+
+                disposables.Add(handleInventoryRequests);
                 disposables.Add(mapServicePlayerUpdate);
                 disposables.Add(mapDataRequests);
                 disposables.Add(spawnDisposable);
+                disposables.Add(handleInventoryRequests);
+                disposables.Add(handlePickupRequests);
             });
         }
 
@@ -100,7 +122,7 @@ namespace DataModel.Server.Services
         IObservable<IUser> LoggedInUser(IObservable<IMessage> inboundtraffic)
         {
             return inboundtraffic.OfType<AccountMessage>()
-                          .Where(v=> v.Context == MessageContext.LOGIN)
+                          .Where(v => v.Context == MessageContext.LOGIN)
                           .SelectMany(v => userService.LoginUser(v.Name, v.Password))
                           .Catch<IUser, Exception>(tx =>
                           {
@@ -109,15 +131,48 @@ namespace DataModel.Server.Services
                           })
                           .Do(v =>
                           {
-                              if(v != null)
+                              if (v != null)
                                   responses.OnNext(loginSuccessWithId(v));
                           });
+        }
+
+        IDisposable HandleInventoryRequests(IUser user, IObservable<IMessage> inboundtraffic)
+        {
+            return inboundtraffic.OfType<InventoryContentMessage>()
+                          .Where(v => v.Type == MessageType.REQUEST)
+                          .Select(v => inventoryService.RequestContainerInventory(user.UserId, v.InventoryOwner))
+                          .Switch()
+                          .Catch<(Dictionary<ResourceType, int>, byte[]), Exception>(v =>
+                         {
+                             responses.OnNext(contentRetrievalFail);
+                             return Observable.Empty<(Dictionary<ResourceType, int>, byte[])>();
+                         })
+                          .Subscribe(v =>
+                         {
+                             responses.OnNext(ContentResponse(v.Item2, v.Item1));
+                         });
+        }
+        IDisposable HandleMapContentPickup(IUser user, IObservable<IMessage> inboundtraffic)
+        {
+            return inboundtraffic.OfType<MapContentTransactionMessage>()
+                                      .Where(v => v.MessageType == MessageType.REQUEST)
+                                      .Select(v => inventoryService.MapContentPickUp(user.UserId, v.MapContentId))
+                                      .Switch()
+                                      .Catch<(bool, byte[]), Exception>(v =>
+                                       {
+                                           responses.OnNext(MapContentTransactionFail(null));
+                                           return Observable.Empty<(bool, byte[])>();
+                                       })
+                                      .Subscribe(v =>
+                                       {
+                                           responses.OnNext(new MapContentTransactionMessage() { MessageType = MessageType.RESPONSE, MapContentId = v.Item2, MessageState = MessageState.SUCCESS });
+                                       });
         }
 
         IDisposable HandleRegister(IObservable<IMessage> inboundtraffic)
         {
             return inboundtraffic.OfType<AccountMessage>()
-                                .Where(v=> v.Context == MessageContext.REGISTER)
+                                .Where(v => v.Context == MessageContext.REGISTER)
                                 .Select(v => userService.RegisterUser(v.Name, v.Password))
                                 .Switch()
                                 .Catch<bool, Exception>(tx =>
@@ -133,7 +188,7 @@ namespace DataModel.Server.Services
                                     }
                                 });
         }
-        
+
         IObservable<PlusCode> LatestClientLocation(IObservable<IMessage> inboundtraffic)
         {
             return inboundtraffic.OfType<UserGpsMessage>()
@@ -142,6 +197,6 @@ namespace DataModel.Server.Services
                           .DistinctUntilChanged();
         }
 
-        
+
     }
 }

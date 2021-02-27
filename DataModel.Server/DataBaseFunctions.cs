@@ -75,7 +75,7 @@ namespace DataModel.Server
         /// </summary>
         /// <param name="contentId">The ID of the content to remove</param>
         /// <returns>MapContent if successful, null if content could not be removed</returns>
-        public static MapContent RemoveContent(byte[] contentId)
+        public static MapContent RemoveMapContent(byte[] contentId)
         {
             using (var dataBase = new LiteDatabase(MapDataWrite()))
             {
@@ -95,10 +95,63 @@ namespace DataModel.Server
             }
 
         }
-
-        public static Dictionary<Common.Messages.ResourceType, int> RequestInventory(byte[] requestOwnerId, byte[] targetId)
+        public static bool AddContentToPlayerInventory(byte[] inventoryId, Dictionary<ResourceType, int> content)
         {
-            using (var dataBase = new LiteDatabase(MapDataWrite()))
+            using (var dataBase = new LiteDatabase(InventoryDatabaseWrite()))
+            {
+                var col = dataBase.GetCollection<Inventory>("inventory");
+                col.EnsureIndex(v => v.ContainerId);
+                col.EnsureIndex(v => v.OwnerId);
+                col.EnsureIndex(v => v.ResourceDictionary);
+                col.EnsureIndex(v => v.StorageCapacity);
+                var enumerable = col.Find(v => v.OwnerId == inventoryId);
+                var containerRequest = enumerable.Where(v => v.ContainerId.SequenceEqual(inventoryId));
+                if (containerRequest.Count() > 1)
+                    throw new Exception("Multiple inventories for same player id");
+                if (enumerable.Count() == 0)
+                {
+                    CreatePlayerInventory(inventoryId);
+                    AddContentToPlayerInventory(inventoryId, content);
+                }
+                else
+                {
+                    var inventory = containerRequest.First();
+                    content.ToList().ForEach(x =>
+                    {
+                        int oldval = inventory.ResourceDictionary[x.Key];
+                        inventory.ResourceDictionary[x.Key] = x.Value + oldval;
+                    });
+                    return col.Update(inventory);
+                }
+                return false;
+            }
+
+
+        }
+        public static bool CreatePlayerInventory(byte[] playerId)
+        {
+            using (var dataBase = new LiteDatabase(InventoryDatabaseWrite()))
+            {
+                var col = dataBase.GetCollection<Inventory>("inventory");
+                col.EnsureIndex(v => v.ContainerId);
+                col.EnsureIndex(v => v.OwnerId);
+                col.EnsureIndex(v => v.ResourceDictionary);
+                col.EnsureIndex(v => v.StorageCapacity);
+                var enumerable = col.Find(v => v.OwnerId == playerId);
+
+                if (enumerable.Count() > 1)
+                    throw new Exception("Multiple inventories for same player id");
+                if (enumerable.Count() == 1)
+                    return false;
+
+                var toInsert = new Inventory() { ContainerId = playerId, OwnerId = playerId, ResourceDictionary = new Dictionary<Common.Messages.ResourceType, int>(), StorageCapacity = 500 };
+                col.Insert(toInsert);
+                return true;
+            }
+        }
+        public static Dictionary<ResourceType, int> RequestInventory(byte[] requestOwnerId, byte[] targetId)
+        {
+            using (var dataBase = new LiteDatabase(InventoryDatabaseRead()))
             {
                 var col = dataBase.GetCollection<Inventory>("inventory");
                 col.EnsureIndex(v => v.ContainerId);
@@ -106,14 +159,13 @@ namespace DataModel.Server
                 col.EnsureIndex(v => v.ResourceDictionary);
                 col.EnsureIndex(v => v.StorageCapacity);
                 var enumerable = col.Find(v => v.OwnerId == requestOwnerId);
-                enumerable.Where(v => v.ContainerId.SequenceEqual(targetId));
+                var containerRequest = enumerable.Where(v => v.ContainerId.SequenceEqual(targetId));
 
-                if (enumerable.Count() > 1)
+                if (containerRequest.Count() > 1)
                     throw new Exception("Multiple objects with same ID in database");
-                if (enumerable.Count() == 0)
+                if (containerRequest.Count() == 0)
                     return null;
-                
-                var inventory = enumerable.First();
+                var inventory = containerRequest.First();
                 return inventory.ResourceDictionary;
             }
         }
@@ -220,12 +272,7 @@ namespace DataModel.Server
                         return null;
                     }
                 }
-
             }
-
-
-
-
         }
 
 

@@ -1,4 +1,5 @@
-﻿using DataModel.Server.Model;
+﻿using DataModel.Common.Messages;
+using DataModel.Server.Model;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -14,79 +15,61 @@ namespace DataModel.Server.Services
     /// </summary>
     public class InventoryService
     {
-
-
-        readonly Func<byte[], MapContent> dataBaseMapPickupFunction;
-        readonly Func<byte[], MapContent, bool> dataBaseAddPlayerInventoryFunction;
-        readonly Func<byte[], byte[], bool> hasStorageSpaceForTarget;
-        readonly Func<byte[], Inventory> dataBasePlayerInventoryLookup;
-        public InventoryService(Func<byte[], MapContent> dataBaseMapPickupFunction, 
-                                Func<byte[], MapContent, bool> dataBaseAddPlayerInventoryFunction, 
-                                Func<byte[], byte[], bool> hasStorageSpaceForTarget, 
-                                Func<byte[], Inventory> dataBasePlayerInventoryLookup)
+        public IObservable<Dictionary<ResourceType, int>> RequestPlayerInventory(byte[] playerId)
         {
-            this.dataBaseMapPickupFunction = dataBaseMapPickupFunction;
-            this.dataBaseAddPlayerInventoryFunction = dataBaseAddPlayerInventoryFunction;
-            this.hasStorageSpaceForTarget = hasStorageSpaceForTarget;
-            this.dataBasePlayerInventoryLookup = dataBasePlayerInventoryLookup;
+            return Observable.Create<Dictionary<ResourceType, int>>(v =>
+             {
+                 var result = DataBaseFunctions.RequestInventory(playerId, playerId);
+                 if (result == null)
+                 {
+                     v.OnError(new Exception("No inventory for player found!"));
+                     return Disposable.Empty;
+                 }
+
+                 v.OnNext(result);
+                 v.OnCompleted();
+                 return Disposable.Empty;
+             });
         }
-
-        public IObservable<Inventory> RequestPlayerInventory(byte[] playerId)
+        public IObservable<(Dictionary<ResourceType, int>, byte[])> RequestContainerInventory(byte[] playerId, byte[] containerId)
         {
-            return Observable.Create<Inventory>(v =>
-            {
-                var result = dataBasePlayerInventoryLookup(playerId);
-                if (result == null)
-                {
-                    v.OnError(new Exception("No inventory for player found!"));
-                    return Disposable.Empty;
-                }
-                Debug.Assert(result.ContainerId.SequenceEqual(playerId));
-                Debug.Assert(result.OwnerId.SequenceEqual(playerId));
-                v.OnNext(result);
-                v.OnCompleted();
-                return Disposable.Empty;
-            });
-
-        }
-        public IObservable<Inventory> RequestContainerInventory(byte[] playerId, byte[] containerId)
-        {
-            return Observable.Create<Inventory>(v => 
-            {
-
-                return Disposable.Empty; 
-            });
+            return Observable.Create<(Dictionary<ResourceType, int>, byte[])>(v =>
+             {
+                 var inventory = DataBaseFunctions.RequestInventory(playerId, containerId);
+                 if (inventory == null)
+                 {
+                     v.OnError(new Exception("Could not fetch inventory for id"));
+                     return Disposable.Empty;
+                 }
+                 v.OnNext((inventory, containerId));
+                 v.OnCompleted();
+                 return Disposable.Empty;
+             });
 
         }
         //TODO: BUG: synchronize properly
-        public IObservable<bool> MapContentPickUp(byte[] requestId, byte[] mapContentTarget)
+        public IObservable<(bool, byte[])> MapContentPickUp(byte[] requestId, byte[] mapContentTarget)
         {
-            return Observable.Create<bool>(v =>
+            return Observable.Create<(bool, byte[])>(v =>
             {
-                var hasSpace = hasStorageSpaceForTarget(requestId, mapContentTarget);
-                if (!hasSpace)
-                {
-                    v.OnNext(false);
-                    v.OnCompleted();
-                    return Disposable.Empty;
-                }
-
-                var result = dataBaseMapPickupFunction(mapContentTarget);
+                var result = DataBaseFunctions.RemoveMapContent(mapContentTarget);
                 if (result == null)
                 {
-                    v.OnNext(false);
-                    v.OnCompleted();
-                    return Disposable.Empty;
-                }
-                var inventoryInsertResult = dataBaseAddPlayerInventoryFunction(requestId, result);
-                if (!inventoryInsertResult)
-                {
-                    v.OnNext(false);
+                    v.OnNext((false, mapContentTarget));
                     v.OnCompleted();
                     return Disposable.Empty;
                 }
 
-                v.OnNext(true);
+                var asDictionary = result.ToResourceDictionary();
+                var inventoryInsertResult = DataBaseFunctions.AddContentToPlayerInventory(requestId, asDictionary);
+                if (!inventoryInsertResult)
+                {
+                    v.OnNext((false, mapContentTarget));
+                    v.OnCompleted();
+                    return Disposable.Empty;
+                }
+
+                v.OnNext((true, mapContentTarget));
                 v.OnCompleted();
                 return Disposable.Empty;
             });
