@@ -41,8 +41,6 @@ namespace DataModel.Common.Messages
         APPLE,
         BANANA,
         WOOD,
-        SHEEP,
-        CAMEL,
         AMETHYST,
         BERRY,
         CARROT,
