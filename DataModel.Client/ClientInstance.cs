@@ -50,7 +50,7 @@ namespace DataModel.Client
                 pipeline.AddLast(serverHandler);
             });
         }
-        public IDisposable AddOutBoundTraffic(IObservable<IMessage> outboundSource) 
+        public IDisposable AddOutBoundTraffic(IObservable<IMessage> outboundSource)
         {
             return outboundSource.Subscribe(v => outboundTraffic.OnNext(v));
         }
@@ -62,19 +62,19 @@ namespace DataModel.Client
 
         public IObservable<bool> ClientConnectionState => serverHandler.ConnctionState;
 
-        public void SendGps(GPS gps) => SendMessage(new UserGpsMessage() {Lat = gps.Lat, Lon = gps.Lon });
+        public void SendGps(GPS gps) => SendMessage(new UserGpsMessage() { Lat = gps.Lat, Lon = gps.Lon });
 
 
         public void SendRegisterRequest(string username, string password)
         {
-            var e = new AccountMessage() { Name = username, Password = password, Context = MessageContext.REGISTER};
+            var e = new AccountMessage() { Name = username, Password = password, Context = MessageContext.REGISTER };
             SendMessage(e);
         }
 
         public void SendLoginRequest(string username, string password)
         {
 
-            var e = new AccountMessage() { Name = username, Password = password, Context = MessageContext.LOGIN};
+            var e = new AccountMessage() { Name = username, Password = password, Context = MessageContext.LOGIN };
             SendMessage(e);
         }
 
@@ -83,7 +83,7 @@ namespace DataModel.Client
             outboundTraffic.OnNext(msg);
         }
 
-        public void DisconnectClient() 
+        public void DisconnectClient()
         {
             serverHandler.ShutDown();
             closingEvent.Set();
@@ -97,7 +97,7 @@ namespace DataModel.Client
             serverHandler.ShutDown();
             closingEvent.Set();
             disposables.ForEach(v => v.Dispose());
-            if(BootstrapChannel != null)
+            if (BootstrapChannel != null)
                 BootstrapChannel.CloseAsync().Wait();
             Task.WaitAll(group.ShutdownGracefullyAsync(TimeSpan.FromMilliseconds(200), TimeSpan.FromMilliseconds(400)));
             closingEvent.Reset();
@@ -116,10 +116,10 @@ namespace DataModel.Client
                 var serverIP = IPAddress.Parse(ipAdress);
                 int serverPort = port;
 
-            //    X509Certificate2 cert = null;
-            //    string targetHost = null;
-            //    cert = new X509Certificate2("name", "password");
-            //    targetHost = cert.GetNameInfo(X509NameType.DnsName, false);
+                //    X509Certificate2 cert = null;
+                //    string targetHost = null;
+                //    cert = new X509Certificate2("name", "password");
+                //    targetHost = cert.GetNameInfo(X509NameType.DnsName, false);
 
                 Bootstrap = new Bootstrap();
                 Bootstrap
@@ -138,31 +138,40 @@ namespace DataModel.Client
             }
         }
 
-        IObservable<UnityMapMessage> GetSmallUnityMap(IObservable<UserGpsMessage> gpsStream, IObservable<ServerMapEvent> bigMapStream)
+        IObservable<UnityMapMessage> GetSmallUnityMap(IObservable<UserGpsMessage> gpsStream, IObservable<Dictionary<PlusCode, MiniTile>> bigMapStream)
         {
             return gpsStream.Select(v => new GPS(v.Lat, v.Lon))
                             .Select(v => v.GetPlusCode(10))
                             .DistinctUntilChanged()
                             .Select(v => (v, LocationCodeTileUtility.GetTileSection(v.Code, 10, 10)))
-                            .WithLatestFrom(bigMapStream.Select(v => v.Tiles), (loc, map) => new { loc, map })
+                            .WithLatestFrom(bigMapStream, (loc, map) => new { loc, map })
                             .Select(v =>
                             {
-                                return (v.loc.v, v.map.ToList().SelectMany(v2 => v2.MiniTiles).Where(v2 => v.loc.Item2.Contains(v2.MiniTileId.Code)).ToList());
+                                var map = v.loc.Item2.ConvertAll(e => e.From10String());
+                                var transformedMap =map.Select(e =>
+                                {
+                                    MiniTile tile = null;
+                                    v.map.TryGetValue(e, out tile);
+                                    return tile;
+                                }).ToList();
+                                
+                                return (v.loc.v, transformedMap);
                             })
-                            .Select(v => (v.v, LocationCodeTileUtility.SortList(v.Item2)))
-                            .Select(v => new UnityMapMessage() { ClientLocation = v.v, VisibleMap = v.Item2 });
+                            .Select(v => new UnityMapMessage() { ClientLocation = v.v, VisibleMap = v.transformedMap });
         }
 
 
-        IObservable<ServerMapEvent> GetBigMapStream(IObservable<UserGpsMessage> messageStream)
+        IObservable<Dictionary<PlusCode, MiniTile>> GetBigMapStream(IObservable<UserGpsMessage> messageStream)
         {
             return messageStream.Select(v => new GPS(v.Lat, v.Lon))
-                                .Select(v => v.GetPlusCode(8))
-                                .DistinctUntilChanged()
-                                .Select(v => LocationCodeTileUtility.GetTileSection(v.Code, 1, v.Precision)) //List of local area strings
-                                .Select(v => v.ConvertAll(e => new PlusCode(e, 8))) //transform into pluscodes
-                                .Select(v => v.ConvertAll(e => WorldGenerator.GenerateTile(e))) //transform each pluscode into world tile
-                                .Select(v => new ServerMapEvent() { Tiles = v });
+                                 .Select(v => v.GetPlusCode(8))
+                                 .DistinctUntilChanged()
+                                 .Select(v => LocationCodeTileUtility.GetTileSection(v.Code, 1, v.Precision)) //List of local area strings
+                                 .Select(v => v.ConvertAll(e => new PlusCode(e, 8))) //transform into pluscodes
+                                 .Select(v => v.ConvertAll(e => WorldGenerator.GenerateTile(e))) //transform each pluscode into world tile
+                                 .Select(v => v.ConvertAll(e => e.MiniTiles))
+                                 .Select(v => v.SelectMany(e => e).ToList())
+                                 .Select(v => v.GroupBy(e => e.MiniTileId).ToDictionary(e => e.Key, e => e.First()));
         }
     }
 }

@@ -18,7 +18,7 @@ namespace ServerMain
         public static void Main(String[] args)
         {
             var server = new ServerInstance();
-            var resourceCleanup = DataBaseFunctions.DeleteAllDatabaseResources();
+            var resourceCleanup = DataBaseFunctions.ResetMapContent();
             Console.WriteLine("Cleaned up resources amount:" + resourceCleanup);
             var task = server.RunServerAsync();
 

@@ -9,6 +9,7 @@ using DotNetty.Transport.Channels;
 using System.Reactive.Subjects;
 using System.Reactive.Disposables;
 using System.Collections.Concurrent;
+using DataModel.Server.Model;
 
 namespace DataModel.Server.Services
 {

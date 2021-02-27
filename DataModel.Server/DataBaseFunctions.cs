@@ -1,5 +1,6 @@
 ﻿using DataModel.Common;
 using DataModel.Common.Messages;
+using DataModel.Server.Model;
 using DataModel.Server.Services;
 using LiteDB;
 using System;
@@ -15,23 +16,106 @@ namespace DataModel.Server
 {
     public static class DataBaseFunctions
     {
-        
-
-        static ConnectionString DataBaseRead()
+        public static string UserDatabaseName { get { return @"Users.db"; } }
+        public static string MapDatabaseName { get { return @"MapData.db"; } }
+        public static string InventoryDatabaseName { get { return @"Inventory.db"; } }
+        static ConnectionString UserDatabaseWrite()
         {
-            return new ConnectionString(@"MyData.db")
+            return new ConnectionString(UserDatabaseName)
+            {
+                Connection = ConnectionType.Shared,
+                ReadOnly = false
+            };
+        }
+        static ConnectionString UserDatabaseRead()
+        {
+            return new ConnectionString(UserDatabaseName)
+            {
+                Connection = ConnectionType.Shared,
+                ReadOnly = true
+            };
+        }
+
+        static ConnectionString InventoryDatabaseWrite()
+        {
+            return new ConnectionString(InventoryDatabaseName)
+            {
+                Connection = ConnectionType.Shared,
+                ReadOnly = false
+            };
+        }
+
+        static ConnectionString InventoryDatabaseRead()
+        {
+            return new ConnectionString(InventoryDatabaseName)
+            {
+                Connection = ConnectionType.Shared,
+                ReadOnly = true
+            };
+        }
+        static ConnectionString MapDataRead()
+        {
+            return new ConnectionString(MapDatabaseName)
             {
                 Connection = ConnectionType.Shared,
                 ReadOnly = true
             };
 
         }
-        static ConnectionString DataBasePath()
+        static ConnectionString MapDataWrite()
         {
-            return new ConnectionString(@"MyData.db")
+            return new ConnectionString(MapDatabaseName)
             {
                 Connection = ConnectionType.Shared
             };
+        }
+
+        /// <summary>
+        /// Function which removes content in the database.
+        /// </summary>
+        /// <param name="contentId">The ID of the content to remove</param>
+        /// <returns>MapContent if successful, null if content could not be removed</returns>
+        public static MapContent RemoveContent(byte[] contentId)
+        {
+            using (var dataBase = new LiteDatabase(MapDataWrite()))
+            {
+                var col = dataBase.GetCollection<MapContent>("mapcontent");
+                col.EnsureIndex(v => v.Id);
+                col.EnsureIndex(v => v.Location);
+                col.EnsureIndex(v => v.Name);
+                col.EnsureIndex(v => v.ResourceType);
+                col.EnsureIndex(v => v.Type);
+                var enumerable = col.Find(v => v.Id == contentId);
+
+                if (enumerable.Count() > 1)
+                    throw new Exception("Multiple objects with same ID in database");
+                if (enumerable.Count() == 0)
+                    return null;
+                return enumerable.First();
+            }
+
+        }
+
+        public static Dictionary<Common.Messages.ResourceType, int> RequestInventory(byte[] requestOwnerId, byte[] targetId)
+        {
+            using (var dataBase = new LiteDatabase(MapDataWrite()))
+            {
+                var col = dataBase.GetCollection<Inventory>("inventory");
+                col.EnsureIndex(v => v.ContainerId);
+                col.EnsureIndex(v => v.OwnerId);
+                col.EnsureIndex(v => v.ResourceDictionary);
+                col.EnsureIndex(v => v.StorageCapacity);
+                var enumerable = col.Find(v => v.OwnerId == requestOwnerId);
+                enumerable.Where(v => v.ContainerId.SequenceEqual(targetId));
+
+                if (enumerable.Count() > 1)
+                    throw new Exception("Multiple objects with same ID in database");
+                if (enumerable.Count() == 0)
+                    return null;
+                
+                var inventory = enumerable.First();
+                return inventory.ResourceDictionary;
+            }
         }
 
         /// <summary>
@@ -41,7 +125,7 @@ namespace DataModel.Server
         /// <param name="location">The current location of the MapContent, if null this function will delete the mapcontent</param>
         public static void UpdateOrDeleteContent(MapContent content, string location)
         {
-            using (var dataBase = new LiteDatabase(DataBasePath()))
+            using (var dataBase = new LiteDatabase(MapDataWrite()))
             {
                 var col = dataBase.GetCollection<MapContent>("mapcontent");
                 col.EnsureIndex(v => v.Id);
@@ -53,7 +137,7 @@ namespace DataModel.Server
                 var enumerable = col.Find(v => v.Id == content.Id);
                 if (enumerable.Count() > 1)
                     throw new Exception("Multiple objects with same ID in database");
-                
+
                 //No database entry and no location given, skip/ignore update
                 if (enumerable.Count() == 0 && location == null)
                 {
@@ -71,7 +155,7 @@ namespace DataModel.Server
                 var first = enumerable.First();
 
                 //Delte value out of database, if it is still present.
-                if (enumerable.Count() != 0 && location == null) 
+                if (enumerable.Count() != 0 && location == null)
                 {
                     var deletedAmount = col.DeleteMany(v => v.Id == first.Id);
                     return;
@@ -84,9 +168,9 @@ namespace DataModel.Server
                     throw new Exception("Could not update entity");
             }
         }
-        public static int DeleteAllDatabaseResources()
+        public static int ResetMapContent()
         {
-            using (var dataBase = new LiteDatabase(DataBasePath()))
+            using (var dataBase = new LiteDatabase(MapDataWrite()))
             {
                 var col = dataBase.GetCollection<MapContent>("mapcontent");
                 col.EnsureIndex(v => v.Id);
@@ -105,7 +189,7 @@ namespace DataModel.Server
         public static List<MapContent> AreaContentAsListRequest(string location)
         {
             //TODO: FIX BUG, WORKS ONLY IN WRITE ONLY MODE!
-            using (var dataBase = new LiteDatabase(DataBasePath()))
+            using (var dataBase = new LiteDatabase(MapDataWrite()))
             {
                 try
                 {
@@ -125,7 +209,7 @@ namespace DataModel.Server
                 catch (FileNotFoundException e)
                 {
 
-                    using (var dbwrite = new LiteDatabase(DataBasePath()))
+                    using (var dbwrite = new LiteDatabase(MapDataWrite()))
                     {
                         var col = dbwrite.GetCollection<MapContent>("mapcontent");
                         col.EnsureIndex(v => v.Id);
@@ -148,7 +232,7 @@ namespace DataModel.Server
         public static BatchContentMessage AreaContentAsMessageRequest(string location)
         {
             //TODO: FIX BUG, WORKS ONLY IN WRITE ONLY MODE!
-            using (var dataBase = new LiteDatabase(DataBasePath()))
+            using (var dataBase = new LiteDatabase(MapDataWrite()))
             {
                 try
                 {
@@ -168,8 +252,8 @@ namespace DataModel.Server
                 }
                 catch (FileNotFoundException e)
                 {
-                    
-                    using (var dbwrite = new LiteDatabase(DataBasePath()))
+
+                    using (var dbwrite = new LiteDatabase(MapDataWrite()))
                     {
                         var col = dbwrite.GetCollection<MapContent>("mapcontent");
                         col.EnsureIndex(v => v.Id);
@@ -180,14 +264,14 @@ namespace DataModel.Server
                         return null;
                     }
                 }
-               
+
             }
         }
 
         public static bool CreateAccount(string name, string password)
         {
 
-            using (var dataBase = new LiteDatabase(DataBasePath()))
+            using (var dataBase = new LiteDatabase(UserDatabaseWrite()))
             {
                 var col = dataBase.GetCollection<User>("users");
                 col.EnsureIndex(v => v.AccountCreated);
@@ -219,7 +303,7 @@ namespace DataModel.Server
 
         public static User FindUserInDatabase(string name)
         {
-            using (var dataBase = new LiteDatabase(DataBaseRead()))
+            using (var dataBase = new LiteDatabase(UserDatabaseRead()))
             {
                 try
                 {
@@ -232,7 +316,7 @@ namespace DataModel.Server
                 }
                 catch (System.IO.FileNotFoundException e)
                 {
-                    using (var dbwrite = new LiteDatabase(DataBasePath()))
+                    using (var dbwrite = new LiteDatabase(MapDataWrite()))
                     {
                         var col = dbwrite.GetCollection<User>("users");
                         col.EnsureIndex(v => v.AccountCreated);

@@ -31,6 +31,16 @@ namespace DataModel.Server.Tests
             }
         }
 
-        
+        [Test]
+        public void SpawnsResource()
+        {
+
+            var a = new byte[] { 1, 2, 3, 4, 5 };
+            var b = new byte[] { 1, 2, 3, 4, 5 };
+            var c = new byte[] { 1, 2, 3, 4, 6 };
+            var equals = a == b;
+            var equalsnot = b == c;
+            ;
+        }
     }
 }

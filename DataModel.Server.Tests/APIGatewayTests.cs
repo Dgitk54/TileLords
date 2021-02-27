@@ -9,6 +9,7 @@ using System.Reactive.Linq;
 using System.Reactive.Joins;
 using DataModel.Common.Messages;
 using System.Reactive.Subjects;
+using DataModel.Server.Model;
 
 namespace DataModel.Server.Tests
 {

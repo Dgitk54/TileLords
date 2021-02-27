@@ -46,7 +46,10 @@ namespace DataModel.Common
             });
         }
         
-
+        public static PlusCode From10String(this string location)
+        {
+            return new PlusCode(location, 10);
+        }
 
         public static IObservable<PlusCode> GetPlusCode(this IObservable<GPS> gps, IObservable<int> precision)
             => from i in gps
