@@ -118,8 +118,15 @@ namespace DataModel.Server
                     var inventory = containerRequest.First();
                     content.ToList().ForEach(x =>
                     {
-                        int oldval = inventory.ResourceDictionary[x.Key];
-                        inventory.ResourceDictionary[x.Key] = x.Value + oldval;
+                        int i = 0;
+                        if (inventory.ResourceDictionary.TryGetValue(x.Key, out i))
+                        {  
+                            inventory.ResourceDictionary[x.Key] = x.Value + i;
+                        }
+                        else
+                        {
+                            inventory.ResourceDictionary.Add(x.Key, x.Value);
+                        }
                     });
                     return col.Update(inventory);
                 }
@@ -153,20 +160,35 @@ namespace DataModel.Server
         {
             using (var dataBase = new LiteDatabase(InventoryDatabaseRead()))
             {
-                var col = dataBase.GetCollection<Inventory>("inventory");
-                col.EnsureIndex(v => v.ContainerId);
-                col.EnsureIndex(v => v.OwnerId);
-                col.EnsureIndex(v => v.ResourceDictionary);
-                col.EnsureIndex(v => v.StorageCapacity);
-                var enumerable = col.Find(v => v.OwnerId == requestOwnerId);
-                var containerRequest = enumerable.Where(v => v.ContainerId.SequenceEqual(targetId));
+                try
+                {
+                    var col = dataBase.GetCollection<Inventory>("inventory");
+                    col.EnsureIndex(v => v.ContainerId);
+                    col.EnsureIndex(v => v.OwnerId);
+                    col.EnsureIndex(v => v.ResourceDictionary);
+                    col.EnsureIndex(v => v.StorageCapacity);
+                    var enumerable = col.Find(v => v.OwnerId == requestOwnerId);
+                    var containerRequest = enumerable.Where(v => v.ContainerId.SequenceEqual(targetId));
 
-                if (containerRequest.Count() > 1)
-                    throw new Exception("Multiple objects with same ID in database");
-                if (containerRequest.Count() == 0)
-                    return null;
-                var inventory = containerRequest.First();
-                return inventory.ResourceDictionary;
+                    if (containerRequest.Count() > 1)
+                        throw new Exception("Multiple objects with same ID in database");
+                    if (containerRequest.Count() == 0)
+                        return null;
+                    var inventory = containerRequest.First();
+                    return inventory.ResourceDictionary;
+                }
+                catch (FileNotFoundException e)
+                {
+                    using (var dataBase2 = new LiteDatabase(InventoryDatabaseWrite())) 
+                    {
+                        var col = dataBase2.GetCollection<Inventory>("inventory");
+                        col.EnsureIndex(v => v.ContainerId);
+                        col.EnsureIndex(v => v.OwnerId);
+                        col.EnsureIndex(v => v.ResourceDictionary);
+                        col.EnsureIndex(v => v.StorageCapacity);
+                        return null;
+                    }
+                }
             }
         }
 
