@@ -140,33 +140,35 @@ namespace DataModel.Server.Services
         {
             return inboundtraffic.OfType<InventoryContentMessage>()
                           .Where(v => v.Type == MessageType.REQUEST)
-                          .Select(v => inventoryService.RequestContainerInventory(user.UserId, v.InventoryOwner))
-                          .Switch()
-                          .Catch<(Dictionary<ResourceType, int>, byte[]), Exception>(v =>
-                         {
-                             responses.OnNext(contentRetrievalFail);
-                             return Observable.Empty<(Dictionary<ResourceType, int>, byte[])>();
-                         })
+                          .SelectMany(v => 
+                          {
+                              return inventoryService.RequestContainerInventory(user.UserId, v.InventoryOwner).Catch<(Dictionary<ResourceType, int>, byte[]), Exception>(v2 =>
+                              {
+                                  responses.OnNext(contentRetrievalFail);
+                                  return Observable.Empty<(Dictionary<ResourceType, int>, byte[])>();
+                              });
+                          })
                           .Subscribe(v =>
-                         {
+                          {
                              responses.OnNext(ContentResponse(v.Item2, v.Item1));
-                         });
+                          });
         }
         IDisposable HandleMapContentPickup(IUser user, IObservable<IMessage> inboundtraffic)
         {
             return inboundtraffic.OfType<MapContentTransactionMessage>()
                                       .Where(v => v.MessageType == MessageType.REQUEST)
-                                      .Select(v => inventoryService.MapContentPickUp(user.UserId, v.MapContentId))
-                                      .Switch()
-                                      .Catch<(bool, byte[]), Exception>(v =>
-                                       {
-                                           responses.OnNext(MapContentTransactionFail(null));
-                                           return Observable.Empty<(bool, byte[])>();
-                                       })
+                                      .SelectMany(v => 
+                                      { 
+                                          return inventoryService.MapContentPickUp(user.UserId, v.MapContentId).Catch<(bool, byte[]), Exception>(v2 =>
+                                          {
+                                          responses.OnNext(MapContentTransactionFail(null));
+                                          return Observable.Empty<(bool, byte[])>();
+                                          }); 
+                                      })
                                       .Subscribe(v =>
-                                       {
+                                      {
                                            responses.OnNext(new MapContentTransactionMessage() { MessageType = MessageType.RESPONSE, MapContentId = v.Item2, MessageState = MessageState.SUCCESS });
-                                       });
+                                      });
         }
 
         IDisposable HandleRegister(IObservable<IMessage> inboundtraffic)

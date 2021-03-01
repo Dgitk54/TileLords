@@ -78,7 +78,7 @@ namespace ClientIntegration
         }
 
         [Test]
-        public void ClientCanSend()
+        public void ClientCanRegisterLoginAndRequestInventory()
         {
             ClientInstance instance = new ClientInstance();
 
@@ -98,28 +98,30 @@ namespace ClientIntegration
             var gpsMsg = new UserGpsMessage() { Lat = 49.000000, Lon = 50.00000 };
             var gspMsg2 = new UserGpsMessage() { Lat = 49.000050, Lon = 50.0000050 };
 
-            var ctMsg = new ContentMessage() { Id = new byte[] { 5, 12, 3 }, Location = "dbg", Name = "dbgname", ResourceType = DataModel.Common.Messages.ResourceType.APPLE, Type = ContentType.RESSOURCE };
             instance.SendMessage(regMsg);
             Thread.Sleep(1500);
+            inbound.Clear();
             instance.SendMessage(logMsg);
             Thread.Sleep(1000);
-            instance.SendMessage(ctMsg);
+            var response = inbound[0];
+            Debug.Assert(response != null);
+            Debug.Assert(response is UserActionMessage);
+            var accountid = (response as UserActionMessage).AdditionalInfo;
+            var requestInventory = new InventoryContentMessage() { InventoryOwner = accountid, Type = MessageType.REQUEST };
+            instance.SendMessage(requestInventory);
+           
             Thread.Sleep(1000);
-
-            instance.SendMessage(gpsMsg);
-
-
+            instance.SendMessage(requestInventory);
+           
             Thread.Sleep(1000);
-            instance.SendMessage(gspMsg2);
-
-            ;
+            instance.SendMessage(requestInventory);
+            Thread.Sleep(1000);
+            //instance.SendMessage(gpsMsg);
+            //instance.SendMessage(gspMsg2);
             instance.DisconnectClient();
             startedClientTask.Wait();
-
-            ;
             var client = ClientFunctions.StartClient(instance);
             Thread.Sleep(1500);
-            ;
         }
        
     }

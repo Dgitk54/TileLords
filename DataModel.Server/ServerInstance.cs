@@ -23,8 +23,7 @@ namespace DataModel.Server
         IChannel bootstrapChannel;
         public ServerInstance()
         {
-           
-            
+            DataBaseFunctions.InitializeDataBases();
         }
         public async Task RunServerAsync()
         {

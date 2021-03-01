@@ -69,7 +69,35 @@ namespace DataModel.Server
                 Connection = ConnectionType.Shared
             };
         }
-
+        public static void InitializeDataBases()
+        {
+            using (var dataBase = new LiteDatabase(MapDataWrite()))
+            {
+                var col = dataBase.GetCollection<MapContent>("mapcontent");
+                col.EnsureIndex(v => v.Id);
+                col.EnsureIndex(v => v.Location);
+                col.EnsureIndex(v => v.Name);
+                col.EnsureIndex(v => v.ResourceType);
+                col.EnsureIndex(v => v.Type);
+            }
+            using (var dataBase = new LiteDatabase(InventoryDatabaseWrite()))
+            {
+                var col = dataBase.GetCollection<Inventory>("inventory");
+                col.EnsureIndex(v => v.ContainerId);
+                col.EnsureIndex(v => v.OwnerId);
+                col.EnsureIndex(v => v.ResourceDictionary);
+                col.EnsureIndex(v => v.StorageCapacity);
+            }
+            using (var dataBase = new LiteDatabase(UserDatabaseWrite()))
+            {
+                var col = dataBase.GetCollection<User>("users");
+                col.EnsureIndex(v => v.AccountCreated);
+                col.EnsureIndex(v => v.LastOnline);
+                col.EnsureIndex(v => v.UserName);
+                col.EnsureIndex(v => v.Salt);
+                col.EnsureIndex(v => v.SaltedHash);
+            }
+        }
         /// <summary>
         /// Function which removes content in the database.
         /// </summary>
@@ -120,7 +148,7 @@ namespace DataModel.Server
                     {
                         int i = 0;
                         if (inventory.ResourceDictionary.TryGetValue(x.Key, out i))
-                        {  
+                        {
                             inventory.ResourceDictionary[x.Key] = x.Value + i;
                         }
                         else
@@ -158,7 +186,7 @@ namespace DataModel.Server
         }
         public static Dictionary<ResourceType, int> RequestInventory(byte[] requestOwnerId, byte[] targetId)
         {
-            using (var dataBase = new LiteDatabase(InventoryDatabaseRead()))
+            using (var dataBase = new LiteDatabase(InventoryDatabaseWrite()))
             {
                 try
                 {
@@ -167,19 +195,29 @@ namespace DataModel.Server
                     col.EnsureIndex(v => v.OwnerId);
                     col.EnsureIndex(v => v.ResourceDictionary);
                     col.EnsureIndex(v => v.StorageCapacity);
-                    var enumerable = col.Find(v => v.OwnerId == requestOwnerId);
-                    var containerRequest = enumerable.Where(v => v.ContainerId.SequenceEqual(targetId));
+                    var getContainersWherePlayerHasInventory = col.Find(v => v.OwnerId == requestOwnerId);
+                    var getRequestedContainerInventory = getContainersWherePlayerHasInventory.Where(v => v.ContainerId.SequenceEqual(targetId));
 
-                    if (containerRequest.Count() > 1)
+                    if (getRequestedContainerInventory.Count() > 1)
                         throw new Exception("Multiple objects with same ID in database");
-                    if (containerRequest.Count() == 0)
+                    if (getRequestedContainerInventory.Count() == 0)
+                    {
+                        //No user inventory has been set up yet
+                        if (requestOwnerId.SequenceEqual(targetId))
+                        {
+                            
+                            CreatePlayerInventory(requestOwnerId);
+                            return RequestInventory(requestOwnerId, targetId);
+                        }
                         return null;
-                    var inventory = containerRequest.First();
+                    }
+
+                    var inventory = getRequestedContainerInventory.First();
                     return inventory.ResourceDictionary;
                 }
                 catch (FileNotFoundException e)
                 {
-                    using (var dataBase2 = new LiteDatabase(InventoryDatabaseWrite())) 
+                    using (var dataBase2 = new LiteDatabase(InventoryDatabaseWrite()))
                     {
                         var col = dataBase2.GetCollection<Inventory>("inventory");
                         col.EnsureIndex(v => v.ContainerId);
