@@ -98,6 +98,27 @@ namespace DataModel.Server
                 col.EnsureIndex(v => v.SaltedHash);
             }
         }
+
+        public static bool RemoveContentAndAddToPlayer(byte[] playerId, byte[] mapcontentId)
+        {
+            using (LiteDatabase mapData = new LiteDatabase(MapDataWrite()),
+                              inventory = new LiteDatabase(InventoryDatabaseWrite()))
+            {
+                var content = RemoveMapContent(mapcontentId);
+                if (content == null)
+                    return false;
+                var asDictionary = content.ToResourceDictionary();
+                var inventoryInsertResult = AddContentToPlayerInventory(playerId, asDictionary);
+                if (!inventoryInsertResult)
+                {
+                    return false;
+                }
+                return true;
+            }
+        }
+
+
+
         /// <summary>
         /// Function which removes content in the database.
         /// </summary>

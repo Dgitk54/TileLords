@@ -52,24 +52,8 @@ namespace DataModel.Server.Services
         {
             return Observable.Create<(bool, byte[])>(v =>
             {
-                var result = DataBaseFunctions.RemoveMapContent(mapContentTarget);
-                if (result == null)
-                {
-                    v.OnNext((false, mapContentTarget));
-                    v.OnCompleted();
-                    return Disposable.Empty;
-                }
-
-                var asDictionary = result.ToResourceDictionary();
-                var inventoryInsertResult = DataBaseFunctions.AddContentToPlayerInventory(requestId, asDictionary);
-                if (!inventoryInsertResult)
-                {
-                    v.OnNext((false, mapContentTarget));
-                    v.OnCompleted();
-                    return Disposable.Empty;
-                }
-
-                v.OnNext((true, mapContentTarget));
+                var result = DataBaseFunctions.RemoveContentAndAddToPlayer(requestId, mapContentTarget);
+                v.OnNext((result, mapContentTarget));
                 v.OnCompleted();
                 return Disposable.Empty;
             });
