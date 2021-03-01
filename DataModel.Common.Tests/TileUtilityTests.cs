@@ -23,98 +23,10 @@ namespace DataModel.Common.Tests
             miniTileTypeList = new List<int>() { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
             worldObjectTypeList = new List<int>() { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
         }
-        [Test]
-        public void GivenTileSectionTheChebyshevDistanceReturnsProperAmount()
-        {
-            var startCode = new PlusCode("8FX9XW2F+XX", 10);
-            var tiles = TileGenerator.GenerateArea(startCode, 1);
-            var miniTiles = TileUtility.GetTileSectionWithinChebyshevDistance(startCode, tiles, 1);
-
-            Assert.IsTrue(miniTiles.Count == 3 * 3);
-            miniTiles = TileUtility.GetTileSectionWithinChebyshevDistance(startCode, tiles, 0);
-            Assert.IsTrue(miniTiles.Count == 1 * 1);
-            miniTiles = TileUtility.GetTileSectionWithinChebyshevDistance(startCode, tiles, 2);
-            Assert.IsTrue(miniTiles.Count == 5 * 5);
-        }
-
-        /*[Test]
-         public void GetTileSectionReturnsCodesWithPlus()
-        {
-            
-            var list = LocationCodeTileUtility.GetTileSection("8FX9XW2F+", 5, 8);
-            
-            
-            Assert.IsTrue(list[0][8] == '+');
-            var watch = Stopwatch.StartNew();
-            var list2 = LocationCodeTileUtility.GetTileSection("8FX9XW2F+XX", 5, 10);
-            watch.Stop();
-            var elapsedMs = watch.ElapsedMilliseconds;
-            Debug.WriteLine(elapsedMs);
-            Assert.IsTrue(list2[0][8] == '+');
-
-            watch = Stopwatch.StartNew();
-            var list3 = LocationCodeTileUtility.GetTileSection("8FX9XW2F+XX", 50, 10);
-            watch.Stop();
-            var tileSection50Time = watch.ElapsedMilliseconds;
-
-            watch = Stopwatch.StartNew();
-            var list4 = LocationCodeTileUtility.GetTileSectionParallel("8FX9XW2F+XX", 50, 10);
-            watch.Stop();
-            var tileSection50ParallelTime = watch.ElapsedMilliseconds;
-
-            Assert.IsTrue(list4.Count == list3.Count);
-            ;
-        } */
-
-        [Test]
-        public void GivenEdgeTileChebyshevAlsoFindsNeighborsInOtherTiles()
-        {
-            var startCode = new PlusCode("8FX9XW2F+XX", 10);
-            var tiles = TileGenerator.GenerateArea(startCode, 1);
-            var miniTiles = TileUtility.GetTileSectionWithinChebyshevDistance(startCode, tiles, 1);
-            var startTile = startCode.ToLowerResolution(8);
-
-            var neighborMiniTilesOnly = from tile in miniTiles
-                                        where !DataModelFunctions.ToLowerResolution(tile.MiniTileId, 8).Equals(startTile)
-                                        select tile;
-
-            var tileParentList = new List<PlusCode>();
-            neighborMiniTilesOnly.ToList().ForEach(v =>
-            {
-                var tileParent = DataModelFunctions.ToLowerResolution(v.MiniTileId, 8);
-                if (!tileParentList.Contains(tileParent))
-                    tileParentList.Add(tileParent);
-            }
-            );
-
-            Assert.IsTrue(tileParentList.Count == 3);
+   
 
 
-        }
-
-
-        [Test]
-        public void TestGetTileByMiniTileList()
-        {
-
-            List<MiniTile> miniTileList = TileGenerator.GenerateMiniTiles(new PlusCode("9F4MGC94+", 8), miniTileTypeList, worldObjectTypeList);
-            MiniTile miniTile = TileUtility.GetMiniTile(new PlusCode("9F4MGC94+MC", 10), miniTileList);
-            Assert.AreEqual("9F4MGC94+MC", miniTile.MiniTileId.Code);
-            MiniTile miniTile2 = TileUtility.GetMiniTile(new PlusCode("9F4MGC94+X2", 10), miniTileList);
-            Assert.AreEqual("9F4MGC94+X2", miniTile2.MiniTileId.Code);
-
-        }
-        [Test]
-        public void TestGetTilesByTileList()
-        {
-
-            List<Tile> tileList = TileGenerator.GenerateArea(new PlusCode("9F4MGC94+", 8), 1, tileTypeList, miniTileTypeList);
-            MiniTile miniTile = TileUtility.GetMiniTile(new PlusCode("9F4MGC94+MC", 10), tileList);
-            Assert.AreEqual("9F4MGC94+MC", miniTile.MiniTileId.Code);
-            MiniTile miniTile2 = TileUtility.GetMiniTile(new PlusCode("9F4MGC94+X2", 10), tileList);
-            Assert.AreEqual("9F4MGC94+X2", miniTile2.MiniTileId.Code);
-
-        }
+        
 
         [Test]
         public void TestCodeBigger()
@@ -209,29 +121,6 @@ namespace DataModel.Common.Tests
         }
 
 
-        //[Test]
-        //takes 6 seconds
-        /*  public void TestConcantWithReplaceOld()
-          {
-              List<MiniTile> miniTileList = TileGenerator.GenerateMiniTiles(new PlusCode("9F4MGC94+", 8), miniTileTypeList);
-              List<MiniTile> miniTileList2 = TileGenerator.GenerateMiniTiles(new PlusCode("9F4MGC84+", 8), miniTileTypeList);
-              List<MiniTile> newList = TileUtility.ConcatWithReplaceOld(miniTileList, miniTileList2, new PlusCode("9F4MGC94+X2",10), 40);
-              Debug.WriteLine(newList.Count);
-          } */
-
-        //   [Test]
-
-        /*   public void TestRegenerateArea()
-           {
-               List<MiniTile> miniTileList = TileGenerator.GenerateMiniTiles(new PlusCode("9F4MGC94+", 8), miniTileTypeList, worldObjectTypeList);
-               List<MiniTile> miniTileList2 = TileGenerator.GenerateMiniTiles(new PlusCode("9F4MGC94+", 8), miniTileTypeList, worldObjectTypeList);
-               List<MiniTile> newList = TileGenerator.RegenerateArea(new PlusCode("9F4MGC94+X2", 10), miniTileList, miniTileList2, 10);
-               Debug.WriteLine(newList.Count);
-               foreach (MiniTile m in newList)
-               {
-                   Debug.WriteLine(m);
-               }
-           } */
 
         [Test]
 

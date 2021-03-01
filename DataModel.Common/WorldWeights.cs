@@ -29,10 +29,10 @@ namespace DataModel.Common
 
         public static T ConvertEnumString<T>(this string name)
             => (T)Enum.Parse(typeof(T), name);
-        
 
-        
-       
+
+
+
 
         public static Dictionary<string, int> desertObjectWeights = new Dictionary<string, int>
         {
@@ -52,6 +52,8 @@ namespace DataModel.Common
          {"WheatField", 5 },
          {"FanTree", 4 },
          {"Pyramid", 5 },
+         {"DryDesertTree", 15 },
+         {"Bamboo", 3 },
         };
 
         public static Dictionary<string, int> desertTypeWeight = new Dictionary<string, int>
@@ -90,6 +92,8 @@ namespace DataModel.Common
          {"Volcano", 1 },
          {"WaterFall", 5 },
          {"WheatField", 10 },
+         {"Flowers", 10 },
+         {"CherryTree", 5 },
         };
 
         public static Dictionary<string, int> grassTypeWeight = new Dictionary<string, int>
@@ -125,6 +129,9 @@ namespace DataModel.Common
          {"CowWhite", 15 },
          {"AppleTree", 15 },
          {"OrangeTree", 5 },
+         {"Flowers", 10 },
+         {"Bamboo", 10 },
+         {"CrocodilePit", 5 },
         };
 
         public static Dictionary<string, int> jungleTypeWeight = new Dictionary<string, int>
@@ -156,6 +163,8 @@ namespace DataModel.Common
          {"WinterTree", 15 },
          {"WinterTree2", 15 },
          {"TreeTrunk", 10 },
+         {"SnowBells", 10 },
+         {"Flowers", 3 },
         };
 
         public static Dictionary<string, int> mountainsTypeWeight = new Dictionary<string, int>
@@ -185,6 +194,8 @@ namespace DataModel.Common
          {"WheatField", 5 },
          {"Stork", 5 },
          {"Zebra", 15 },
+         {"CrocodilePit", 5 },
+         {"DryDesertTree", 10 },
         };
 
         public static Dictionary<string, int> savannaTypeWeight = new Dictionary<string, int>
@@ -216,6 +227,7 @@ namespace DataModel.Common
          {"SheepWhite", 5 },
          {"CowBlack", 5 },
          {"CowWhite", 5 },
+         {"SnowBells", 8 },
         };
 
         public static Dictionary<string, int> snowTypeWeight = new Dictionary<string, int>
@@ -223,7 +235,7 @@ namespace DataModel.Common
          {"Snow_Tile", 10 },
          {"Snow_Tile2", 2 },
          {"Snow_Tile3", 2 },
-         {"Snow_PatchyGrass", 7 },
+         {"Snow_PatchyGrass", 7 }
         };
         public static Dictionary<string, int> swampObjectWeight = new Dictionary<string, int>
         {
@@ -252,6 +264,10 @@ namespace DataModel.Common
          {"FanTree", 20},
          {"PalmTree", 10 },
          {"SmallPalmTree", 10 },
+         {"CrocodilePit", 5 },
+         {"Flowers", 10 },
+         {"CherryTree", 10 },
+         {"Bamboo", 10 }
         };
 
         public static Dictionary<string, int> swampTypeWeight = new Dictionary<string, int>

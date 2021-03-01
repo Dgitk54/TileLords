@@ -51,7 +51,13 @@ namespace DataModel.Common
         CowWhite,
         AppleTree,
         OrangeTree,
-        Pyramid
+        Pyramid,
+        Bamboo,
+        Flowers,
+        DryDesertTree,
+        CrocodilePit,
+        SnowBells,
+        CherryTree
    
 
 

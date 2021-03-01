@@ -22,13 +22,13 @@ namespace DataModel.Common.Messages
         {
             if (Type == ContentType.RESSOURCE)
             {
-                return ResourceType + "";
+                return ResourceType + "" + " at " + Location;
             }
             else if (Type == ContentType.PLAYER)
             {
                 if (Name != null)
                 {
-                    return "Player: " + " " + Name;
+                    return "Player: " + " " + Name + " at " + Location; 
                 }
                 else
                 {
@@ -39,7 +39,7 @@ namespace DataModel.Common.Messages
             {
                 if (Name != null)
                 {
-                    return "Quest: " + " " + Name;
+                    return "Quest: " + " " + Name + " at " + Location;
                 }
                 else
                 {

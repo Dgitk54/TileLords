@@ -168,7 +168,7 @@ namespace DataModel.Client
                                  .DistinctUntilChanged()
                                  .Select(v => LocationCodeTileUtility.GetTileSection(v.Code, 1, v.Precision)) //List of local area strings
                                  .Select(v => v.ConvertAll(e => new PlusCode(e, 8))) //transform into pluscodes
-                                 .Select(v => v.ConvertAll(e => WorldGenerator.GenerateTile(e))) //transform each pluscode into world tile
+                                 .Select(v => v.ConvertAll(e => WorldGenerator.GenerateTile(e, "extensionToSeed"))) //transform each pluscode into world tile
                                  .Select(v => v.ConvertAll(e => e.MiniTiles))
                                  .Select(v => v.SelectMany(e => e).ToList())
                                  .Select(v => v.GroupBy(e => e.MiniTileId).ToDictionary(e => e.Key, e => e.First()));
