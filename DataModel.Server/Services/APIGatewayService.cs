@@ -161,13 +161,20 @@ namespace DataModel.Server.Services
                                       { 
                                           return inventoryService.MapContentPickUp(user.UserId, v.MapContentId).Catch<(bool, byte[]), Exception>(v2 =>
                                           {
-                                          responses.OnNext(MapContentTransactionFail(null));
+                                         
                                           return Observable.Empty<(bool, byte[])>();
                                           }); 
                                       })
                                       .Subscribe(v =>
                                       {
-                                           responses.OnNext(new MapContentTransactionMessage() { MessageType = MessageType.RESPONSE, MapContentId = v.Item2, MessageState = MessageState.SUCCESS });
+                                          if (v.Item1 == true)
+                                          {
+                                              responses.OnNext(new MapContentTransactionMessage() { MessageType = MessageType.RESPONSE, MapContentId = v.Item2, MessageState = MessageState.SUCCESS });
+                                          }
+                                          else
+                                          {
+                                              responses.OnNext(new MapContentTransactionMessage() { MessageType = MessageType.RESPONSE, MapContentId = v.Item2, MessageState = MessageState.ERROR });
+                                          }
                                       });
         }
 

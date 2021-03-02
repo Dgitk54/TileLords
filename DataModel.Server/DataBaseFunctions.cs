@@ -19,7 +19,7 @@ namespace DataModel.Server
         public static string UserDatabaseName { get { return @"Users.db"; } }
         public static string MapDatabaseName { get { return @"MapData.db"; } }
         public static string InventoryDatabaseName { get { return @"Inventory.db"; } }
-        public static Mutex DatabaseLock = new Mutex();
+
         static ConnectionString UserDatabaseWrite()
         {
             return new ConnectionString(UserDatabaseName)
@@ -102,24 +102,24 @@ namespace DataModel.Server
 
         public static bool RemoveContentAndAddToPlayer(byte[] playerId, byte[] mapcontentId)
         {
-            DatabaseLock.WaitOne(); 
+          
             using (LiteDatabase mapData = new LiteDatabase(MapDataWrite()),
                               inventory = new LiteDatabase(InventoryDatabaseWrite()))
             {
                 var content = RemoveMapContent(mapcontentId);
                 if (content == null)
                 {
-                    DatabaseLock.ReleaseMutex();
+                   
                     return false;
                 }
                 var asDictionary = content.ToResourceDictionary();
                 var inventoryInsertResult = AddContentToPlayerInventory(playerId, asDictionary);
                 if (!inventoryInsertResult)
                 {
-                    DatabaseLock.ReleaseMutex();
+                   
                     return false;
                 }
-                DatabaseLock.ReleaseMutex();
+               
                 return true;
             }
         }
@@ -147,7 +147,10 @@ namespace DataModel.Server
                     throw new Exception("Multiple objects with same ID in database");
                 if (enumerable.Count() == 0)
                     return null;
-                return enumerable.First();
+                var ret = enumerable.First();
+                var deleted = col.DeleteMany(v => v.Id == contentId);
+                Debug.Assert(deleted == 1);
+                return ret;
             }
 
         }
