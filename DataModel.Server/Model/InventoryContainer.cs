@@ -14,7 +14,6 @@ namespace DataModel.Server.Model
 
     public enum InventoryContainerType
     {
-        PLAYER,
         TOWN,
         CARAVAN,
         SECURECHEST

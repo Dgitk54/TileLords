@@ -324,7 +324,7 @@ namespace DataModel.Server
                 col.EnsureIndex(v => v.Type);
 
                 int players = col.DeleteMany(v => v.Type == ContentType.PLAYER);
-                int resources = col.DeleteMany(v => v.Type == ContentType.RESSOURCE);
+                int resources = col.DeleteMany(v => v.Type == ContentType.RESOURCE);
                 return players + resources;
             }
 

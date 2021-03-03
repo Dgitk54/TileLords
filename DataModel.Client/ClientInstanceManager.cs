@@ -82,7 +82,7 @@ namespace DataModel.Client
                 string visibleContentString = "\n \n";
                 visibleContentString += "Visible Contentamount:" + v.Count + " \n";
                 var players = v.Where(v2 => v2.Type == ContentType.PLAYER).Select(v2 => "[Player:" + v2.Name + " id:" + v2.Id + " on location " + v2.Location + "] \n").ToList();
-                var resources = v.Where(v2 => v2.Type == ContentType.RESSOURCE).Select(v2 => "[Resource:" + v2.Name + " id:" + v2.Id + " on location " + v2.Location + "] \n").ToList();
+                var resources = v.Where(v2 => v2.Type == ContentType.RESOURCE).Select(v2 => "[Resource:" + v2.Name + " id:" + v2.Id + " on location " + v2.Location + "] \n").ToList();
                 players.ForEach(v2 => visibleContentString += v2);
                 resources.ForEach(v2 => visibleContentString += v2);
                 Console.WriteLine(visibleContentString);

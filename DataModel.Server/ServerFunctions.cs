@@ -31,7 +31,7 @@ namespace DataModel.Server
 
         public static bool Only5ResourcesInArea(List<MapContent> content)
         {
-            return content.Where(v => v.Type == ContentType.RESSOURCE).Count() < 5;
+            return content.Where(v => v.Type == ContentType.RESOURCE).Count() < 5;
         }
         public static Dictionary<ResourceType, int> ToResourceDictionary(this MapContent content)
         {
@@ -44,7 +44,7 @@ namespace DataModel.Server
             Random random = new Random();
             ResourceType randomType = (ResourceType)values.GetValue(random.Next(1, values.Length));
             var id = ObjectId.NewObjectId().ToByteArray();
-            return new Resource() { Id = id, Location = null, Name = randomType.ToString(), ResourceType = randomType, Type = ContentType.RESSOURCE };
+            return new Resource() { Id = id, Location = null, Name = randomType.ToString(), ResourceType = randomType, Type = ContentType.RESOURCE };
         }
 
         public static IObservable<bool> SpawnConditionMet(this IObservable<PlusCode> code, MapContentService service, List<Func<List<MapContent>, bool>> spawnCheckFunctions)

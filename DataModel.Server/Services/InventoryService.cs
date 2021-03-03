@@ -47,7 +47,6 @@ namespace DataModel.Server.Services
              });
 
         }
-        //TODO: BUG: synchronize properly
         public IObservable<(bool, byte[])> MapContentPickUp(byte[] requestId, byte[] mapContentTarget)
         {
             return Observable.Create<(bool, byte[])>(v =>

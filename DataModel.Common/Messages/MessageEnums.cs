@@ -30,9 +30,16 @@ namespace DataModel.Common.Messages
     }
     public enum ContentType
     {
-        RESSOURCE,
+        RESOURCE,
         PLAYER,
-        QUEST
+        TOWNLEVEL1,
+        TOWNLEVEL2,
+        TOWNLEVEL3,
+        QUESTLEVEL1,
+        QUESTLEVEL2,
+        QUESTLEVEL3,
+        QUESTLEVEL4,
+        QUESTLEVEL5
     }
 
     public enum ResourceType

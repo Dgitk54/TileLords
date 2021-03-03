@@ -20,7 +20,7 @@ namespace DataModel.Common.Messages
 
         override public string ToString()
         {
-            if (Type == ContentType.RESSOURCE)
+            if (Type == ContentType.RESOURCE)
             {
                 return ResourceType + "" + " at " + Location;
             }
@@ -35,7 +35,7 @@ namespace DataModel.Common.Messages
                     return "Player: " + " unknown Name";
                 }
             }
-            else if (Type == ContentType.RESSOURCE)
+            else if (Type == ContentType.RESOURCE)
             {
                 if (Name != null)
                 {
