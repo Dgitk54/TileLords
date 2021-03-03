@@ -17,6 +17,7 @@ using System.Security.Cryptography;
 using DataModel.Common.Messages;
 using DataModel.Server.Services;
 using DataModel.Server.Model;
+using DataModel.Common.GameModel;
 
 namespace DataModel.Server
 {
@@ -37,7 +38,6 @@ namespace DataModel.Server
         {
             return new Dictionary<ResourceType, int>() { { content.ResourceType, 1 } };
         }
-
         public static Resource GetRandomNonQuestResource()
         {
             Array values = Enum.GetValues(typeof(ResourceType));
@@ -45,6 +45,26 @@ namespace DataModel.Server
             ResourceType randomType = (ResourceType)values.GetValue(random.Next(1, values.Length));
             var id = ObjectId.NewObjectId().ToByteArray();
             return new Resource() { Id = id, Location = null, Name = randomType.ToString(), ResourceType = randomType, Type = ContentType.RESOURCE };
+        }
+
+        public static bool PlayerCanLootObject(List<QuestContainer> currentPlayerQuests, MapContent contentToCheck)
+        {
+            if (!contentToCheck.CanBeLootedByPlayer)
+                return false;
+            if (contentToCheck.Type == ContentType.RESOURCE)
+                return true;
+            
+            if(currentPlayerQuests != null)
+                return currentPlayerQuests.Select(v => v.Quest).Any(v => v.QuestHasItemAsTarget(contentToCheck));
+            return false;
+        }
+        public static bool QuestHasItemAsTarget(this Quest quest, MapContent contentToCheck) 
+        {
+            if (quest.QuestLevel != contentToCheck.Type)
+                return false;
+            if (quest.TypeToPickUp != contentToCheck.ResourceType)
+                return false;
+            return true;
         }
 
         public static IObservable<bool> SpawnConditionMet(this IObservable<PlusCode> code, MapContentService service, List<Func<List<MapContent>, bool>> spawnCheckFunctions)
@@ -60,10 +80,10 @@ namespace DataModel.Server
 
         public static MapContent AsMapContent(this IUser user)
         {
-            return new MapContent() { Id = user.UserId, Name = user.UserName, ResourceType = ResourceType.NONE, Type = ContentType.PLAYER, Location = null, MapContentId = null };
+            return new MapContent() { Id = user.UserId, Name = user.UserName, ResourceType = ResourceType.NONE, Type = ContentType.PLAYER, Location = null, MapContentId = null, CanBeLootedByPlayer = false };
         }
         public static MapContent AsMapContent(this Resource resource)
-        => new MapContent() { Id = resource.Id, Location = resource.Location, Name = resource.Name, ResourceType = resource.ResourceType, Type = resource.Type };
+        => new MapContent() { Id = resource.Id, Location = resource.Location, Name = resource.Name, ResourceType = resource.ResourceType, Type = resource.Type, CanBeLootedByPlayer = true };
         public static ContentMessage AsMessage(this MapContent content)
         => new ContentMessage() { Id = content.Id, Location = content.Location, Name = content.Name, ResourceType = content.ResourceType, Type = content.Type };
         public static byte[] Hash(string value, byte[] salt) => Hash(Encoding.UTF8.GetBytes(value), salt);

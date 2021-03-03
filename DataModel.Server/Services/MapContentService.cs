@@ -11,7 +11,7 @@ namespace DataModel.Server.Services
 {
     public class MapContentService
     {
-        const int CONTENTTHROTTLEINSECONDS = 2;
+        const int CONTENTTHROTTLEINSECONDS = 1;
         readonly Func<string, BatchContentMessage> areaLookup;
         readonly Func<string, List<MapContent>> areaLookupAsContent;
         readonly Action<MapContent, string> userContentStorage;

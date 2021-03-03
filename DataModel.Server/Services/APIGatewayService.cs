@@ -202,8 +202,7 @@ namespace DataModel.Server.Services
         {
             return inboundtraffic.OfType<UserGpsMessage>()
                           .Select(v => { return new GPS(v.Lat, v.Lon); })
-                          .Select(v => v.GetPlusCode(10))
-                          .DistinctUntilChanged();
+                          .Select(v => v.GetPlusCode(10));
         }
 
 

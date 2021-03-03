@@ -19,5 +19,7 @@ namespace DataModel.Server.Model
         public string Name { get; set; }
         
         public string Location { get; set; }
+
+        public bool CanBeLootedByPlayer { get; set; }
     }
 }

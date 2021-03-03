@@ -19,7 +19,24 @@ namespace DataModel.Server
         public static string UserDatabaseName { get { return @"Users.db"; } }
         public static string MapDatabaseName { get { return @"MapData.db"; } }
         public static string InventoryDatabaseName { get { return @"Inventory.db"; } }
+        public static string QuestDatabaseName { get { return @"Quest.db"; } }
 
+        static ConnectionString QuestDatabaseWrite()
+        {
+            return new ConnectionString(QuestDatabaseName)
+            {
+                Connection = ConnectionType.Shared,
+                ReadOnly = false
+            };
+        }
+        static ConnectionString QuestDatabaseRead()
+        {
+            return new ConnectionString(QuestDatabaseName)
+            {
+                Connection = ConnectionType.Shared,
+                ReadOnly = true
+            };
+        }
         static ConnectionString UserDatabaseWrite()
         {
             return new ConnectionString(UserDatabaseName)
@@ -98,33 +115,73 @@ namespace DataModel.Server
                 col.EnsureIndex(v => v.Salt);
                 col.EnsureIndex(v => v.SaltedHash);
             }
+            using (var dataBase = new LiteDatabase(QuestDatabaseWrite()))
+            {
+                var col = dataBase.GetCollection<QuestContainer>("quests");
+                col.EnsureIndex(v => v.OwnerId);
+                col.EnsureIndex(v => v.Quest);
+                col.EnsureIndex(v => v.QuestId);
+            }
         }
 
         public static bool RemoveContentAndAddToPlayer(byte[] playerId, byte[] mapcontentId)
         {
-          
+            //Check if the player can loot the item first with readonly db queries:
+            var contentAsRead = GetMapContentById(mapcontentId);
+            if (contentAsRead == null)
+                return false;
+            if (!contentAsRead.CanBeLootedByPlayer)
+                return false;
+            var playerCanLoot = ServerFunctions.PlayerCanLootObject(GetQuestsForUser(playerId), contentAsRead);
+            if (!playerCanLoot)
+                return false;
+
+
+            //Get write locks and loot it:
             using (LiteDatabase mapData = new LiteDatabase(MapDataWrite()),
                               inventory = new LiteDatabase(InventoryDatabaseWrite()))
             {
                 var content = RemoveMapContent(mapcontentId);
                 if (content == null)
                 {
-                   
                     return false;
                 }
                 var asDictionary = content.ToResourceDictionary();
                 var inventoryInsertResult = AddContentToPlayerInventory(playerId, asDictionary);
                 if (!inventoryInsertResult)
                 {
-                   
                     return false;
                 }
-               
                 return true;
             }
         }
 
+        public static MapContent GetMapContentById(byte[] mapcontentid)
+        {
+            using (LiteDatabase dataBase = new LiteDatabase(MapDataRead()))
+            {
+                var col = dataBase.GetCollection<MapContent>("mapcontent");
+                var enumerable = col.Find(v => v.Id == mapcontentid);
+                if (enumerable.Count() > 1)
+                    throw new Exception("Multiple objects with same ID in database");
+                if (enumerable.Count() == 0)
+                    return null;
+                var ret = enumerable.First();
+                return ret;
+            }
+        }
 
+        public static List<QuestContainer> GetQuestsForUser(byte[] userid)
+        {
+            using (LiteDatabase dataBase = new LiteDatabase(QuestDatabaseRead()))
+            {
+                var col = dataBase.GetCollection<QuestContainer>("quests");
+                var allPlayerQuests = col.Find(v => v.OwnerId == userid);
+                if (allPlayerQuests.Count() == 0)
+                    return null;
+                return allPlayerQuests.ToList();
+            }
+        }
 
         /// <summary>
         /// Function which removes content in the database.
@@ -136,11 +193,6 @@ namespace DataModel.Server
             using (var dataBase = new LiteDatabase(MapDataWrite()))
             {
                 var col = dataBase.GetCollection<MapContent>("mapcontent");
-                col.EnsureIndex(v => v.Id);
-                col.EnsureIndex(v => v.Location);
-                col.EnsureIndex(v => v.Name);
-                col.EnsureIndex(v => v.ResourceType);
-                col.EnsureIndex(v => v.Type);
                 var enumerable = col.Find(v => v.Id == contentId);
 
                 if (enumerable.Count() > 1)
@@ -159,10 +211,6 @@ namespace DataModel.Server
             using (var dataBase = new LiteDatabase(InventoryDatabaseWrite()))
             {
                 var col = dataBase.GetCollection<Inventory>("inventory");
-                col.EnsureIndex(v => v.ContainerId);
-                col.EnsureIndex(v => v.OwnerId);
-                col.EnsureIndex(v => v.ResourceDictionary);
-                col.EnsureIndex(v => v.StorageCapacity);
                 var enumerable = col.Find(v => v.OwnerId == inventoryId);
                 var containerRequest = enumerable.Where(v => v.ContainerId.SequenceEqual(inventoryId));
                 if (containerRequest.Count() > 1)
@@ -199,10 +247,6 @@ namespace DataModel.Server
             using (var dataBase = new LiteDatabase(InventoryDatabaseWrite()))
             {
                 var col = dataBase.GetCollection<Inventory>("inventory");
-                col.EnsureIndex(v => v.ContainerId);
-                col.EnsureIndex(v => v.OwnerId);
-                col.EnsureIndex(v => v.ResourceDictionary);
-                col.EnsureIndex(v => v.StorageCapacity);
                 var enumerable = col.Find(v => v.OwnerId == playerId);
 
                 if (enumerable.Count() > 1)
@@ -217,47 +261,28 @@ namespace DataModel.Server
         }
         public static Dictionary<ResourceType, int> RequestInventory(byte[] requestOwnerId, byte[] targetId)
         {
-            using (var dataBase = new LiteDatabase(InventoryDatabaseWrite()))
+            using (var dataBase = new LiteDatabase(InventoryDatabaseRead()))
             {
-                try
-                {
-                    var col = dataBase.GetCollection<Inventory>("inventory");
-                    col.EnsureIndex(v => v.ContainerId);
-                    col.EnsureIndex(v => v.OwnerId);
-                    col.EnsureIndex(v => v.ResourceDictionary);
-                    col.EnsureIndex(v => v.StorageCapacity);
-                    var getContainersWherePlayerHasInventory = col.Find(v => v.OwnerId == requestOwnerId);
-                    var getRequestedContainerInventory = getContainersWherePlayerHasInventory.Where(v => v.ContainerId.SequenceEqual(targetId));
+                var col = dataBase.GetCollection<Inventory>("inventory");
+                var getContainersWherePlayerHasInventory = col.Find(v => v.OwnerId == requestOwnerId);
+                var getRequestedContainerInventory = getContainersWherePlayerHasInventory.Where(v => v.ContainerId.SequenceEqual(targetId));
 
-                    if (getRequestedContainerInventory.Count() > 1)
-                        throw new Exception("Multiple objects with same ID in database");
-                    if (getRequestedContainerInventory.Count() == 0)
-                    {
-                        //No user inventory has been set up yet
-                        if (requestOwnerId.SequenceEqual(targetId))
-                        {
-                            
-                            CreatePlayerInventory(requestOwnerId);
-                            return RequestInventory(requestOwnerId, targetId);
-                        }
-                        return null;
-                    }
-
-                    var inventory = getRequestedContainerInventory.First();
-                    return inventory.ResourceDictionary;
-                }
-                catch (FileNotFoundException e)
+                if (getRequestedContainerInventory.Count() > 1)
+                    throw new Exception("Multiple objects with same ID in database");
+                if (getRequestedContainerInventory.Count() == 0)
                 {
-                    using (var dataBase2 = new LiteDatabase(InventoryDatabaseWrite()))
+                    //No user inventory has been set up yet
+                    if (requestOwnerId.SequenceEqual(targetId))
                     {
-                        var col = dataBase2.GetCollection<Inventory>("inventory");
-                        col.EnsureIndex(v => v.ContainerId);
-                        col.EnsureIndex(v => v.OwnerId);
-                        col.EnsureIndex(v => v.ResourceDictionary);
-                        col.EnsureIndex(v => v.StorageCapacity);
-                        return null;
+
+                        CreatePlayerInventory(requestOwnerId);
+                        return RequestInventory(requestOwnerId, targetId);
                     }
+                    return null;
                 }
+
+                var inventory = getRequestedContainerInventory.First();
+                return inventory.ResourceDictionary;
             }
         }
 
@@ -266,18 +291,11 @@ namespace DataModel.Server
         /// </summary>
         /// <param name="content">MapContent to insert/update</param>
         /// <param name="location">The current location of the MapContent, if null this function will delete the mapcontent</param>
-
         public static void UpdateOrDeleteContent(MapContent content, string location)
         {
             using (var dataBase = new LiteDatabase(MapDataWrite()))
             {
                 var col = dataBase.GetCollection<MapContent>("mapcontent");
-                col.EnsureIndex(v => v.Id);
-                col.EnsureIndex(v => v.Location);
-                col.EnsureIndex(v => v.Name);
-                col.EnsureIndex(v => v.ResourceType);
-                col.EnsureIndex(v => v.Type);
-
                 var enumerable = col.Find(v => v.Id == content.Id);
                 if (enumerable.Count() > 1)
                     throw new Exception("Multiple objects with same ID in database");
@@ -317,12 +335,6 @@ namespace DataModel.Server
             using (var dataBase = new LiteDatabase(MapDataWrite()))
             {
                 var col = dataBase.GetCollection<MapContent>("mapcontent");
-                col.EnsureIndex(v => v.Id);
-                col.EnsureIndex(v => v.Location);
-                col.EnsureIndex(v => v.Name);
-                col.EnsureIndex(v => v.ResourceType);
-                col.EnsureIndex(v => v.Type);
-
                 int players = col.DeleteMany(v => v.Type == ContentType.PLAYER);
                 int resources = col.DeleteMany(v => v.Type == ContentType.RESOURCE);
                 return players + resources;
@@ -332,77 +344,25 @@ namespace DataModel.Server
 
         public static List<MapContent> AreaContentAsListRequest(string location)
         {
-            //TODO: FIX BUG, WORKS ONLY IN WRITE ONLY MODE!
-            using (var dataBase = new LiteDatabase(MapDataWrite()))
+            using (var dataBase = new LiteDatabase(MapDataRead()))
             {
-                try
-                {
-                    var col = dataBase.GetCollection<MapContent>("mapcontent");
-                    col.EnsureIndex(v => v.Id);
-                    col.EnsureIndex(v => v.Location);
-                    col.EnsureIndex(v => v.Name);
-                    col.EnsureIndex(v => v.ResourceType);
-                    col.EnsureIndex(v => v.Type);
-
-                    var nearbyCodes = LocationCodeTileUtility.GetTileSection(location, ServerFunctions.CLIENTVISIBILITY, ServerFunctions.CLIENTLOCATIONPRECISION);
-
-                    var enumerable = col.Find(v => nearbyCodes.Any(v2 => v2.Equals(v.Location)));
-
-                    return enumerable.ToList();
-                }
-                catch (FileNotFoundException e)
-                {
-
-                    using (var dbwrite = new LiteDatabase(MapDataWrite()))
-                    {
-                        var col = dbwrite.GetCollection<MapContent>("mapcontent");
-                        col.EnsureIndex(v => v.Id);
-                        col.EnsureIndex(v => v.Location);
-                        col.EnsureIndex(v => v.Name);
-                        col.EnsureIndex(v => v.ResourceType);
-                        col.EnsureIndex(v => v.Type);
-                        return null;
-                    }
-                }
+                var col = dataBase.GetCollection<MapContent>("mapcontent");
+                var nearbyCodes = LocationCodeTileUtility.GetTileSection(location, ServerFunctions.CLIENTVISIBILITY, ServerFunctions.CLIENTLOCATIONPRECISION);
+                var enumerable = col.Find(v => nearbyCodes.Any(v2 => v2.Equals(v.Location)));
+                return enumerable.ToList();
             }
         }
 
 
         public static BatchContentMessage AreaContentAsMessageRequest(string location)
         {
-            //TODO: FIX BUG, WORKS ONLY IN WRITE ONLY MODE!
-            using (var dataBase = new LiteDatabase(MapDataWrite()))
+            using (var dataBase = new LiteDatabase(MapDataRead()))
             {
-                try
-                {
-                    var col = dataBase.GetCollection<MapContent>("mapcontent");
-                    col.EnsureIndex(v => v.Id);
-                    col.EnsureIndex(v => v.Location);
-                    col.EnsureIndex(v => v.Name);
-                    col.EnsureIndex(v => v.ResourceType);
-                    col.EnsureIndex(v => v.Type);
-
-                    var nearbyCodes = LocationCodeTileUtility.GetTileSection(location, ServerFunctions.CLIENTVISIBILITY, ServerFunctions.CLIENTLOCATIONPRECISION);
-
-                    var enumerable = col.Find(v => nearbyCodes.Any(v2 => v2.Equals(v.Location)));
-
-                    var list = enumerable.ToList().ConvertAll(v => v.AsMessage());
-                    return new BatchContentMessage() { ContentList = list };
-                }
-                catch (FileNotFoundException e)
-                {
-
-                    using (var dbwrite = new LiteDatabase(MapDataWrite()))
-                    {
-                        var col = dbwrite.GetCollection<MapContent>("mapcontent");
-                        col.EnsureIndex(v => v.Id);
-                        col.EnsureIndex(v => v.Location);
-                        col.EnsureIndex(v => v.Name);
-                        col.EnsureIndex(v => v.ResourceType);
-                        col.EnsureIndex(v => v.Type);
-                        return null;
-                    }
-                }
+                var col = dataBase.GetCollection<MapContent>("mapcontent");
+                var nearbyCodes = LocationCodeTileUtility.GetTileSection(location, ServerFunctions.CLIENTVISIBILITY, ServerFunctions.CLIENTLOCATIONPRECISION);
+                var enumerable = col.Find(v => nearbyCodes.Any(v2 => v2.Equals(v.Location)));
+                var list = enumerable.ToList().ConvertAll(v => v.AsMessage());
+                return new BatchContentMessage() { ContentList = list };
 
             }
         }
@@ -413,12 +373,6 @@ namespace DataModel.Server
             using (var dataBase = new LiteDatabase(UserDatabaseWrite()))
             {
                 var col = dataBase.GetCollection<User>("users");
-                col.EnsureIndex(v => v.AccountCreated);
-                col.EnsureIndex(v => v.LastOnline);
-                col.EnsureIndex(v => v.UserName);
-                col.EnsureIndex(v => v.Salt);
-                col.EnsureIndex(v => v.SaltedHash);
-
                 if (NameTaken(name, col))
                     return false;
 
