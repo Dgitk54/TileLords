@@ -7,33 +7,6 @@ namespace DataModel.Common
 {
     public static class WorldWeights
     {
-        // see https://stackoverflow.com/questions/56692/random-weighted-choice
-        public static T RandomElementByWeight<T>(this IEnumerable<T> sequence, Func<T, float> weightSelector, Random seed)
-        {
-            float totalWeight = sequence.Sum(weightSelector);
-            // The weight we are after...
-            float itemWeightIndex = (float)seed.NextDouble() * totalWeight;
-            float currentWeightIndex = 0;
-
-            foreach (var item in from weightedItem in sequence select new { Value = weightedItem, Weight = weightSelector(weightedItem) })
-            {
-                currentWeightIndex += item.Weight;
-
-                // If we've hit or passed the weight we are after for this item then it's the one we want....
-                if (currentWeightIndex >= itemWeightIndex)
-                    return item.Value;
-            }
-
-            return default;
-        }
-
-        public static T ConvertEnumString<T>(this string name)
-            => (T)Enum.Parse(typeof(T), name);
-
-
-
-
-
         public static Dictionary<string, int> desertObjectWeights = new Dictionary<string, int>
         {
          {"Cactus", 30 },

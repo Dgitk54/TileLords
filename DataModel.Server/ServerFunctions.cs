@@ -28,16 +28,29 @@ namespace DataModel.Server
     {
         public readonly static int CLIENTVISIBILITY = 10;
         public readonly static int CLIENTLOCATIONPRECISION = 10;
+
+        public readonly static int CLIENT_MAXQUESTS = 5;
+
+        //QUESTLEVEL 1:
+        public readonly static int QUESTLEVEL1_DECAYINDAYS = 14;
+        public readonly static int QUESTLEVEL1_MINDISTANCEFROMREQUESTSPAWN_INMINITILES = 40;
+        public readonly static int QUESTLEVEL1_MAXDISTANCEFROMREQUESTSPAWN_INMINITILES = 60;
+        public readonly static int QUESTLEVEL1_SPAWNAREA_INMINITILES = 10;
+        public readonly static int QUESTLEVEL1_REQUIREDAMOUNT_MAX = 15;
         
 
         public static bool Only5ResourcesInArea(List<MapContent> content)
         {
             return content.Where(v => v.Type == ContentType.RESOURCE).Count() < 5;
         }
+
+
+
         public static Dictionary<ResourceType, int> ToResourceDictionary(this MapContent content)
         {
             return new Dictionary<ResourceType, int>() { { content.ResourceType, 1 } };
         }
+
         public static Resource GetRandomNonQuestResource()
         {
             Array values = Enum.GetValues(typeof(ResourceType));
@@ -58,6 +71,7 @@ namespace DataModel.Server
                 return currentPlayerQuests.Select(v => v.Quest).Any(v => v.QuestHasItemAsTarget(contentToCheck));
             return false;
         }
+
         public static bool QuestHasItemAsTarget(this Quest quest, MapContent contentToCheck) 
         {
             if (quest.QuestLevel != contentToCheck.Type)
@@ -77,15 +91,57 @@ namespace DataModel.Server
                 });
             });
         }
+       
+        public static bool ResourceCanSpawn(TileType location, ResourceType type)
+        {
+            var tileSpawnDictionary = WorldSpawnWeights.TileTypeToResourceTypeWeights[location];
+            return tileSpawnDictionary.Keys.Contains(type);
+        }
+
+        public static ResourceType GetRandomResourceTypeForArea(string areaLocationIn10)
+        {
+            var tiletype = WorldGenerator.GetTileTypeForArea(new PlusCode(areaLocationIn10, 10));
+            var dictionaryForTile = WorldSpawnWeights.TileTypeToResourceTypeWeights[tiletype];
+            var randomDictionaryValue = new Random().Next(dictionaryForTile.Keys.Count);
+            var randomType = dictionaryForTile.Keys.ToList()[randomDictionaryValue];
+            return randomType;
+        }
+
+        public static Quest GetLevel1QuestForUser(this IUser user, PlusCode questRequestStart)
+        {
+            var questTargetLocation = DataModelFunctions.GetNearbyLocationWithinMinMaxBounds
+                (
+                questRequestStart.Code,
+                QUESTLEVEL1_MAXDISTANCEFROMREQUESTSPAWN_INMINITILES,
+                QUESTLEVEL1_MINDISTANCEFROMREQUESTSPAWN_INMINITILES
+                ).Code;
+            var resourceTypeForQuest = GetRandomResourceTypeForArea(questTargetLocation);
+            var quest = new Quest()
+            {
+                AreaRadiusFromLocation = 5,
+                ExpiringDate = DateTime.Now.AddDays(QUESTLEVEL1_DECAYINDAYS),
+                QuestLevel = ContentType.QUESTLEVEL1,
+                QuestOriginId = null,
+                QuestTargetLocation = questTargetLocation,
+                QuestTurninLocation = null,
+                RequiredAmountForCompletion = QUESTLEVEL1_REQUIREDAMOUNT_MAX,
+                TypeToPickUp = resourceTypeForQuest,
+                QuestId = ObjectId.NewObjectId().ToByteArray()
+            };
+            return quest;
+        }
 
         public static MapContent AsMapContent(this IUser user)
         {
             return new MapContent() { Id = user.UserId, Name = user.UserName, ResourceType = ResourceType.NONE, Type = ContentType.PLAYER, Location = null, MapContentId = null, CanBeLootedByPlayer = false };
         }
+
         public static MapContent AsMapContent(this Resource resource)
         => new MapContent() { Id = resource.Id, Location = resource.Location, Name = resource.Name, ResourceType = resource.ResourceType, Type = resource.Type, CanBeLootedByPlayer = true };
+
         public static ContentMessage AsMessage(this MapContent content)
         => new ContentMessage() { Id = content.Id, Location = content.Location, Name = content.Name, ResourceType = content.ResourceType, Type = content.Type };
+
         public static byte[] Hash(string value, byte[] salt) => Hash(Encoding.UTF8.GetBytes(value), salt);
 
         public static byte[] Hash(byte[] value, byte[] salt)

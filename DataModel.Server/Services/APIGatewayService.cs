@@ -99,7 +99,7 @@ namespace DataModel.Server.Services
                                                                                   .Subscribe(v2 => responses.OnNext(v2));
 
 
-                var spawnDisposable = resourceSpawnService.AddMovableRessourceSpawnArea(v.UserId, LatestClientLocation(inboundtraffic));
+                var spawnDisposable = resourceSpawnService.AddMovableResourceSpawnArea(v.UserId, LatestClientLocation(inboundtraffic));
 
                 var handleInventoryRequests = HandleInventoryRequests(v, inboundtraffic);
                 var handlePickupRequests = HandleMapContentPickup(v, inboundtraffic);

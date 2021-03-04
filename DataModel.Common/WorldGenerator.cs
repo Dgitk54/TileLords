@@ -20,7 +20,18 @@ namespace DataModel.Common
             var list = MiniTilesForTile(code, biomevalues.Item1, biomevalues.Item2, rnd);
             return new Tile(code, type, list);
         }
+        public static TileType GetTileTypeForArea(PlusCode code, string addition = "")
+        {
+            var lowerPrecision = code;
+            if (code.Precision == 10)
+                lowerPrecision = code.ToLowerResolution(8);
 
+            var md5Hasher = MD5.Create();
+            var hashed = md5Hasher.ComputeHash(Encoding.UTF8.GetBytes(lowerPrecision.Code));
+            var asInt = BitConverter.ToInt32(hashed, 0); // more collisions!
+            var rnd = new Random(asInt);
+            return getRandomTileType(rnd);
+        }
         public static Tile GenerateTile(PlusCode code, string addition)
         {
             string newCode = code.Code + addition;

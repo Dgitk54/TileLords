@@ -120,7 +120,7 @@ namespace DataModel.Server
                 var col = dataBase.GetCollection<QuestContainer>("quests");
                 col.EnsureIndex(v => v.OwnerId);
                 col.EnsureIndex(v => v.Quest);
-                col.EnsureIndex(v => v.QuestId);
+                col.EnsureIndex(v => v.QuestContainerId);
             }
         }
 
@@ -169,6 +169,17 @@ namespace DataModel.Server
                 var ret = enumerable.First();
                 return ret;
             }
+        }
+
+        public static bool AddQuestForUser(byte[] userId, QuestContainer container)
+        {
+            using (LiteDatabase dataBase = new LiteDatabase(QuestDatabaseWrite()))
+            {
+                var col = dataBase.GetCollection<QuestContainer>("quests");
+                col.Insert(container);
+                return true;
+            }
+
         }
 
         public static List<QuestContainer> GetQuestsForUser(byte[] userid)

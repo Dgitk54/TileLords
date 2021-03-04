@@ -55,7 +55,7 @@ namespace DataModel.Server.Services
         }
 
         //TODO: minor bugprone: Propagate location downstream via touples
-        public IDisposable AddMovableRessourceSpawnArea(byte[] moveableOwnerId, IObservable<PlusCode> location)
+        public IDisposable AddMovableResourceSpawnArea(byte[] moveableOwnerId, IObservable<PlusCode> location)
         {
             return Observable.Interval(TimeSpan.FromSeconds(RESOURCESPAWNCHECKTHROTTLEINSECONDS))
                              .WithLatestFrom(location, (_, loc) => new { _, loc})
@@ -67,16 +67,15 @@ namespace DataModel.Server.Services
                              .WithLatestFrom(location, (res, loc) => new { res, loc })
                              .Subscribe(v =>
                              {
-                                 var randomNearbyLocation = GetNearbyRandomSpawn(v.res, v.loc.Code).Code;
+                                 var randomNearbyLocation = DataModelFunctions.GetNearbyRandomSpawn(v.loc.Code, 10).Code;
                                  resourceSpawnRequests.OnNext((v.res, randomNearbyLocation));
                              });
         }
 
-        PlusCode GetNearbyRandomSpawn(Resource resource, string vicinity)
+        public IDisposable AddMoveableQuestResourceSpawnArea(byte[] moveableOwnerId, IObservable<PlusCode> location)
         {
-            var list = LocationCodeTileUtility.GetTileSection(vicinity, 10, 10);
-            var randomSpot = new Random().Next(list.Count);
-            return new PlusCode(list[randomSpot], 10);
+            return null;
+            //TODO: FINISH
         }
 
         IObservable<Resource> GetRandomResource(byte[] requestId)

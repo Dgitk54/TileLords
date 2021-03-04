@@ -69,13 +69,5 @@ namespace DataModel.Server.Tests
             casted = responses[0] as UserActionMessage;
             Assert.IsTrue(casted.MessageState == MessageState.SUCCESS);
         }
-
-        [Test]
-        public void ReceivesMapContent()
-        {
-
-
-
-        }
     }
 }
