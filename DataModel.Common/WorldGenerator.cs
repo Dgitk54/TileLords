@@ -17,7 +17,7 @@ namespace DataModel.Common
             var type = getRandomTileType(rnd);
             
             var biomevalues = WorldWeights.biomes[type];
-            var list = MiniTilesForTile(code, biomevalues.Item1, biomevalues.Item2, rnd);
+            var list = MiniTilesForTile(code, biomevalues.Item1, biomevalues.Item2, rnd, type);
             return new Tile(code, type, list);
         }
         public static TileType GetTileTypeForArea(PlusCode code, string addition = "")
@@ -43,11 +43,11 @@ namespace DataModel.Common
             var type = getRandomTileType(rnd);
 
             var biomevalues = WorldWeights.biomes[type];
-            var list = MiniTilesForTile(code, biomevalues.Item1, biomevalues.Item2, rnd);
+            var list = MiniTilesForTile(code, biomevalues.Item1, biomevalues.Item2, rnd, type);
             return new Tile(code, type, list);
         }
 
-        public static List<MiniTile> MiniTilesForTile(PlusCode tileCode,Dictionary<string, int> worldObjects, Dictionary<string,int> floorValues, Random seed)
+        public static List<MiniTile> MiniTilesForTile(PlusCode tileCode,Dictionary<string, int> worldObjects, Dictionary<string,int> floorValues, Random seed,  TileType parentsType)
         {
             string code = tileCode.Code;
             if (code.Length > 9)
@@ -59,7 +59,7 @@ namespace DataModel.Common
                 code += "+";
             }
             var tiles = from miniTileCodeString in LocationCodeTileUtility.GetAndCombineWithAllAfterPlus(code)
-                        select new MiniTile(new PlusCode(miniTileCodeString, 10), floorValues.RandomElementByWeight(e=> e.Value, seed).Key.ConvertEnumString<MiniTileType>(), new List<ITileContent>() { new WorldObject(worldObjects.RandomElementByWeight(e => e.Value, seed).Key.ConvertEnumString<WorldObjectType>()) });
+                        select new MiniTile(new PlusCode(miniTileCodeString, 10), floorValues.RandomElementByWeight(e=> e.Value, seed).Key.ConvertEnumString<MiniTileType>(), new List<ITileContent>() { new WorldObject(worldObjects.RandomElementByWeight(e => e.Value, seed).Key.ConvertEnumString<WorldObjectType>()) }, parentsType);
             return tiles.ToList();
         }
         
