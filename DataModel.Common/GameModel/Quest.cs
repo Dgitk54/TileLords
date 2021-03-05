@@ -7,8 +7,8 @@ namespace DataModel.Common.GameModel
 {
     public class Quest
     {
-        public byte[] QuestOriginId { get; set; }
-        public byte[] QuestId { get; set; }
+        public byte[] QuestOriginId { get; set; } //Town the quest started from
+        public byte[] QuestId { get; set; } //Quest ID 
         public ContentType QuestLevel { get; set; }
         public ResourceType TypeToPickUp { get; set; }
         public int RequiredAmountForCompletion { get; set; }

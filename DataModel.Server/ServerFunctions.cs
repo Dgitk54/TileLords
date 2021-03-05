@@ -37,7 +37,16 @@ namespace DataModel.Server
         public readonly static int QUESTLEVEL1_MAXDISTANCEFROMREQUESTSPAWN_INMINITILES = 60;
         public readonly static int QUESTLEVEL1_SPAWNAREA_INMINITILES = 10;
         public readonly static int QUESTLEVEL1_REQUIREDAMOUNT_MAX = 15;
-        
+
+        //Magic numbers for spawnchance calculation:
+        public readonly static double ONE_PER_MINUTEAVARAGE = 1.67;
+        public readonly static double TWO_PER_MINUTEAVARAGE = 3.34;
+
+        //QUESTCONTAINER LEVEL 1:
+        public readonly static double CONTAINER_1_ITEMSPAWNCHANCE_PERSECOND = TWO_PER_MINUTEAVARAGE;
+        public readonly static int CONTAINER_1_MAXITEMS_PERAREA = 10;
+        public readonly static int CONTAINER_1_ITEMALIVE_INSECONDS = 420;
+
 
         public static bool Only5ResourcesInArea(List<MapContent> content)
         {
@@ -60,19 +69,20 @@ namespace DataModel.Server
             return new Resource() { Id = id, Location = null, Name = randomType.ToString(), ResourceType = randomType, Type = ContentType.RESOURCE };
         }
 
+
         public static bool PlayerCanLootObject(List<QuestContainer> currentPlayerQuests, MapContent contentToCheck)
         {
             if (!contentToCheck.CanBeLootedByPlayer)
                 return false;
             if (contentToCheck.Type == ContentType.RESOURCE)
                 return true;
-            
-            if(currentPlayerQuests != null)
+
+            if (currentPlayerQuests != null)
                 return currentPlayerQuests.Select(v => v.Quest).Any(v => v.QuestHasItemAsTarget(contentToCheck));
             return false;
         }
 
-        public static bool QuestHasItemAsTarget(this Quest quest, MapContent contentToCheck) 
+        public static bool QuestHasItemAsTarget(this Quest quest, MapContent contentToCheck)
         {
             if (quest.QuestLevel != contentToCheck.Type)
                 return false;
@@ -91,7 +101,7 @@ namespace DataModel.Server
                 });
             });
         }
-       
+
         public static bool ResourceCanSpawn(TileType location, ResourceType type)
         {
             var tileSpawnDictionary = WorldSpawnWeights.TileTypeToResourceTypeWeights[location];
@@ -106,8 +116,20 @@ namespace DataModel.Server
             var randomType = dictionaryForTile.Keys.ToList()[randomDictionaryValue];
             return randomType;
         }
-
-        public static Quest GetLevel1QuestForUser(this IUser user, PlusCode questRequestStart)
+        public static QuestContainer WrapLevel1Quest(this Quest quest, byte[] owner)
+        {
+            return new QuestContainer()
+            {
+                OwnerId = owner,
+                Quest = quest,
+                QuestCreatedOn = DateTime.Now,
+                QuestHasExpired = false,
+                QuestItemAliveTimeInSeconds = CONTAINER_1_ITEMALIVE_INSECONDS,
+                QuestItemsMaxAliveInQuestArea = CONTAINER_1_MAXITEMS_PERAREA,
+                QuestItemSpawnChancePerSecond = CONTAINER_1_ITEMSPAWNCHANCE_PERSECOND
+            };
+        }
+        public static Quest GetLevel1QuestForUser(PlusCode questRequestStart)
         {
             var questTargetLocation = DataModelFunctions.GetNearbyLocationWithinMinMaxBounds
                 (

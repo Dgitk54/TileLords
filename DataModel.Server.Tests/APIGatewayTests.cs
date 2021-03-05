@@ -39,8 +39,9 @@ namespace DataModel.Server.Tests
             var mapservice = new MapContentService(DataBaseFunctions.AreaContentAsMessageRequest, DataBaseFunctions.UpdateOrDeleteContent, DataBaseFunctions.AreaContentAsListRequest);
             var resourceSpawnService = new ResourceSpawnService(mapservice, DataBaseFunctions.UpdateOrDeleteContent, new List<Func<List<MapContent>, bool>>() { ServerFunctions.Only5ResourcesInArea });
             var inventoryService = new InventoryService();
+            var questService = new QuestService();
             var responses = new List<IMessage>();
-            var gateway = new APIGatewayService(accountservice, mapservice, resourceSpawnService, inventoryService);
+            var gateway = new APIGatewayService(accountservice, mapservice, resourceSpawnService, inventoryService, questService);
 
             gateway.GatewayResponse.Subscribe(v => responses.Add(v));
             Subject<IMessage> testInput = new Subject<IMessage>();
