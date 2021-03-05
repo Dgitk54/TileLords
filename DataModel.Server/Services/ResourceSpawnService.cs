@@ -21,7 +21,7 @@ namespace DataModel.Server.Services
     /// </summary>
     public class ResourceSpawnService
     {
-        const int RESOURCEALIVEINSEC = 60;
+        const int RESOURCEALIVEINSEC = 420; //TODO: Find a structure to handle quest resource decay differently
         const int RESOURCESPAWNCHECKTHROTTLEINSECONDS = 15;
         readonly MapContentService service;
         readonly List<IDisposable> disposables = new List<IDisposable>();
@@ -74,8 +74,24 @@ namespace DataModel.Server.Services
 
         public IDisposable AddMoveableQuestResourceSpawnArea(byte[] moveableOwnerId, IObservable<PlusCode> location)
         {
-            return null;
-            //TODO: FINISH
+            return Observable.Interval(TimeSpan.FromSeconds(RESOURCESPAWNCHECKTHROTTLEINSECONDS))
+                                .WithLatestFrom(location, (_, loc) => new { _, loc })
+                                .Select(v => v.loc)
+                                .Select(v => (DataBaseFunctions.GetQuestsForUser(moveableOwnerId), v))
+                                .Where(v=> v.Item1 != null)
+                                .Select(v => ServerFunctions.LocationIsInsideQuestSpawnableArea(v.v, v.Item1))
+                                .Where(v => v.Any())
+                                .Select(v=> v.Where(e => ServerFunctions.ShouldResourceSpawn(e,RESOURCESPAWNCHECKTHROTTLEINSECONDS)))
+                                .Where(v=> v.Any())
+                                .Subscribe(v =>
+                                {
+                                    v.ToList().ForEach(e =>
+                                    {
+                                        var randomSpawnInQuestArea = DataModelFunctions.GetNearbyRandomSpawn(e.Quest.QuestTargetLocation, e.Quest.AreaRadiusFromLocation);
+                                        var resource = e.ExtractQuestResource(randomSpawnInQuestArea.Code);
+                                        resourceSpawnRequests.OnNext((resource, randomSpawnInQuestArea.Code));
+                                    });                                    
+                                });
         }
 
         IObservable<Resource> GetRandomResource(byte[] requestId)

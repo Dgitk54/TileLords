@@ -50,14 +50,18 @@ namespace DataModel.Server.Services
 
 
                 var spawnDisposable = resourceSpawnService.AddMovableResourceSpawnArea(v.UserId, LatestClientLocation(inboundtraffic));
+                var spawnQuestDisposable = resourceSpawnService.AddMoveableQuestResourceSpawnArea(v.UserId, LatestClientLocation(inboundtraffic));
+
 
                 var handleInventoryRequests = HandleInventoryRequests(v, inboundtraffic);
                 var handlePickupRequests = HandleMapContentPickup(v, inboundtraffic);
                 var handleQuestGenerationRequests = HandleQuestGenerationRequests(v, inboundtraffic);
                 var handleQuestList = HandleQuestlistRequest(v, inboundtraffic);
 
+
                 disposables.Add(handleQuestList);
                 disposables.Add(handleQuestGenerationRequests);
+                disposables.Add(spawnQuestDisposable);
                 disposables.Add(handleInventoryRequests);
                 disposables.Add(mapServicePlayerUpdate);
                 disposables.Add(mapDataRequests);

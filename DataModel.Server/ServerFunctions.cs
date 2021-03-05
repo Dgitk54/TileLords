@@ -68,7 +68,10 @@ namespace DataModel.Server
             var id = ObjectId.NewObjectId().ToByteArray();
             return new Resource() { Id = id, Location = null, Name = randomType.ToString(), ResourceType = randomType, Type = ContentType.RESOURCE };
         }
-
+        public static Resource ExtractQuestResource(this QuestContainer quest, string location)
+        {
+            return new Resource() { Id = ObjectId.NewObjectId().ToByteArray(), Location = location, Name = quest.Quest.TypeToPickUp.ToString(), ResourceType = quest.Quest.TypeToPickUp, Type = quest.Quest.QuestLevel };
+        }
 
         public static bool PlayerCanLootObject(List<QuestContainer> currentPlayerQuests, MapContent contentToCheck)
         {
@@ -81,7 +84,30 @@ namespace DataModel.Server
                 return currentPlayerQuests.Select(v => v.Quest).Any(v => v.QuestHasItemAsTarget(contentToCheck));
             return false;
         }
+        
+        public static bool ShouldResourceSpawn(QuestContainer container, int spawnCheckDelayInSeconds)
+        {
+            var perSpawnCheck = container.QuestItemSpawnChancePerSecond * spawnCheckDelayInSeconds;
+            var random = new Random();
+            var roll = random.Next(0, 101);
+            return roll < perSpawnCheck;
+        }
+        
+        
+        public static IEnumerable<QuestContainer> LocationIsInsideQuestSpawnableArea(PlusCode locationToTest, List<QuestContainer> quests)
+        {
+            return quests.Where(v =>
+            {
+                var targetLocation = v.Quest.QuestTargetLocation;
+                var radius = v.Quest.AreaRadiusFromLocation;
+                var section = LocationCodeTileUtility.GetTileSection(targetLocation, radius, 10);
 
+                return section.Contains(locationToTest.Code);
+            });
+        }
+        
+        
+       
         public static bool QuestHasItemAsTarget(this Quest quest, MapContent contentToCheck)
         {
             if (quest.QuestLevel != contentToCheck.Type)
