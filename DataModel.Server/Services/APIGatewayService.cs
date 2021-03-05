@@ -22,67 +22,17 @@ namespace DataModel.Server.Services
         readonly MapContentService mapService;
         readonly ResourceSpawnService resourceSpawnService;
         readonly InventoryService inventoryService;
+        readonly QuestService questService;
         readonly List<IDisposable> disposables = new List<IDisposable>();
 
-        readonly static UserActionMessage loginFail = new UserActionMessage()
-        {
-            MessageContext = MessageContext.LOGIN,
-            MessageInfo = MessageInfo.LOGINFAIL,
-            MessageState = MessageState.ERROR,
-            MessageType = MessageType.RESPONSE
-        };
-        readonly static InventoryContentMessage contentRetrievalFail = new InventoryContentMessage()
-        {
-            InventoryContent = null,
-            InventoryOwner = null,
-            Type = MessageType.RESPONSE,
-            MessageState = MessageState.ERROR
 
-        };
-
-        readonly static UserActionMessage loginSuccess = new UserActionMessage()
-        {
-            MessageContext = MessageContext.LOGIN,
-            MessageInfo = MessageInfo.NONE,
-            MessageState = MessageState.SUCCESS,
-            MessageType = MessageType.RESPONSE
-        };
-
-        readonly static UserActionMessage registerFail = new UserActionMessage()
-        {
-            MessageContext = MessageContext.REGISTER,
-            MessageInfo = MessageInfo.NONE,
-            MessageState = MessageState.ERROR,
-            MessageType = MessageType.RESPONSE
-        };
-        readonly static UserActionMessage registerSuccess = new UserActionMessage()
-        {
-            MessageContext = MessageContext.REGISTER,
-            MessageInfo = MessageInfo.NONE,
-            MessageState = MessageState.SUCCESS,
-            MessageType = MessageType.RESPONSE
-        };
-        static UserActionMessage loginSuccessWithId(IUser user)
-        {
-            var success = loginSuccess;
-            success.MessageInfo = MessageInfo.USERID;
-            success.AdditionalInfo = user.UserId;
-            return success;
-        }
-        static InventoryContentMessage ContentResponse(byte[] ownerId, Dictionary<ResourceType, int> resources)
-        {
-            return new InventoryContentMessage() { InventoryContent = resources.ToList(), InventoryOwner = ownerId, MessageState = MessageState.SUCCESS, Type = MessageType.RESPONSE };
-        }
-        static MapContentTransactionMessage MapContentTransactionFail(byte[] targetId)
-        {
-            return new MapContentTransactionMessage() { MapContentId = targetId, MessageState = MessageState.ERROR, MessageType = MessageType.RESPONSE };
-        }
-        public APIGatewayService(UserAccountService userService, MapContentService mapService, ResourceSpawnService spawnService, InventoryService inventoryService)
+        public APIGatewayService(UserAccountService userService, MapContentService mapService, ResourceSpawnService spawnService, InventoryService inventoryService, QuestService questService)
         {
             this.userService = userService;
             this.mapService = mapService;
             this.inventoryService = inventoryService;
             this.resourceSpawnService = spawnService;
+            this.questService = questService;
         }
         public IObservable<IMessage> GatewayResponse => responses.AsObservable();
         public void AttachGateway(IObservable<IMessage> inboundtraffic)
@@ -103,7 +53,11 @@ namespace DataModel.Server.Services
 
                 var handleInventoryRequests = HandleInventoryRequests(v, inboundtraffic);
                 var handlePickupRequests = HandleMapContentPickup(v, inboundtraffic);
+                var handleQuestGenerationRequests = HandleQuestGenerationRequests(v, inboundtraffic);
+                var handleQuestList = HandleQuestlistRequest(v, inboundtraffic);
 
+                disposables.Add(handleQuestList);
+                disposables.Add(handleQuestGenerationRequests);
                 disposables.Add(handleInventoryRequests);
                 disposables.Add(mapServicePlayerUpdate);
                 disposables.Add(mapDataRequests);
@@ -126,13 +80,13 @@ namespace DataModel.Server.Services
                           .SelectMany(v => userService.LoginUser(v.Name, v.Password))
                           .Catch<IUser, Exception>(tx =>
                           {
-                              responses.OnNext(loginFail);
+                              responses.OnNext(GatewayResponses.loginFail);
                               return Observable.Empty<IUser>();
                           })
                           .Do(v =>
                           {
                               if (v != null)
-                                  responses.OnNext(loginSuccessWithId(v));
+                                  responses.OnNext(GatewayResponses.loginSuccessWithId(v));
                           });
         }
 
@@ -140,30 +94,30 @@ namespace DataModel.Server.Services
         {
             return inboundtraffic.OfType<InventoryContentMessage>()
                           .Where(v => v.Type == MessageType.REQUEST)
-                          .SelectMany(v => 
+                          .SelectMany(v =>
                           {
                               return inventoryService.RequestContainerInventory(user.UserId, v.InventoryOwner).Catch<(Dictionary<ResourceType, int>, byte[]), Exception>(v2 =>
                               {
-                                  responses.OnNext(contentRetrievalFail);
+                                  responses.OnNext(GatewayResponses.contentRetrievalFail);
                                   return Observable.Empty<(Dictionary<ResourceType, int>, byte[])>();
                               });
                           })
                           .Subscribe(v =>
                           {
-                             responses.OnNext(ContentResponse(v.Item2, v.Item1));
+                              responses.OnNext(GatewayResponses.ContentResponse(v.Item2, v.Item1));
                           });
         }
         IDisposable HandleMapContentPickup(IUser user, IObservable<IMessage> inboundtraffic)
         {
             return inboundtraffic.OfType<MapContentTransactionMessage>()
                                       .Where(v => v.MessageType == MessageType.REQUEST)
-                                      .SelectMany(v => 
-                                      { 
+                                      .SelectMany(v =>
+                                      {
                                           return inventoryService.MapContentPickUp(user.UserId, v.MapContentId).Catch<(bool, byte[]), Exception>(v2 =>
                                           {
-                                         
-                                          return Observable.Empty<(bool, byte[])>();
-                                          }); 
+
+                                              return Observable.Empty<(bool, byte[])>();
+                                          });
                                       })
                                       .Subscribe(v =>
                                       {
@@ -177,6 +131,43 @@ namespace DataModel.Server.Services
                                           }
                                       });
         }
+        IDisposable HandleQuestlistRequest(IUser user, IObservable<IMessage> inboundtraffic)
+        {
+            return inboundtraffic.OfType<ActiveUserQuestsMessage>().Where(v => v.MessageType == MessageType.REQUEST)
+                                                                   .SelectMany(v =>
+                                                                   {
+                                                                       return questService.RequestActiveQuests(user.UserId)
+                                                                                          .Catch<List<QuestContainer>, Exception>(e => Observable.Empty<List<QuestContainer>>());
+
+                                                                   })
+                                                                   .Subscribe(v =>
+                                                                   {
+                                                                       responses.OnNext(GatewayResponses.ActiveQuestListResponse(v));
+                                                                   });
+        }
+        IDisposable HandleQuestGenerationRequests(IUser user, IObservable<IMessage> inboundtraffic)
+        {
+            var clientLocation = LatestClientLocation(inboundtraffic);
+            return inboundtraffic.OfType<QuestRequestMessage>().Where(v => v.MessageType == MessageType.REQUEST)
+                                                                      .WithLatestFrom(clientLocation, (req, location) => new { req, location })
+                                                                      .SelectMany(v =>
+                                                                      {
+                                                                          return questService.GenerateNewQuest(user, v.req.QuestContainerId, v.location.Code)
+                                                                                             .Catch<QuestContainer, Exception>(e => Observable.Empty<QuestContainer>());
+                                                                      })
+                                                                      .Subscribe(v =>
+                                                                      {
+                                                                          if (v != null)
+                                                                          {
+                                                                              Debug.Assert(v.Quest != null);
+                                                                              responses.OnNext(GatewayResponses.QuestRequestResponse(v.Quest));
+                                                                          }
+                                                                          else
+                                                                          {
+                                                                              responses.OnNext(GatewayResponses.QuestRequestResponse(null));
+                                                                          }
+                                                                      });
+        }
 
         IDisposable HandleRegister(IObservable<IMessage> inboundtraffic)
         {
@@ -186,14 +177,14 @@ namespace DataModel.Server.Services
                                 .Switch()
                                 .Catch<bool, Exception>(tx =>
                                 {
-                                    responses.OnNext(registerFail);
+                                    responses.OnNext(GatewayResponses.registerFail);
                                     return Observable.Return(false);
                                 })
                                 .Subscribe(v =>
                                 {
                                     if (v)
                                     {
-                                        responses.OnNext(registerSuccess);
+                                        responses.OnNext(GatewayResponses.registerSuccess);
                                     }
                                 });
         }

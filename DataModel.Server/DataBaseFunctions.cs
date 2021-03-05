@@ -20,7 +20,17 @@ namespace DataModel.Server
         public static string MapDatabaseName { get { return @"MapData.db"; } }
         public static string InventoryDatabaseName { get { return @"Inventory.db"; } }
         public static string QuestDatabaseName { get { return @"Quest.db"; } }
-
+        public static void WipeAllDatabases()
+        {
+            if (File.Exists(UserDatabaseName))
+                File.Delete(UserDatabaseName);
+            if (File.Exists(MapDatabaseName))
+                File.Delete(MapDatabaseName);
+            if (File.Exists(InventoryDatabaseName))
+                File.Delete(InventoryDatabaseName);
+            if (File.Exists(QuestDatabaseName))
+                File.Delete(QuestDatabaseName);
+        }
         static ConnectionString QuestDatabaseWrite()
         {
             return new ConnectionString(QuestDatabaseName)
@@ -120,7 +130,11 @@ namespace DataModel.Server
                 var col = dataBase.GetCollection<QuestContainer>("quests");
                 col.EnsureIndex(v => v.OwnerId);
                 col.EnsureIndex(v => v.Quest);
-                col.EnsureIndex(v => v.QuestContainerId);
+                col.EnsureIndex(v => v.QuestCreatedOn);
+                col.EnsureIndex(v => v.QuestHasExpired);
+                col.EnsureIndex(v => v.QuestItemAliveTimeInSeconds);
+                col.EnsureIndex(v => v.QuestItemsMaxAliveInQuestArea);
+                col.EnsureIndex(v => v.QuestItemSpawnChancePerSecond);
             }
         }
 
