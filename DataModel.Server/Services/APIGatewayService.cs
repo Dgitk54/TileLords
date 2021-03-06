@@ -82,11 +82,13 @@ namespace DataModel.Server.Services
         {
             return inboundtraffic.OfType<AccountMessage>()
                           .Where(v => v.Context == MessageContext.LOGIN)
-                          .SelectMany(v => userService.LoginUser(v.Name, v.Password))
-                          .Catch<IUser, Exception>(tx =>
+                          .SelectMany(v => 
                           {
-                              responses.OnNext(GatewayResponses.loginFail);
-                              return Observable.Empty<IUser>();
+                              return userService.LoginUser(v.Name, v.Password).Catch<IUser, Exception>(tx =>
+                              {
+                                  responses.OnNext(GatewayResponses.loginFail);
+                                  return Observable.Empty<IUser>();
+                              });
                           })
                           .Do(v =>
                           {

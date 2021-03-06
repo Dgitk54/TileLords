@@ -37,8 +37,8 @@ namespace DataModel.Server
             }
 
 
-            bossGroup = new MultithreadEventLoopGroup(1); //  accepts an incoming connection
-            workerGroup = new MultithreadEventLoopGroup(8); // handles the traffic of the accepted connection once the boss accepts the connection and registers the accepted connection to the worker
+            bossGroup = new MultithreadEventLoopGroup(2); //  accepts an incoming connection
+            workerGroup = new MultithreadEventLoopGroup(6); // handles the traffic of the accepted connection once the boss accepts the connection and registers the accepted connection to the worker
 
          //   X509Certificate2 tlsCertificate = new X509Certificate2("tilelordss.com.pfx", "mach_irgendwas_random_und_schreibs_auf_XD");
 

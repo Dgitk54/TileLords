@@ -30,12 +30,13 @@ namespace DataModel.Client
         ClientInstance instance;
         Task runningClient;
         bool hasBeenRunningFlag = false;
+        bool shouldLogConsole;
 
-        public ClientInstanceManager(string ipAdress = "127.0.0.1", int port = 8080)
+        public ClientInstanceManager(string ipAdress = "127.0.0.1", int port = 8080, bool shouldLogConsole = false)
         {
             ip = ipAdress;
             this.port = port;
-                                   
+            this.shouldLogConsole = shouldLogConsole;
 
             var autoRelog = connectionState.Where(v => v).WithLatestFrom(reconnectionState, (connection, reconnect) => new { connection, reconnect })
                                                          .Where(v => v.reconnect)
@@ -79,13 +80,16 @@ namespace DataModel.Client
 
             var consoleContentLogger = inboundTraffic.OfType<BatchContentMessage>().Select(v=> v.ContentList).Subscribe(v => 
             {
-                string visibleContentString = "\n \n";
-                visibleContentString += "Visible Contentamount:" + v.Count + " \n";
-                var players = v.Where(v2 => v2.Type == ContentType.PLAYER).Select(v2 => "[Player:" + v2.Name + " id:" + v2.Id + " on location " + v2.Location + "] \n").ToList();
-                var resources = v.Where(v2 => v2.Type == ContentType.RESOURCE).Select(v2 => "[Resource:" + v2.Name + " id:" + v2.Id + " on location " + v2.Location + "] \n").ToList();
-                players.ForEach(v2 => visibleContentString += v2);
-                resources.ForEach(v2 => visibleContentString += v2);
-                Console.WriteLine(visibleContentString);
+                if (shouldLogConsole)
+                {
+                    string visibleContentString = "\n \n";
+                    visibleContentString += "Visible Contentamount:" + v.Count + " \n";
+                    var players = v.Where(v2 => v2.Type == ContentType.PLAYER).Select(v2 => "[Player:" + v2.Name + " id:" + v2.Id + " on location " + v2.Location + "] \n").ToList();
+                    var resources = v.Where(v2 => v2.Type == ContentType.RESOURCE).Select(v2 => "[Resource:" + v2.Name + " id:" + v2.Id + " on location " + v2.Location + "] \n").ToList();
+                    players.ForEach(v2 => visibleContentString += v2);
+                    resources.ForEach(v2 => visibleContentString += v2);
+                    Console.WriteLine(visibleContentString);
+                }
             } );
 
             reconnectDisposables.Add(reconnectionResetDisposable);

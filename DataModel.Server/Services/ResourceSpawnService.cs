@@ -37,13 +37,10 @@ namespace DataModel.Server.Services
             resourceSpawnRequests = Subject.Synchronize(storedMapResources);
 
             //Handling spawn requests
-            var disposable = resourceSpawnRequests.Do(v => Console.WriteLine("Spawning content!"))
-                                                  .Subscribe(v => userContentStorage(v.Item1.AsMapContent(), v.Item2));
+            var disposable = resourceSpawnRequests.Subscribe(v => userContentStorage(v.Item1.AsMapContent(), v.Item2));
             
             //Handling delete requests
-            var deleteRequests = resourceSpawnRequests.Delay(TimeSpan.FromSeconds(RESOURCEALIVEINSEC))
-                                                      .Do(v => Console.WriteLine("Despawning content!"))
-                                                      .Subscribe(v => userContentStorage(v.Item1.AsMapContent(), null));
+            var deleteRequests = resourceSpawnRequests.Delay(TimeSpan.FromSeconds(RESOURCEALIVEINSEC)).Subscribe(v => userContentStorage(v.Item1.AsMapContent(), null));
 
             disposables.Add(disposable);
             disposables.Add(deleteRequests);

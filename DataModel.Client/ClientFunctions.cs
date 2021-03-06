@@ -77,6 +77,28 @@ namespace DataModel.Client
             return received.Result;
         }
 
+        public static void TryRegisterAndLogIn(ClientInstanceManager instance, string name, string password)
+        {
+            var tryRegister = GetsEvent<UserActionMessage, AccountMessage>(instance, new AccountMessage() { Name = name, Password = password, Context = MessageContext.REGISTER }, 5);
+            tryRegister.Wait();
+            var registerResponse = tryRegister.Result;
+            tryRegister.Dispose();
+            if (!(registerResponse.MessageState == MessageState.SUCCESS && registerResponse.MessageContext == MessageContext.REGISTER))
+            {
+            }
+            //Log in after register:
+            Thread.Sleep(300);
+            var tryLogin = GetsEvent<UserActionMessage, AccountMessage>(instance, new AccountMessage() { Name = name, Password = password, Context = MessageContext.LOGIN }, 5);
+            tryLogin.Wait();
+            var loginResponse = tryLogin.Result;
+            tryLogin.Dispose();
+            if (!(loginResponse.MessageState == MessageState.SUCCESS && loginResponse.MessageContext == MessageContext.LOGIN))
+            {
+                throw new Exception("Error logging in after registering");
+            }
+
+        }
+
         public static void LoginOrRegisterAndLogin(ClientInstanceManager instance, string name, string password)
         {
             var tryLogin = GetsEvent<UserActionMessage, AccountMessage>(instance, new AccountMessage() { Name = name, Password = password, Context = MessageContext.LOGIN }, 5);

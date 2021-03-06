@@ -12,7 +12,56 @@ namespace ClientMain
 {
     class Program
     {
+
         static void Main(string[] args)
+        {
+            var token = new CancellationTokenSource();
+            for (; ; )
+            {
+                Console.WriteLine("Small or large scale tests? a: small, b: large, c: largescaleobserver");
+                var testSize = Console.ReadLine();
+                if (string.IsNullOrEmpty(testSize))
+                    continue;
+                switch (testSize[0])
+                {
+                    case 'a':
+                        SmallScaleTests();
+                        break;
+                    case 'b':
+                        LargeScaleTests();
+                        break;
+                    case 'c':
+                        Task.Run(() => DebugLoginAndObserveTestClient("observer", "observer", token.Token));
+                        break;
+                }
+            }
+
+            
+        }
+        static void LargeScaleTests()
+        {
+
+            var token = new CancellationTokenSource();
+            int spots = 3;
+            for (; ; )
+            {
+                Console.WriteLine("Clientamount:");
+                string input = Console.ReadLine();
+                int number;
+                if (!Int32.TryParse(input, out number))
+                    continue;
+                for (int i = 0; i < number; i++)
+                {
+                    Task.Run(() => DebugRegisterAndLoginClient("test" + i, "test" + i, GetRandomSpotsInArea(spots), token.Token));
+                    Thread.Sleep(2500);
+                }
+            }
+
+
+
+
+        }
+        static void SmallScaleTests()
         {
             var token = new CancellationTokenSource();
             for (; ; )
@@ -38,26 +87,72 @@ namespace ClientMain
                 switch (locationChar[0])
                 {
                     case 'a':
-                              Task.Run(() => DebugLoginAndRunAroundClient(name, password, debugJumpLista, token.Token));
+                        Task.Run(() => DebugLoginAndRunAroundClient(name, password, debugJumpLista, token.Token));
                         break;
                     case 'b':
-                              Task.Run(() => DebugLoginAndRunAroundClient(name, password, debugJumpListb, token.Token));
+                        Task.Run(() => DebugLoginAndRunAroundClient(name, password, debugJumpListb, token.Token));
                         break;
                     case 'c':
-                              Task.Run(() => DebugLoginAndRunAroundClient(name, password, debugJumpListc, token.Token));
+                        Task.Run(() => DebugLoginAndRunAroundClient(name, password, debugJumpListc, token.Token));
                         break;
                 }
             }
         }
-        
-        
 
-        static void DebugLoginAndRunAroundClient(string name, string password, List<GPS> path, CancellationToken cancellationToken)
+        static List<GPS> MainzMiddleSpots => new List<GPS>() { LargeScaleMiddle, new GPS() { Lat = 49.9898735, Lon = 8.2498895 } };
+        static GPS LargeScaleMiddle => new GPS() { Lat = 49.9898735, Lon = 8.2498895 };
+
+        static void DebugLoginAndObserveTestClient(string name, string password, CancellationToken cancellationToken)
         {
-            
+            var instance = new ClientInstanceManager("127.0.0.1", 8080, true);
+            instance.StartClient();
+            ClientFunctions.TryRegisterAndLogIn(instance, name, password);
+            var tokenSrc = new CancellationTokenSource();
+
+            var sendPath = Task.Run(() => ClientFunctions.SendGpsPath(instance, tokenSrc.Token, MainzMiddleSpots, 4000));
+            do
+            {
+                if (cancellationToken.IsCancellationRequested)
+                    break;
+                Thread.Sleep(1000);
+
+            } while (!cancellationToken.IsCancellationRequested);
+
+            tokenSrc.Cancel();
+            sendPath.Wait();
+            instance.ShutDown();
+
+        }
+        static void DebugRegisterAndLoginClient(string name, string password, List<GPS> path , CancellationToken cancellationToken)
+        {
             var instance = new ClientInstanceManager();
             instance.StartClient();
-            
+
+            var tokenSrc = new CancellationTokenSource();
+
+            //Try to log in, create account if cant log in:
+            ClientFunctions.TryRegisterAndLogIn(instance, name, password);
+            ;
+            var sendPath = Task.Run(() => ClientFunctions.SendGpsPath(instance, tokenSrc.Token, path, 4000));
+            do
+            {
+                if (cancellationToken.IsCancellationRequested)
+                    break;
+                Thread.Sleep(1000);
+
+            } while (!cancellationToken.IsCancellationRequested);
+
+            tokenSrc.Cancel();
+            sendPath.Wait();
+            instance.ShutDown();
+
+        }
+        static void DebugLoginAndRunAroundClient(string name, string password, List<GPS> path, CancellationToken cancellationToken)
+        {
+
+            var instance = new ClientInstanceManager();
+            instance.StartClient();
+
             var tokenSrc = new CancellationTokenSource();
 
             //Try to log in, create account if cant log in:
@@ -75,6 +170,22 @@ namespace ClientMain
             tokenSrc.Cancel();
             sendPath.Wait();
             instance.ShutDown();
+        }
+
+        static List<GPS> GetRandomSpotsInArea(int jumpspots)
+        {
+            var random = new Random();
+            double mainzLatMin = 49.9;  //max should be 50.025
+            double mainzLonMin = 8.16;  //max should be 8.334
+            var list = new List<GPS>();
+
+            for (int i = 0; i <= jumpspots; i++)
+            {
+                var rollLat = random.NextDouble() * 0.168653;
+                var rollLon = random.NextDouble() * 0.068825;
+                list.Add(new GPS() { Lat = mainzLatMin + rollLat, Lon = mainzLonMin + rollLon });
+            }
+            return list;
         }
 
     }
