@@ -1,4 +1,5 @@
-﻿using DataModel.Common.Messages;
+﻿using DataModel.Common.GameModel;
+using DataModel.Common.Messages;
 using DataModel.Server.Model;
 using System;
 using System.Collections.Generic;
@@ -15,9 +16,9 @@ namespace DataModel.Server.Services
     /// </summary>
     public class InventoryService
     {
-        public IObservable<Dictionary<ResourceType, int>> RequestPlayerInventory(byte[] playerId)
+        public IObservable<Dictionary<ItemType, int>> RequestPlayerInventory(byte[] playerId)
         {
-            return Observable.Create<Dictionary<ResourceType, int>>(v =>
+            return Observable.Create<Dictionary<ItemType, int>>(v =>
              {
                  var result = DataBaseFunctions.RequestInventory(playerId, playerId);
                  if (result == null)
@@ -31,9 +32,9 @@ namespace DataModel.Server.Services
                  return Disposable.Empty;
              });
         }
-        public IObservable<(Dictionary<ResourceType, int>, byte[])> RequestContainerInventory(byte[] playerId, byte[] containerId)
+        public IObservable<(Dictionary<ItemType, int>, byte[])> RequestContainerInventory(byte[] playerId, byte[] containerId)
         {
-            return Observable.Create<(Dictionary<ResourceType, int>, byte[])>(v =>
+            return Observable.Create<(Dictionary<ItemType, int>, byte[])>(v =>
              {
                  var inventory = DataBaseFunctions.RequestInventory(playerId, containerId);
                  if (inventory == null)

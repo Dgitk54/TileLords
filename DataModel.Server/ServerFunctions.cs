@@ -55,9 +55,9 @@ namespace DataModel.Server
 
 
 
-        public static Dictionary<ResourceType, int> ToResourceDictionary(this MapContent content)
+        public static Dictionary<ItemType, int> ToResourceDictionary(this MapContent content)
         {
-            return new Dictionary<ResourceType, int>() { { content.ResourceType, 1 } };
+            return new Dictionary<ItemType, int>() { { new ItemType() { ContentType= content.Type, ResourceType = content.ResourceType }, 1 } };
         }
 
         public static Resource GetRandomNonQuestResource()

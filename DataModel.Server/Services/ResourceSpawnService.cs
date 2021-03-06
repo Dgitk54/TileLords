@@ -83,6 +83,7 @@ namespace DataModel.Server.Services
                                 .Where(v => v.Any())
                                 .Select(v=> v.Where(e => ServerFunctions.ShouldResourceSpawn(e,RESOURCESPAWNCHECKTHROTTLEINSECONDS)))
                                 .Where(v=> v.Any())
+
                                 .Subscribe(v =>
                                 {
                                     v.ToList().ForEach(e =>
