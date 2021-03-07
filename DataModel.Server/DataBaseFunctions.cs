@@ -1,4 +1,5 @@
 ﻿using DataModel.Common;
+using DataModel.Common.GameModel;
 using DataModel.Common.Messages;
 using DataModel.Server.Model;
 using DataModel.Server.Services;
@@ -231,7 +232,7 @@ namespace DataModel.Server
             }
 
         }
-        public static bool AddContentToPlayerInventory(byte[] inventoryId, Dictionary<ResourceType, int> content)
+        public static bool AddContentToPlayerInventory(byte[] inventoryId, Dictionary<ItemType, int> content)
         {
             using (var dataBase = new LiteDatabase(InventoryDatabaseWrite()))
             {
@@ -279,12 +280,12 @@ namespace DataModel.Server
                 if (enumerable.Count() == 1)
                     return false;
 
-                var toInsert = new Inventory() { ContainerId = playerId, OwnerId = playerId, ResourceDictionary = new Dictionary<Common.Messages.ResourceType, int>(), StorageCapacity = 500 };
+                var toInsert = new Inventory() { ContainerId = playerId, OwnerId = playerId, ResourceDictionary = new Dictionary<ItemType, int>(), StorageCapacity = 500 };
                 col.Insert(toInsert);
                 return true;
             }
         }
-        public static Dictionary<ResourceType, int> RequestInventory(byte[] requestOwnerId, byte[] targetId)
+        public static Dictionary<ItemType, int> RequestInventory(byte[] requestOwnerId, byte[] targetId)
         {
             using (var dataBase = new LiteDatabase(InventoryDatabaseRead()))
             {

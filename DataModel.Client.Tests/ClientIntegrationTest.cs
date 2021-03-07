@@ -20,10 +20,10 @@ namespace ClientIntegration
         private Task serverRunning;
 
         [SetUp]
-        public void StartServer()
+        public void Setup()
         {
-            if (File.Exists(@"MyData.db"))
-                File.Delete(@"MyData.db");
+            DataBaseFunctions.WipeAllDatabases();
+            DataBaseFunctions.InitializeDataBases();
             server = new ServerInstance();
             serverRunning = server.RunServerAsync();
         }
@@ -31,10 +31,7 @@ namespace ClientIntegration
         [TearDown]
         public void TearDown()
         {
-            if (File.Exists(@"MyData.db"))
-            {
-                File.Delete(@"MyData.db");
-            }
+            DataBaseFunctions.WipeAllDatabases();
             server.ShutDownServer().Wait();
         }
         [Test]

@@ -1,4 +1,5 @@
-﻿using DataModel.Common.Messages;
+﻿using DataModel.Common.GameModel;
+using DataModel.Common.Messages;
 using LiteDB;
 using System;
 using System.Collections.Generic;
@@ -12,7 +13,7 @@ namespace DataModel.Server.Model
         public byte[] OwnerId { get; set; }
         public byte[] ContainerId { get; set; }
         public int StorageCapacity { get; set; }
-        public Dictionary<ResourceType, int> ResourceDictionary { get; set; }
+        public Dictionary<ItemType, int> ResourceDictionary { get; set; }
         
     }
 }

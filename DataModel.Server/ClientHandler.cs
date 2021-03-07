@@ -23,6 +23,7 @@ namespace DataModel.Server
     {
         static readonly IInternalLogger Logger = InternalLoggerFactory.GetInstance<ClientHandler>();
 
+        static bool logInConsole = false;
         readonly Subject<IMessage> clientInboundTraffic = new Subject<IMessage>();
         readonly ISubject<IMessage> synchronizedInboundTraffic;
         readonly UserAccountService userAccountService;
@@ -43,10 +44,11 @@ namespace DataModel.Server
 
         public override void ChannelActive(IChannelHandlerContext ctx)
         {
-            Console.WriteLine("Client connected");
+            if (logInConsole)
+                Console.WriteLine("Client connected");
             apiGatewayService.AttachGateway(synchronizedInboundTraffic);
 
-            responseDisposable = apiGatewayService.GatewayResponse.Do(v=>Console.WriteLine(v) ).Select(v => v.ToJsonPayload()).Subscribe(v =>
+            responseDisposable = apiGatewayService.GatewayResponse.Do(v => { if (logInConsole) { Console.WriteLine(v); } }).Select(v => v.ToJsonPayload()).Subscribe(v =>
             {
                 ctx.WriteAndFlushAsync(Unpooled.WrappedBuffer(v));
             });
@@ -58,7 +60,8 @@ namespace DataModel.Server
             var byteBuffer = message as IByteBuffer;
             if (byteBuffer != null)
             {
-                Console.WriteLine("Received" + byteBuffer.ToString(Encoding.UTF8));
+                if(logInConsole)
+                    Console.WriteLine("Received" + byteBuffer.ToString(Encoding.UTF8));
                 var msgpack = byteBuffer.ToString(Encoding.UTF8).FromString();
                 synchronizedInboundTraffic.OnNext(msgpack);
             }
@@ -69,7 +72,8 @@ namespace DataModel.Server
         {
             apiGatewayService.DetachGateway();
             responseDisposable.Dispose();
-            Console.WriteLine("Cleaned up ClientHandler");
+            if(logInConsole)
+                Console.WriteLine("Cleaned up ClientHandler");
         }
 
         public override bool IsSharable => true;

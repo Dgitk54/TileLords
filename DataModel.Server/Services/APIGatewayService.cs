@@ -11,6 +11,7 @@ using System.Collections.Concurrent;
 using System.Reactive.Disposables;
 using DataModel.Server.Model;
 using System.Linq;
+using DataModel.Common.GameModel;
 
 namespace DataModel.Server.Services
 {
@@ -81,11 +82,13 @@ namespace DataModel.Server.Services
         {
             return inboundtraffic.OfType<AccountMessage>()
                           .Where(v => v.Context == MessageContext.LOGIN)
-                          .SelectMany(v => userService.LoginUser(v.Name, v.Password))
-                          .Catch<IUser, Exception>(tx =>
+                          .SelectMany(v => 
                           {
-                              responses.OnNext(GatewayResponses.loginFail);
-                              return Observable.Empty<IUser>();
+                              return userService.LoginUser(v.Name, v.Password).Catch<IUser, Exception>(tx =>
+                              {
+                                  responses.OnNext(GatewayResponses.loginFail);
+                                  return Observable.Empty<IUser>();
+                              });
                           })
                           .Do(v =>
                           {
@@ -100,10 +103,10 @@ namespace DataModel.Server.Services
                           .Where(v => v.Type == MessageType.REQUEST)
                           .SelectMany(v =>
                           {
-                              return inventoryService.RequestContainerInventory(user.UserId, v.InventoryOwner).Catch<(Dictionary<ResourceType, int>, byte[]), Exception>(v2 =>
+                              return inventoryService.RequestContainerInventory(user.UserId, v.InventoryOwner).Catch<(Dictionary<ItemType, int>, byte[]), Exception>(v2 =>
                               {
                                   responses.OnNext(GatewayResponses.contentRetrievalFail);
-                                  return Observable.Empty<(Dictionary<ResourceType, int>, byte[])>();
+                                  return Observable.Empty<(Dictionary<ItemType, int>, byte[])>();
                               });
                           })
                           .Subscribe(v =>
