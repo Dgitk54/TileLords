@@ -13,7 +13,7 @@ namespace DataModel.Server.Model
         public byte[] OwnerId { get; set; }
         public byte[] ContainerId { get; set; }
         public int StorageCapacity { get; set; }
-        public Dictionary<ItemType, int> ResourceDictionary { get; set; }
+        public List<KeyValuePair<ItemType, int>> ResourceDictionary { get; set; }
         
     }
 }

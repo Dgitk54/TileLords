@@ -31,7 +31,7 @@ namespace ClientMain
                         LargeScaleTests();
                         break;
                     case 'c':
-                        Task.Run(() => DebugLoginAndObserveTestClient("observer", "observer", token.Token));
+                        Task.Run(() => DebugLoginAndObserveTestClient("observer", "observer", GetRandomSpotsInArea(3), token.Token));
                         break;
                 }
             }
@@ -100,9 +100,10 @@ namespace ClientMain
         }
 
         static List<GPS> MainzMiddleSpots => new List<GPS>() { LargeScaleMiddle, new GPS() { Lat = 49.9898735, Lon = 8.2498895 } };
+        static List<GPS> MainzSmallScale => new List<GPS>() { new GPS() { Lat = 49.900250, Lon = 8.160250 }, new GPS() { Lat = 49.900300, Lon = 8.160300 } };
         static GPS LargeScaleMiddle => new GPS() { Lat = 49.9898735, Lon = 8.2498895 };
 
-        static void DebugLoginAndObserveTestClient(string name, string password, CancellationToken cancellationToken)
+        static void DebugLoginAndObserveTestClient(string name, string password, List<GPS> path, CancellationToken cancellationToken)
         {
             var instance = new ClientInstanceManager("127.0.0.1", 8080, true);
             instance.StartClient();
@@ -132,7 +133,8 @@ namespace ClientMain
 
             //Try to log in, create account if cant log in:
             ClientFunctions.TryRegisterAndLogIn(instance, name, password);
-            ;
+
+            Console.Write("Connected and logged in!");
             var sendPath = Task.Run(() => ClientFunctions.SendGpsPath(instance, tokenSrc.Token, path, 4000));
             do
             {
@@ -177,14 +179,20 @@ namespace ClientMain
             var random = new Random();
             double mainzLatMin = 49.9;  //max should be 50.025
             double mainzLonMin = 8.16;  //max should be 8.334
+            //Mainz rolls: lat:  0.168653    lon:  0.068825
+            
+            double square = 0.000500;
+
             var list = new List<GPS>();
 
             for (int i = 0; i <= jumpspots; i++)
             {
-                var rollLat = random.NextDouble() * 0.168653;
-                var rollLon = random.NextDouble() * 0.068825;
+                var rollLat = random.NextDouble() * 0.0005;
+                var rollLon = random.NextDouble() * 0.0005;
                 list.Add(new GPS() { Lat = mainzLatMin + rollLat, Lon = mainzLonMin + rollLon });
             }
+
+            list.ConvertAll(v => v.GetPlusCode(10)).ForEach(v => Console.WriteLine(v.Code));
             return list;
         }
 

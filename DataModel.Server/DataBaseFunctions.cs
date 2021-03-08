@@ -249,18 +249,21 @@ namespace DataModel.Server
                 else
                 {
                     var inventory = containerRequest.First();
+                    var inventoryDictionary = inventory.ResourceDictionary.ToDictionary(x => x.Key, x => x.Value);
+
                     content.ToList().ForEach(x =>
                     {
                         int i = 0;
-                        if (inventory.ResourceDictionary.TryGetValue(x.Key, out i))
+                        if (inventoryDictionary.TryGetValue(x.Key, out i))
                         {
-                            inventory.ResourceDictionary[x.Key] = x.Value + i;
+                            inventoryDictionary[x.Key] = x.Value + i;
                         }
                         else
                         {
-                            inventory.ResourceDictionary.Add(x.Key, x.Value);
+                            inventoryDictionary.Add(x.Key, x.Value);
                         }
                     });
+                    inventory.ResourceDictionary = inventoryDictionary.ToList();
                     return col.Update(inventory);
                 }
                 return false;
@@ -280,7 +283,7 @@ namespace DataModel.Server
                 if (enumerable.Count() == 1)
                     return false;
 
-                var toInsert = new Inventory() { ContainerId = playerId, OwnerId = playerId, ResourceDictionary = new Dictionary<ItemType, int>(), StorageCapacity = 500 };
+                var toInsert = new Inventory() { ContainerId = playerId, OwnerId = playerId, ResourceDictionary = new List<KeyValuePair<ItemType, int>>(), StorageCapacity = 500 };
                 col.Insert(toInsert);
                 return true;
             }
@@ -308,7 +311,7 @@ namespace DataModel.Server
                 }
 
                 var inventory = getRequestedContainerInventory.First();
-                return inventory.ResourceDictionary;
+                return inventory.ResourceDictionary.ToDictionary(x=> x.Key, x=> x.Value);
             }
         }
 
