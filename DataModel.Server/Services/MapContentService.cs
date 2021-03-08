@@ -11,7 +11,7 @@ namespace DataModel.Server.Services
 {
     public class MapContentService
     {
-        const int CONTENTTHROTTLEINSECONDS = 1;
+        const int CONTENTSAMPLE = 3;
         readonly Func<string, BatchContentMessage> areaLookup;
         readonly Func<string, List<MapContent>> areaLookupAsContent;
         readonly Action<MapContent, string> userContentStorage;
@@ -31,7 +31,7 @@ namespace DataModel.Server.Services
         /// <returns>Disposable to remove the content.</returns>
         public IDisposable AddMapContent(MapContent content, IObservable<PlusCode> contentLocation)
         {
-            return contentLocation.Throttle(TimeSpan.FromSeconds(CONTENTTHROTTLEINSECONDS))
+            return contentLocation.Sample(TimeSpan.FromSeconds(CONTENTSAMPLE))
                                   .Finally(()=> userContentStorage(content, null))
                                   .Subscribe(v => 
                                   {

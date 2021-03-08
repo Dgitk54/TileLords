@@ -53,7 +53,7 @@ namespace ClientMain
                 for (int i = 0; i < number; i++)
                 {
                     Task.Run(() => DebugRegisterAndLoginClient("test" + i, "test" + i, GetRandomSpotsInArea(spots), token.Token));
-                    Thread.Sleep(2500);
+                    Thread.Sleep(2000);
                 }
             }
 
@@ -110,7 +110,7 @@ namespace ClientMain
             ClientFunctions.TryRegisterAndLogIn(instance, name, password);
             var tokenSrc = new CancellationTokenSource();
 
-            var sendPath = Task.Run(() => ClientFunctions.SendGpsPath(instance, tokenSrc.Token, MainzMiddleSpots, 4000));
+            var sendPath = Task.Run(() => ClientFunctions.SendGpsPath(instance, tokenSrc.Token, path, 4000));
             do
             {
                 if (cancellationToken.IsCancellationRequested)

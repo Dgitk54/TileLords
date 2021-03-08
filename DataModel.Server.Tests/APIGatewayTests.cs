@@ -19,17 +19,14 @@ namespace DataModel.Server.Tests
         [SetUp]
         public void Setup()
         {
-            if (File.Exists(@"MyData.db"))
-                File.Delete(@"MyData.db");
+            DataBaseFunctions.WipeAllDatabases();
+            DataBaseFunctions.InitializeDataBases();
         }
 
         [TearDown]
         public void TearDown()
         {
-            if (File.Exists(@"MyData.db"))
-            {
-                File.Delete(@"MyData.db");
-            }
+            DataBaseFunctions.WipeAllDatabases();
         }
 
         [Test]
