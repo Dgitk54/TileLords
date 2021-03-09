@@ -192,7 +192,8 @@ namespace DataModel.Server
                 QuestTurninLocation = null,
                 RequiredAmountForCompletion = QUESTLEVEL1_REQUIREDAMOUNT_MAX,
                 TypeToPickUp = resourceTypeForQuest,
-                QuestId = ObjectId.NewObjectId().ToByteArray()
+                QuestId = ObjectId.NewObjectId().ToByteArray(),
+                QuestReward = new QuestReward() { Qpts = 10}
             };
             return quest;
         }

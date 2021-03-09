@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 
@@ -36,36 +37,39 @@ namespace DataModel.Server.Services
         {
             disposables.Add(HandleRegister(inboundtraffic));
 
-            LoggedInUser(inboundtraffic).Where(v => v != null).Take(1).Subscribe(v =>
-             {
-                 var mapServicePlayerUpdate = mapService.AddMapContent(v.AsMapContent(), LatestClientLocation(inboundtraffic));
-                 var mapDataRequests = Observable.Interval(TimeSpan.FromSeconds(3)).WithLatestFrom(LatestClientLocation(inboundtraffic), (time, location) => new { time, location })
-                                                                                   .Select(v2 => v2.location)
-                                                                                   .Select(v2 => mapService.GetMapUpdate(v2.Code))
-                                                                                   .Switch()
-                                                                                   .Subscribe(v2 => responses.OnNext(v2));
+            LoggedInUser(inboundtraffic).Where(v => v != null)
+                                        .Take(1)
+                                        .Do(v => { responses.OnNext(GatewayResponses.loginSuccessWithId(v)); })
+                                        .Subscribe(v =>
+                                        {
+                                            var mapServicePlayerUpdate = mapService.AddMapContent(v.AsMapContent(), LatestClientLocation(inboundtraffic));
+                                            var mapDataRequests = Observable.Interval(TimeSpan.FromSeconds(3)).WithLatestFrom(LatestClientLocation(inboundtraffic), (time, location) => new { time, location })
+                                                                                                              .Select(v2 => v2.location)
+                                                                                                              .Select(v2 => mapService.GetMapUpdate(v2.Code))
+                                                                                                              .Switch()
+                                                                                                              .Subscribe(v2 => responses.OnNext(v2));
 
 
-                 var spawnDisposable = resourceSpawnService.AddMovableResourceSpawnArea(v.UserId, LatestClientLocation(inboundtraffic));
-                 var spawnQuestDisposable = resourceSpawnService.AddMoveableQuestResourceSpawnArea(v.UserId, LatestClientLocation(inboundtraffic));
+                                            var spawnDisposable = resourceSpawnService.AddMovableResourceSpawnArea(v.UserId, LatestClientLocation(inboundtraffic));
+                                            var spawnQuestDisposable = resourceSpawnService.AddMoveableQuestResourceSpawnArea(v.UserId, LatestClientLocation(inboundtraffic));
 
 
-                 var handleInventoryRequests = HandleInventoryRequests(v, inboundtraffic);
-                 var handlePickupRequests = HandleMapContentPickup(v, inboundtraffic);
-                 var handleQuestGenerationRequests = HandleQuestGenerationRequests(v, inboundtraffic);
-                 var handleQuestList = HandleQuestlistRequest(v, inboundtraffic);
+                                            var handleInventoryRequests = HandleInventoryRequests(v, inboundtraffic);
+                                            var handlePickupRequests = HandleMapContentPickup(v, inboundtraffic);
+                                            var handleQuestGenerationRequests = HandleQuestGenerationRequests(v, inboundtraffic);
+                                            var handleQuestList = HandleQuestlistRequest(v, inboundtraffic);
 
-
-                 disposables.Add(handleQuestList);
-                 disposables.Add(handleQuestGenerationRequests);
-                 disposables.Add(spawnQuestDisposable);
-                 disposables.Add(handleInventoryRequests);
-                 disposables.Add(mapServicePlayerUpdate);
-                 disposables.Add(mapDataRequests);
-                 disposables.Add(spawnDisposable);
-                 disposables.Add(handleInventoryRequests);
-                 disposables.Add(handlePickupRequests);
-             });
+                                            disposables.Add(userService.LogOffUseronDispose(v)); 
+                                            disposables.Add(handleQuestList);
+                                            disposables.Add(handleQuestGenerationRequests);
+                                            disposables.Add(spawnQuestDisposable);
+                                            disposables.Add(handleInventoryRequests);
+                                            disposables.Add(mapServicePlayerUpdate);
+                                            disposables.Add(mapDataRequests);
+                                            disposables.Add(spawnDisposable);
+                                            disposables.Add(handleInventoryRequests);
+                                            disposables.Add(handlePickupRequests);
+                                        });
         }
 
         public void DetachGateway()
@@ -85,12 +89,8 @@ namespace DataModel.Server.Services
                                   responses.OnNext(GatewayResponses.loginFail);
                                   return Observable.Empty<IUser>();
                               });
-                          })
-                          .Do(v =>
-                          {
-                              if (v != null)
-                                  responses.OnNext(GatewayResponses.loginSuccessWithId(v));
                           });
+
         }
 
         IDisposable HandleInventoryRequests(IUser user, IObservable<IMessage> inboundtraffic)

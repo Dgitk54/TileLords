@@ -1,6 +1,7 @@
 ﻿using DataModel.Server.Model;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
@@ -15,8 +16,6 @@ namespace DataModel.Server.Services
     public class UserAccountService
     {
 
-        readonly BehaviorSubject<List<IUser>> onlineUsers = new BehaviorSubject<List<IUser>>(new List<IUser>());
-        readonly ISubject<List<IUser>> synchronizedOnlineUsers;
         readonly Func<string, User> userNameLookup;
         readonly Func<byte[], byte[], byte[], bool> passwordMatcher;
 
@@ -24,11 +23,9 @@ namespace DataModel.Server.Services
         {
             passwordMatcher = passwordMatchAlgorithm;
             userNameLookup = userDatabaseLookup;
-            synchronizedOnlineUsers = Subject.Synchronize(onlineUsers);
         }
 
-        public IObservable<IList<IUser>> OnlineUsers => synchronizedOnlineUsers.AsObservable();
-
+        
         public IObservable<IUser> LoginUser(string name, string password)
         {
             return Observable.Create<IUser>(v =>
@@ -40,19 +37,16 @@ namespace DataModel.Server.Services
                     return Disposable.Empty;
                 }
 
-                var sameNameOnlineCount = onlineUsers.Value.Where(u => u.UserName.Equals(name)).Count();
-                if (sameNameOnlineCount != 0)
+                if (user.CurrentlyOnline)
                 {
-                    v.OnError(new Exception("User already online"));
+                    v.OnError(new Exception("User is online!"));
                     return Disposable.Empty;
                 }
-
+                
                 var pass = Encoding.UTF8.GetBytes(password);
                 if (passwordMatcher(pass, user.SaltedHash, user.Salt))
                 {
-                    var updateOnline = onlineUsers.Value;
-                    updateOnline.Add(user);
-                    synchronizedOnlineUsers.OnNext(updateOnline);
+                    DataBaseFunctions.UpdateUserOnlineState(user.UserId.ToByteArray(), true);
                     v.OnNext(user);
                     v.OnCompleted();
                     return Disposable.Empty;
@@ -80,18 +74,17 @@ namespace DataModel.Server.Services
                 return Disposable.Empty;
             });
         }
-
-        public IObservable<bool> LogoutUser(IUser user)
+        public IDisposable LogOffUseronDispose(IUser user)
+        {
+            return Disposable.Create(() => DataBaseFunctions.UpdateUserOnlineState(user.UserId, false));
+        }
+        
+        public IObservable<bool> LogoutUser(string name)
         {
             return Observable.Create<bool>(v =>
             {
-                var val = onlineUsers.Value;
-                if (!val.Contains(user))
-                    v.OnError(new Exception("Could not log out user with id" + Convert.ToString(user.UserId)));
-
-                val.Remove(user);
-                synchronizedOnlineUsers.OnNext(val);
-                v.OnNext(true);
+                var result = DataBaseFunctions.UpdateUserOnlineState(name, false);
+                v.OnNext(result);
                 v.OnCompleted();
                 return Disposable.Empty;
             });

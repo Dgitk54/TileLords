@@ -49,7 +49,24 @@ namespace DataModel.Server.Tests
             userInventory = DataBaseFunctions.RequestInventory(user1.UserId, user1.UserId);
             Assert.IsTrue(userInventory.Values.All(v => v == 0));
         }
+        [Test]
+        public void CanCreateUserLoginAndLogOut()
+        {
+            var user = DataBaseFunctions.CreateAccount("test", "test");
+            var findUser = DataBaseFunctions.FindUserInDatabase("test");
+            Assert.IsTrue(findUser != null);
+            var logOn = DataBaseFunctions.UpdateUserOnlineState(findUser.UserId.ToByteArray(), true);
+            Assert.IsTrue(logOn);
+            var updatedUser = DataBaseFunctions.FindUserInDatabase("test");
+            Assert.IsTrue(updatedUser != null);
+            Assert.IsTrue(updatedUser.CurrentlyOnline);
 
+            var logOff = DataBaseFunctions.UpdateUserOnlineState(findUser.UserId.ToByteArray(), false);
+            Assert.IsTrue(logOff);
+            updatedUser = DataBaseFunctions.FindUserInDatabase("test");
+            Assert.IsTrue(updatedUser != null);
+            Assert.IsTrue(!updatedUser.CurrentlyOnline);
+        }
 
     }
 }

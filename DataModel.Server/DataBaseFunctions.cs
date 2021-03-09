@@ -395,10 +395,10 @@ namespace DataModel.Server
 
         public static List<MapContent> AreaContentAsListRequest(string location)
         {
+            var nearbyCodes = LocationCodeTileUtility.GetTileSection(location, ServerFunctions.CLIENTVISIBILITY, ServerFunctions.CLIENTLOCATIONPRECISION);
             using (var dataBase = new LiteDatabase(MapDataRead()))
             {
                 var col = dataBase.GetCollection<MapContent>("mapcontent");
-                var nearbyCodes = LocationCodeTileUtility.GetTileSection(location, ServerFunctions.CLIENTVISIBILITY, ServerFunctions.CLIENTLOCATIONPRECISION);
                 var enumerable = col.Find(v => nearbyCodes.Any(v2 => v2.Equals(v.Location)));
                 return enumerable.ToList();
             }
@@ -407,14 +407,13 @@ namespace DataModel.Server
 
         public static BatchContentMessage AreaContentAsMessageRequest(string location)
         {
+            var nearbyCodes = LocationCodeTileUtility.GetTileSection(location, ServerFunctions.CLIENTVISIBILITY, ServerFunctions.CLIENTLOCATIONPRECISION);
             using (var dataBase = new LiteDatabase(MapDataRead()))
             {
                 var col = dataBase.GetCollection<MapContent>("mapcontent");
-                var nearbyCodes = LocationCodeTileUtility.GetTileSection(location, ServerFunctions.CLIENTVISIBILITY, ServerFunctions.CLIENTLOCATIONPRECISION);
                 var enumerable = col.Find(v => nearbyCodes.Any(v2 => v2.Equals(v.Location)));
                 var list = enumerable.ToList().ConvertAll(v => v.AsMessage());
                 return new BatchContentMessage() { ContentList = list };
-
             }
         }
 
@@ -437,7 +436,9 @@ namespace DataModel.Server
                     AccountCreated = DateTime.Now,
                     Salt = salt,
                     SaltedHash = hashedpass,
-                    UserName = name
+                    UserName = name,
+                    CurrentlyOnline = false,
+                   
                 };
 
                 col.Insert(userForDb);
@@ -449,32 +450,46 @@ namespace DataModel.Server
         {
             using (var dataBase = new LiteDatabase(UserDatabaseRead()))
             {
-                try
-                {
-                    var col = dataBase.GetCollection<User>("users");
-                    if (col.Find(v => v.UserName == name).Any())
-                        return col.Find(v => v.UserName == name).First();
-                    return null;
-
-
-                }
-                catch (System.IO.FileNotFoundException)
-                {
-                    using (var dbwrite = new LiteDatabase(MapDataWrite()))
-                    {
-                        var col = dbwrite.GetCollection<User>("users");
-                        col.EnsureIndex(v => v.AccountCreated);
-                        col.EnsureIndex(v => v.LastOnline);
-                        col.EnsureIndex(v => v.UserName);
-                        col.EnsureIndex(v => v.Salt);
-                        col.EnsureIndex(v => v.SaltedHash);
-
-                        return null;
-                    }
-                }
-
+                var col = dataBase.GetCollection<User>("users");
+                if (col.Find(v => v.UserName == name).Any())
+                    return col.Find(v => v.UserName == name).First();
+                return null;
             }
         }
+        
+        public static bool UpdateUserOnlineState(byte[] id, bool state)
+        {
+            var objId = new ObjectId(id);
+            using (var dataBase = new LiteDatabase(UserDatabaseWrite()))
+            {
+                var col = dataBase.GetCollection<User>("users");
+                var enumerable = col.Find(v => v.UserId == objId);
+                if (enumerable.Count() > 1)
+                    throw new Exception("More than one user with same name");
+                if (enumerable.Count() == 0)
+                    return false;
+                var user = enumerable.First();
+                user.CurrentlyOnline = state;
+                return col.Update(user);
+            }
+        }
+
+        public static bool UpdateUserOnlineState(string id, bool state)
+        {
+            using (var dataBase = new LiteDatabase(UserDatabaseWrite()))
+            {
+                var col = dataBase.GetCollection<User>("users");
+                var enumerable = col.Find(v => v.UserName == id);
+                if (enumerable.Count() > 1)
+                    throw new Exception("More than one user with same name");
+                if (enumerable.Count() == 0)
+                    return false;
+                var user = enumerable.First();
+                user.CurrentlyOnline = state;
+                return col.Update(user);
+            }
+        }
+
 
         public static bool NameTaken(string name, ILiteCollection<User> col)
         {

@@ -31,8 +31,6 @@ namespace DataModel.Server.Tests
             var service = new UserAccountService(DataBaseFunctions.FindUserInDatabase, ServerFunctions.PasswordMatches);
             var registerResults = new List<bool>();
             var userLoginResults = new List<IUser>();
-            var onlineUsers = new List<IUser>();
-            service.OnlineUsers.Subscribe(v => { onlineUsers = new List<IUser>(v); });
 
 
             //Register same username, expect error
@@ -51,7 +49,6 @@ namespace DataModel.Server.Tests
             //Login user
             service.LoginUser("hans", "hans").Subscribe(v => userLoginResults.Add(v));
             Assert.IsTrue(userLoginResults.Count == 1);
-            Assert.IsTrue(onlineUsers.Count == 1);
 
             //Login call again, should fail because user is already online:
             service.LoginUser("hans", "hans")
@@ -61,7 +58,6 @@ namespace DataModel.Server.Tests
                 })
                 .Subscribe(v => userLoginResults.Add(v));
             Assert.IsTrue(userLoginResults.Count == 1);
-            Assert.IsTrue(onlineUsers.Count == 1);
 
 
             //Register 2nd User and log in:
@@ -69,14 +65,11 @@ namespace DataModel.Server.Tests
             service.LoginUser("hans2", "hans2").Subscribe(v => userLoginResults.Add(v));
 
 
-            Assert.IsTrue(onlineUsers.Count == 2);
 
 
             //Test Log out:
             bool couldLogOut = false;
-            service.LogoutUser(onlineUsers[1]).Subscribe(v => couldLogOut = v);
             Assert.IsTrue(couldLogOut);
-            Assert.IsTrue(onlineUsers.Count == 1);
 
 
         }

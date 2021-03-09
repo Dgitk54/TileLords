@@ -18,6 +18,6 @@ namespace DataModel.Server.Model
 
         public byte[] SaltedHash { get; set; }
 
-
+        public bool CurrentlyOnline { get; set; }
     }
 }

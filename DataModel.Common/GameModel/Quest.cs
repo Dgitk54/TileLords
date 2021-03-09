@@ -14,5 +14,6 @@ namespace DataModel.Common.GameModel
         public string QuestTurninLocation { get; set; }
         public int AreaRadiusFromLocation { get; set; }
         public DateTime ExpiringDate { get; set; }
+        public QuestReward QuestReward { get; set; }
     }
 }
