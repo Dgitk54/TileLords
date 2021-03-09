@@ -7,13 +7,13 @@ using System.Text;
 
 namespace DataModel.Server.Model
 {
-    public class Inventory
+    public class Inventory : IUserInventory
     {
         public ObjectId InventoryId { get; set; }
         public byte[] OwnerId { get; set; }
         public byte[] ContainerId { get; set; }
         public int StorageCapacity { get; set; }
-        public List<KeyValuePair<ItemType, int>> ResourceDictionary { get; set; }
-        
+        public List<DatabaseInventoryStorage> InventoryItems { get; set; }
+        Dictionary<InventoryType, int> IUserInventory.InventoryItems { get =>  InventoryItems.ToInventoryDictionary(); set { InventoryItems = value.ToDatabaseStorage(); } }
     }
 }

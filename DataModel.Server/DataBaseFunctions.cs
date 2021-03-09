@@ -114,7 +114,7 @@ namespace DataModel.Server
                 var col = dataBase.GetCollection<Inventory>("inventory");
                 col.EnsureIndex(v => v.ContainerId);
                 col.EnsureIndex(v => v.OwnerId);
-                col.EnsureIndex(v => v.ResourceDictionary);
+                col.EnsureIndex(v => v.InventoryItems);
                 col.EnsureIndex(v => v.StorageCapacity);
             }
             using (var dataBase = new LiteDatabase(UserDatabaseWrite()))
@@ -162,12 +162,7 @@ namespace DataModel.Server
                     return false;
                 }
                 var asDictionary = content.ToResourceDictionary();
-                var inventoryInsertResult = AddContentToPlayerInventory(playerId, asDictionary);
-                if (!inventoryInsertResult)
-                {
-                    return false;
-                }
-                return true;
+                return AddContentToPlayerInventory(playerId, asDictionary);
             }
         }
 
@@ -232,7 +227,39 @@ namespace DataModel.Server
             }
 
         }
-        public static bool AddContentToPlayerInventory(byte[] inventoryId, Dictionary<ItemType, int> content)
+
+        public static bool RemoveContentFromInventory(byte[] inventoryId, byte[] ownerId, Dictionary<InventoryType, int> content)
+        {
+            using (var dataBase = new LiteDatabase(InventoryDatabaseWrite()))
+            {
+                var col = dataBase.GetCollection<Inventory>("inventory");
+                var enumerable = col.Find(v => v.OwnerId == inventoryId);
+                var containerRequest = enumerable.Where(v => v.ContainerId.SequenceEqual(ownerId));
+                if (containerRequest.Count() > 1)
+                    throw new Exception("Multiple inventories for same player id");
+                if (containerRequest.Count() == 0)
+                    return false;
+                var inventory = containerRequest.First();
+                var inventoryDictionary = inventory.InventoryItems.ToInventoryDictionary();
+
+                Dictionary<InventoryType, int> subtractedResult = null;
+                try
+                {
+                    subtractedResult = inventoryDictionary.SubtractInventory(content);
+                }
+                catch(InvalidOperationException)
+                {
+                    return false;
+                }
+
+                Debug.Assert(subtractedResult != null);
+                inventory.InventoryItems = subtractedResult.ToDatabaseStorage();
+                return col.Update(inventory);
+            }
+        }
+
+
+        public static bool AddContentToPlayerInventory(byte[] inventoryId, Dictionary<InventoryType,int> content)
         {
             using (var dataBase = new LiteDatabase(InventoryDatabaseWrite()))
             {
@@ -244,12 +271,13 @@ namespace DataModel.Server
                 if (enumerable.Count() == 0)
                 {
                     CreatePlayerInventory(inventoryId);
-                    AddContentToPlayerInventory(inventoryId, content);
+                    return AddContentToPlayerInventory(inventoryId, content);
                 }
                 else
                 {
+                    //TODO: improve performance, operation in write lock!
                     var inventory = containerRequest.First();
-                    var inventoryDictionary = inventory.ResourceDictionary.ToDictionary(x => x.Key, x => x.Value);
+                    var inventoryDictionary = inventory.InventoryItems.ToInventoryDictionary();
 
                     content.ToList().ForEach(x =>
                     {
@@ -263,13 +291,10 @@ namespace DataModel.Server
                             inventoryDictionary.Add(x.Key, x.Value);
                         }
                     });
-                    inventory.ResourceDictionary = inventoryDictionary.ToList();
+                    inventory.InventoryItems = inventoryDictionary.ToDatabaseStorage();
                     return col.Update(inventory);
                 }
-                return false;
             }
-
-
         }
         public static bool CreatePlayerInventory(byte[] playerId)
         {
@@ -283,12 +308,12 @@ namespace DataModel.Server
                 if (enumerable.Count() == 1)
                     return false;
 
-                var toInsert = new Inventory() { ContainerId = playerId, OwnerId = playerId, ResourceDictionary = new List<KeyValuePair<ItemType, int>>(), StorageCapacity = 500 };
+                var toInsert = new Inventory() { ContainerId = playerId, OwnerId = playerId, InventoryItems = new List<DatabaseInventoryStorage>(), StorageCapacity = 500 };
                 col.Insert(toInsert);
                 return true;
             }
         }
-        public static Dictionary<ItemType, int> RequestInventory(byte[] requestOwnerId, byte[] targetId)
+        public static Dictionary<InventoryType,int> RequestInventory(byte[] requestOwnerId, byte[] targetId)
         {
             using (var dataBase = new LiteDatabase(InventoryDatabaseRead()))
             {
@@ -311,12 +336,12 @@ namespace DataModel.Server
                 }
 
                 var inventory = getRequestedContainerInventory.First();
-                return inventory.ResourceDictionary.ToDictionary(x=> x.Key, x=> x.Value);
+                return inventory.InventoryItems.ToInventoryDictionary();
             }
         }
 
         /// <summary>
-        /// Updates or deletes the content in the database if no location is provided
+        /// Inserts/Updates or deletes the content in the database if no location is provided
         /// </summary>
         /// <param name="content">MapContent to insert/update</param>
         /// <param name="location">The current location of the MapContent, if null this function will delete the mapcontent</param>

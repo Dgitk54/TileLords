@@ -55,9 +55,9 @@ namespace DataModel.Server
 
 
 
-        public static Dictionary<ItemType, int> ToResourceDictionary(this MapContent content)
+        public static Dictionary<InventoryType, int> ToResourceDictionary(this MapContent content)
         {
-            return new Dictionary<ItemType, int>() { { new ItemType() { ContentType= content.Type, ResourceType = content.ResourceType }, 1 } };
+            return new Dictionary<InventoryType, int>() { { new InventoryType() { ContentType = content.Type, ResourceType = content.ResourceType }, 1 } };
         }
 
         public static Resource GetRandomNonQuestResource()
@@ -84,7 +84,7 @@ namespace DataModel.Server
                 return currentPlayerQuests.Select(v => v.Quest).Any(v => v.QuestHasItemAsTarget(contentToCheck));
             return false;
         }
-        
+
         public static bool ShouldResourceSpawn(QuestContainer container, int spawnCheckDelayInSeconds)
         {
             var perSpawnCheck = container.QuestItemSpawnChancePerSecond * spawnCheckDelayInSeconds;
@@ -92,8 +92,8 @@ namespace DataModel.Server
             var roll = random.Next(0, 101);
             return roll < perSpawnCheck;
         }
-        
-        
+
+
         public static IEnumerable<QuestContainer> LocationIsInsideQuestSpawnableArea(PlusCode locationToTest, List<QuestContainer> quests)
         {
             return quests.Where(v =>
@@ -105,9 +105,30 @@ namespace DataModel.Server
                 return section.Contains(locationToTest.Code);
             });
         }
-        
-        
+
+        /// <summary>
+        /// Pure function, subtracts the amount of each InventoryType
+        /// </summary>
+        /// <param name="dictionary"></param>
+        /// <param name="other"></param>
+        /// <exception cref="InvalidOperationException">If it is impossible to subtract (values go below 0)</exception>
+        /// <returns>A new dictionary with the subtracted values.</returns>
+        public static Dictionary<InventoryType, int> SubtractInventory(this Dictionary<InventoryType, int> dictionary, Dictionary<InventoryType, int> other)
+        {
+            var subtracted = dictionary.SubtractDictionaries(other);
+            if (!subtracted.Values.All(v => v >= 0))
+                throw new InvalidOperationException();
+            return subtracted;
+        }
+
        
+
+        public static List<DatabaseInventoryStorage> ToDatabaseStorage(this Dictionary<InventoryType, int> dictionary)
+        => dictionary.ToList().ConvertAll(v => new DatabaseInventoryStorage() { ContentType = v.Key.ContentType, ResourceType = v.Key.ResourceType, amount = v.Value }).ToList();
+
+        public static Dictionary<InventoryType, int> ToInventoryDictionary(this List<DatabaseInventoryStorage> list)
+        => list.ToDictionary(v => new InventoryType() { ContentType = v.ContentType, ResourceType = v.ResourceType }, v => v.amount);
+
         public static bool QuestHasItemAsTarget(this Quest quest, MapContent contentToCheck)
         {
             if (quest.QuestLevel != contentToCheck.Type)

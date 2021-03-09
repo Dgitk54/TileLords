@@ -103,10 +103,10 @@ namespace DataModel.Server.Services
                           .Where(v => v.Type == MessageType.REQUEST)
                           .SelectMany(v =>
                           {
-                              return inventoryService.RequestContainerInventory(user.UserId, v.InventoryOwner).Catch<(Dictionary<ItemType, int>, byte[]), Exception>(v2 =>
+                              return inventoryService.RequestContainerInventory(user.UserId, v.InventoryOwner).Catch<(Dictionary<InventoryType, int>, byte[]), Exception>(v2 =>
                               {
                                   responses.OnNext(GatewayResponses.contentRetrievalFail);
-                                  return Observable.Empty<(Dictionary<ItemType, int>, byte[])>();
+                                  return Observable.Empty<(Dictionary<InventoryType, int>, byte[])>();
                               });
                           })
                           .Subscribe(v =>

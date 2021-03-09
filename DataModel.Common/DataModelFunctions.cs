@@ -11,6 +11,7 @@ using DataModel.Common.Messages;
 using Newtonsoft.Json;
 using System.Text;
 using System.Diagnostics;
+using DataModel.Common.GameModel;
 
 namespace DataModel.Common
 {
@@ -62,7 +63,53 @@ namespace DataModel.Common
         public static T ConvertEnumString<T>(this string name)
             => (T)Enum.Parse(typeof(T), name);
 
-        
+        /// <summary>
+        /// Pure function from <see href="https://stackoverflow.com/a/57032216">Stackoverflow</see>
+        /// Subtracts two dictionaries.
+        /// </summary>
+        /// <typeparam name="K"></typeparam>
+        /// <typeparam name="V"></typeparam>
+        /// <param name="one"></param>
+        /// <param name="other"></param>
+        /// <returns>subtracted dictionary with negative values in case the key is missing in the first dictionary </returns>
+        public static Dictionary<K, int> SubtractDictionaries<K>(this Dictionary<K, int> one, Dictionary<K, int> other) where K:IEquatable<K>
+        {
+            var distinctKeys = one.Concat(other).Distinct().ToList();
+            ;
+            return one.Concat(other)
+                       .Select(x => x.Key)
+                       .Distinct()
+                       .Select(x => new
+                       {
+                           Key = x,
+                           Value1 = one.TryGetValue(x, out int Value1) ? Value1 : 0,
+                           Value2 = other.TryGetValue(x, out int Value2) ? Value2 : 0,
+                       })
+                       .ToDictionary(x => x.Key, x => x.Value1 - x.Value2);
+        }
+
+        /// <summary>
+        /// Pure Function, similar to subtraction <see cref="SubtractDictionaries{K}(Dictionary{K, int}, Dictionary{K, int})"/>
+        /// </summary>
+        /// <typeparam name="K"></typeparam>
+        /// <param name="one"></param>
+        /// <param name="other"></param>
+        /// <returns>added Dictionary</returns>
+        public static Dictionary<K, int> AddDictionaries<K>(this Dictionary<K, int> one, Dictionary<K, int> other)
+        {
+            return one.Concat(other)
+                       .Select(x => x.Key)
+                       .Distinct()
+                       .Select(x => new
+                       {
+                           Key = x,
+                           Value1 = one.TryGetValue(x, out int Value1) ? Value1 : 0,
+                           Value2 = other.TryGetValue(x, out int Value2) ? Value2 : 0,
+                       })
+                       .ToDictionary(x => x.Key, x => x.Value1 + x.Value2);
+        }
+
+
 
         public static PlusCode GetNearbyLocationWithinMinMaxBounds(string startPluscode, int maxbound, int minbound)
         {
@@ -87,6 +134,7 @@ namespace DataModel.Common
             return new PlusCode(location, 10);
         }
 
+       
         public static IObservable<PlusCode> GetPlusCode(this IObservable<GPS> gps, IObservable<int> precision)
             => from i in gps
                from j in precision

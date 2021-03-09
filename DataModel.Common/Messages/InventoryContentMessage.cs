@@ -10,6 +10,6 @@ namespace DataModel.Common.Messages
         public MessageType Type { get; set; }
         public MessageState MessageState { get; set; }
         public byte[] InventoryOwner { get; set; }
-        public List<KeyValuePair<ItemType, int>> InventoryContent { get; set; }
+        public List<KeyValuePair<InventoryType, int>> InventoryContent { get; set; }
     }
 }

@@ -16,9 +16,9 @@ namespace DataModel.Server.Services
     /// </summary>
     public class InventoryService
     {
-        public IObservable<Dictionary<ItemType, int>> RequestPlayerInventory(byte[] playerId)
+        public IObservable<Dictionary<InventoryType, int>> RequestPlayerInventory(byte[] playerId)
         {
-            return Observable.Create<Dictionary<ItemType, int>>(v =>
+            return Observable.Create<Dictionary<InventoryType, int>>(v =>
              {
                  var result = DataBaseFunctions.RequestInventory(playerId, playerId);
                  if (result == null)
@@ -32,9 +32,9 @@ namespace DataModel.Server.Services
                  return Disposable.Empty;
              });
         }
-        public IObservable<(Dictionary<ItemType, int>, byte[])> RequestContainerInventory(byte[] playerId, byte[] containerId)
+        public IObservable<(Dictionary<InventoryType, int>, byte[])> RequestContainerInventory(byte[] playerId, byte[] containerId)
         {
-            return Observable.Create<(Dictionary<ItemType, int>, byte[])>(v =>
+            return Observable.Create<(Dictionary<InventoryType, int>, byte[])>(v =>
              {
                  var inventory = DataBaseFunctions.RequestInventory(playerId, containerId);
                  if (inventory == null)

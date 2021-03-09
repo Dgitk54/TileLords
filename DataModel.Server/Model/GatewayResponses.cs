@@ -54,7 +54,7 @@ namespace DataModel.Server.Model
             success.AdditionalInfo = user.UserId;
             return success;
         }
-        public static InventoryContentMessage ContentResponse(byte[] ownerId, Dictionary<ItemType, int> resources)
+        public static InventoryContentMessage ContentResponse(byte[] ownerId, Dictionary<InventoryType,int> resources)
         {
             return new InventoryContentMessage() { InventoryContent = resources.ToList(), InventoryOwner = ownerId, MessageState = MessageState.SUCCESS, Type = MessageType.RESPONSE };
         }
