@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace DataModel.Common.Messages
+﻿namespace DataModel.Common.Messages
 {
     public class ContentMessage : IMessage
     {
@@ -18,7 +14,7 @@ namespace DataModel.Common.Messages
         public string Location { get; set; }
 
 
-        override public string ToString()
+        public override string ToString()
         {
             if (Type == ContentType.RESOURCE)
             {
@@ -28,7 +24,7 @@ namespace DataModel.Common.Messages
             {
                 if (Name != null)
                 {
-                    return "Player: " + " " + Name + " at " + TileUtility.PlusCodeToTileName(new PlusCode(Location,10)) + " " + Location; 
+                    return "Player: " + " " + Name + " at " + TileUtility.PlusCodeToTileName(new PlusCode(Location, 10)) + " " + Location;
                 }
                 else
                 {

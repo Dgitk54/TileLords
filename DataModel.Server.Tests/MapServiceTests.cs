@@ -6,9 +6,7 @@ using LiteDB;
 using NUnit.Framework;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Reactive.Subjects;
-using System.Text;
 
 namespace DataModel.Server.Tests
 {
@@ -33,7 +31,7 @@ namespace DataModel.Server.Tests
         {
             //Data setup
             MapContentService service = new MapContentService(DataBaseFunctions.AreaContentAsMessageRequest, DataBaseFunctions.UpdateOrDeleteContent, DataBaseFunctions.AreaContentAsListRequest);
-            
+
             var givenOne = new PlusCode("8FX9XW2F+9X", 10);
             var givenTwo = new PlusCode("8FX9XW2F+8X", 10);
             var givenThree = new PlusCode("8FX9XW2F+7X", 10);
@@ -45,7 +43,7 @@ namespace DataModel.Server.Tests
             {
                 UserId = ObjectId.NewObjectId(),
                 UserName = "TestUser",
-                
+
             };
             IUser user2 = new User()
             {
@@ -65,8 +63,8 @@ namespace DataModel.Server.Tests
 
             user1location.OnNext(givenThree);
 
-            
-            
+
+
             Assert.IsTrue(responseList.Count == 1); //Only one visible content
             Assert.IsTrue(responseList[0] is ContentMessage);
             responseList.Clear();
@@ -81,7 +79,7 @@ namespace DataModel.Server.Tests
             Assert.IsTrue(responseList.Count == 2); //two visible content
             Assert.IsTrue(responseList[0] is ContentMessage);
             var asContent = responseList[0] as ContentMessage;
-            Assert.IsTrue(asContent.Type == ContentType.PLAYER); 
+            Assert.IsTrue(asContent.Type == ContentType.PLAYER);
             responseList.Clear();
 
 
@@ -91,7 +89,7 @@ namespace DataModel.Server.Tests
             Assert.IsTrue(responseList.Count == 1); //one visible content
             Assert.IsTrue(responseList[0] is ContentMessage);
             asContent = responseList[0] as ContentMessage;
-            Assert.IsTrue(asContent.Type == ContentType.PLAYER); 
+            Assert.IsTrue(asContent.Type == ContentType.PLAYER);
             responseList.Clear();
 
 

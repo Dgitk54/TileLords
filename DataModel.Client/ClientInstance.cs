@@ -1,21 +1,15 @@
 ﻿using DataModel.Common;
 using DataModel.Common.Messages;
-using DotNetty.Buffers;
 using DotNetty.Codecs;
-using DotNetty.Common.Internal.Logging;
 using DotNetty.Transport.Bootstrapping;
 using DotNetty.Transport.Channels;
 using DotNetty.Transport.Channels.Sockets;
-using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
-using System.Security.Cryptography.X509Certificates;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -62,8 +56,10 @@ namespace DataModel.Client
 
         public IObservable<bool> ClientConnectionState => serverHandler.ConnctionState;
 
-        public void SendGps(GPS gps) => SendMessage(new UserGpsMessage() { Lat = gps.Lat, Lon = gps.Lon });
-
+        public void SendGps(GPS gps)
+        {
+            SendMessage(new UserGpsMessage() { Lat = gps.Lat, Lon = gps.Lon });
+        }
 
         public void SendRegisterRequest(string username, string password)
         {
@@ -148,13 +144,13 @@ namespace DataModel.Client
                             .Select(v =>
                             {
                                 var map = v.loc.Item2.ConvertAll(e => e.From10String());
-                                var transformedMap =map.Select(e =>
-                                {
-                                    MiniTile tile = null;
-                                    v.map.TryGetValue(e, out tile);
-                                    return tile;
-                                }).ToList();
-                                
+                                var transformedMap = map.Select(e =>
+                                 {
+                                     MiniTile tile = null;
+                                     v.map.TryGetValue(e, out tile);
+                                     return tile;
+                                 }).ToList();
+
                                 return (v.loc.v, transformedMap);
                             })
                             .Select(v => new UnityMapMessage() { ClientLocation = v.v, VisibleMap = v.transformedMap });

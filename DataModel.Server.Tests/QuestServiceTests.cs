@@ -1,15 +1,10 @@
 ﻿using DataModel.Common;
-using DataModel.Common.Messages;
 using DataModel.Server.Model;
 using DataModel.Server.Services;
 using LiteDB;
-using System.Reactive;
-using System.Reactive.Linq;
 using NUnit.Framework;
-using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Text;
+using System.Reactive.Linq;
 
 namespace DataModel.Server.Tests
 {
@@ -51,7 +46,7 @@ namespace DataModel.Server.Tests
             var questsRequest = service.RequestActiveQuests(user1.UserId).Take(1).Wait();
 
             Assert.IsTrue(questsRequest.Count == 1);
-        } 
+        }
 
 
 

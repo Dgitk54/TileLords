@@ -1,7 +1,4 @@
-﻿
-using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System.Collections.Generic;
 
 namespace DataModel.Common.Messages
 {
@@ -11,7 +8,7 @@ namespace DataModel.Common.Messages
         public override string ToString()
         {
             string s = "";
-            foreach(var content in ContentList)
+            foreach (var content in ContentList)
             {
                 s += (content.ToString() + " ");
             }

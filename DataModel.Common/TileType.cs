@@ -1,11 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace DataModel.Common
+﻿namespace DataModel.Common
 {
     //the biome of this tile
-    public enum TileType 
+    public enum TileType
     {
         Grassland,
         //WaterBody,

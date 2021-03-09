@@ -1,15 +1,13 @@
 ﻿using DataModel.Common;
 using DataModel.Common.Messages;
-using System;
 using System.Collections.Generic;
-using System.Text;
 
 namespace DataModel.Server.Model
 {
     public static class WorldSpawnWeights
     {
 
-        public static Dictionary<ResourceType, int> SwampSpawnValues = new Dictionary<ResourceType, int> 
+        public static Dictionary<ResourceType, int> SwampSpawnValues = new Dictionary<ResourceType, int>
         {
             //example: does not spawn appels, coconuts, grapes, milk, orange, potato, salad
 

@@ -1,7 +1,5 @@
-﻿using System;
+﻿using DataModel.Common.GameModel;
 using System.Collections.Generic;
-using System.Text;
-using DataModel.Common.GameModel;
 
 namespace DataModel.Common.Messages
 {

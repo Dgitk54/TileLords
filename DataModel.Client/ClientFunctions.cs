@@ -1,17 +1,11 @@
 ﻿using DataModel.Common;
-using DotNetty.Buffers;
-using DotNetty.Transport.Channels;
+using DataModel.Common.Messages;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Text;
-using System.Reactive.Linq;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Serialization;
-using DataModel.Common.Messages;
-using System.Threading.Tasks;
-using System.Threading;
 using System.Reactive.Concurrency;
+using System.Reactive.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace DataModel.Client
 {
@@ -52,7 +46,7 @@ namespace DataModel.Client
             do
             {
                 var gpsNode = gps[i % gps.Count];
-                instance.SendMessage(new UserGpsMessage() {Lat = gpsNode.Lat, Lon = gpsNode.Lon });
+                instance.SendMessage(new UserGpsMessage() { Lat = gpsNode.Lat, Lon = gpsNode.Lon });
                 Thread.Sleep(sleeptime);
                 i++;
                 if (ct.IsCancellationRequested)

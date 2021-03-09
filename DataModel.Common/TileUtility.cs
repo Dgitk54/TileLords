@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
@@ -62,7 +61,10 @@ namespace DataModel.Common
 
         }
 
-        public static bool EqualsBasedOnPlusCode(this MiniTile t1, MiniTile t2) => t1.MiniTileId.Code.Equals(t2.MiniTileId.Code);
+        public static bool EqualsBasedOnPlusCode(this MiniTile t1, MiniTile t2)
+        {
+            return t1.MiniTileId.Code.Equals(t2.MiniTileId.Code);
+        }
 
 
         /// <summary>
@@ -159,10 +161,6 @@ namespace DataModel.Common
 
         public static String PlusCodeToTileName(PlusCode code)
         {
-            int counter = 0;
-            string line;
-           
-
             var md5Hasher = MD5.Create();
             var hashed = md5Hasher.ComputeHash(Encoding.UTF8.GetBytes(code.Code));
             var asInt = BitConverter.ToInt32(hashed, 0);

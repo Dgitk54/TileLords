@@ -2,10 +2,7 @@
 using DataModel.Server.Model;
 using LiteDB;
 using NUnit.Framework;
-using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 
 namespace DataModel.Server.Tests
 {
@@ -24,7 +21,7 @@ namespace DataModel.Server.Tests
         {
             DataBaseFunctions.WipeAllDatabases();
         }
-        
+
         [Test]
         public void CanAddAndRemoveFromInventory()
         {
@@ -34,7 +31,7 @@ namespace DataModel.Server.Tests
                 UserName = "TestUser",
 
             };
-            
+
             MapContent randomContent = ServerFunctions.GetRandomNonQuestResource().AsMapContent();
             var startLocation = new PlusCode("8FX9XW2F+9X", 10);
             randomContent.Location = startLocation.Code;

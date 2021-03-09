@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace DataModel.Common.Messages
+﻿namespace DataModel.Common.Messages
 {
     /// <summary>
     /// Used to finish quests and trade in the resources into reward points

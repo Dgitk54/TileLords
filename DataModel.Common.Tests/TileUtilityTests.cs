@@ -1,10 +1,7 @@
-﻿using System;
+﻿using NUnit.Framework;
+using System;
 using System.Collections.Generic;
-using NUnit.Framework;
-using System.Linq;
 using System.Diagnostics;
-using DataModel.Common;
-using System.Reactive.Linq;
 
 namespace DataModel.Common.Tests
 {
@@ -23,10 +20,10 @@ namespace DataModel.Common.Tests
             miniTileTypeList = new List<int>() { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
             worldObjectTypeList = new List<int>() { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
         }
-   
 
 
-        
+
+
 
         [Test]
         public void TestCodeBigger()
@@ -214,7 +211,7 @@ namespace DataModel.Common.Tests
         [Test]
         public void DetermineLocationCodesTest()
         {
-            List<string> codes =  LocationCodeTileUtility.GetTileSection("8FX9WWV9+XX", 1 , 10);
+            List<string> codes = LocationCodeTileUtility.GetTileSection("8FX9WWV9+XX", 1, 10);
             List<string> realCodes = new List<String>();
             realCodes.Add("8FX9WWW9+2W");
             realCodes.Add("8FX9WWW9+2X");
@@ -227,7 +224,7 @@ namespace DataModel.Common.Tests
             realCodes.Add("8FX9WWVC+W2");
             Debug.WriteLine("Count: " + codes.Count);
 
-           for(int i = 0; i < codes.Count; i++)
+            for (int i = 0; i < codes.Count; i++)
             {
                 Debug.WriteLine(codes[i]);
                 Assert.AreEqual(realCodes[i], codes[i]);

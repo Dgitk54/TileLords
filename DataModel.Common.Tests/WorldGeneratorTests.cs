@@ -1,20 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using DataModel;
-using System.Reactive;
-using System.Reactive.Linq;
-using System.Reactive.Joins;
-using System.Reactive.PlatformServices;
-using NUnit.Framework;
-using Google.OpenLocationCode;
-using Microsoft.Reactive.Testing;
-using System.Linq;
-using System.Diagnostics;
-using System.Threading.Tasks;
-using DataModel.Common;
-using Newtonsoft.Json;
-using System.IO;
+﻿using NUnit.Framework;
 namespace DataModel.Common.Tests
 {
     public class WorldGeneratorTests

@@ -1,17 +1,12 @@
 ﻿using DataModel.Common;
+using DataModel.Server.Model;
+using LiteDB;
 using System;
 using System.Collections.Generic;
-using System.Text;
+using System.Linq;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
-using System.Reactive.Concurrency;
-using System.Diagnostics;
-using System.Threading.Tasks;
-using LiteDB;
-using DataModel.Common.Messages;
-using System.Linq;
-using DataModel.Server.Model;
 
 namespace DataModel.Server.Services
 {
@@ -38,7 +33,7 @@ namespace DataModel.Server.Services
 
             //Handling spawn requests
             var disposable = resourceSpawnRequests.Subscribe(v => userContentStorage(v.Item1.AsMapContent(), v.Item2));
-            
+
             //Handling delete requests
             var deleteRequests = resourceSpawnRequests.Delay(TimeSpan.FromSeconds(RESOURCEALIVEINSEC)).Subscribe(v => userContentStorage(v.Item1.AsMapContent(), null));
 
@@ -55,11 +50,11 @@ namespace DataModel.Server.Services
         public IDisposable AddMovableResourceSpawnArea(byte[] moveableOwnerId, IObservable<PlusCode> location)
         {
             return Observable.Interval(TimeSpan.FromSeconds(RESOURCESPAWNCHECKTHROTTLEINSECONDS))
-                             .WithLatestFrom(location, (_, loc) => new { _, loc})
-                             .Select(v=> v.loc)
-                             .SpawnConditionMet(service,spawnCheckFunctions)
-                             .Where(v=> v)
-                             .Select(v=> GetRandomResource(moveableOwnerId))
+                             .WithLatestFrom(location, (_, loc) => new { _, loc })
+                             .Select(v => v.loc)
+                             .SpawnConditionMet(service, spawnCheckFunctions)
+                             .Where(v => v)
+                             .Select(v => GetRandomResource(moveableOwnerId))
                              .Switch()
                              .WithLatestFrom(location, (res, loc) => new { res, loc })
                              .Subscribe(v =>
@@ -75,11 +70,11 @@ namespace DataModel.Server.Services
                                 .WithLatestFrom(location, (_, loc) => new { _, loc })
                                 .Select(v => v.loc)
                                 .Select(v => (DataBaseFunctions.GetQuestsForUser(moveableOwnerId), v))
-                                .Where(v=> v.Item1 != null)
+                                .Where(v => v.Item1 != null)
                                 .Select(v => ServerFunctions.LocationIsInsideQuestSpawnableArea(v.v, v.Item1))
                                 .Where(v => v.Any())
-                                .Select(v=> v.Where(e => ServerFunctions.ShouldResourceSpawn(e,RESOURCESPAWNCHECKTHROTTLEINSECONDS)))
-                                .Where(v=> v.Any())
+                                .Select(v => v.Where(e => ServerFunctions.ShouldResourceSpawn(e, RESOURCESPAWNCHECKTHROTTLEINSECONDS)))
+                                .Where(v => v.Any())
 
                                 .Subscribe(v =>
                                 {
@@ -88,7 +83,7 @@ namespace DataModel.Server.Services
                                         var randomSpawnInQuestArea = DataModelFunctions.GetNearbyRandomSpawn(e.Quest.QuestTargetLocation, e.Quest.AreaRadiusFromLocation);
                                         var resource = e.ExtractQuestResource(randomSpawnInQuestArea.Code);
                                         resourceSpawnRequests.OnNext((resource, randomSpawnInQuestArea.Code));
-                                    });                                    
+                                    });
                                 });
         }
 

@@ -1,18 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using DataModel.Common;
-using System.Reactive;
-using System.Reactive.Linq;
-using System.Reactive.Joins;
-using System.Reactive.PlatformServices;
+﻿using Microsoft.Reactive.Testing;
 using NUnit.Framework;
-using Google.OpenLocationCode;
-using Microsoft.Reactive.Testing;
-using System.Linq;
+using System;
+using System.Collections.Generic;
 using System.Diagnostics;
-using System.Threading.Tasks;
-using System.IO;
+using System.Linq;
+using System.Reactive.Linq;
 
 namespace DataModel.Common.Tests
 {
@@ -321,7 +313,7 @@ namespace DataModel.Common.Tests
             Assert.IsTrue(townName != null);
             Debug.WriteLine(townName);
 
-      
+
         }
     }
 }

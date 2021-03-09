@@ -1,16 +1,13 @@
 using DataModel.Client;
-using DataModel.Common;
+using DataModel.Common.Messages;
 using DataModel.Server;
 using NUnit.Framework;
-using System.Threading.Tasks;
-using System.Reactive.Linq;
 using System;
-using System.Threading;
-using System.Reactive.Concurrency;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
-using DataModel.Common.Messages;
+using System.Reactive.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace ClientIntegration
 {
@@ -56,7 +53,7 @@ namespace ClientIntegration
             var gspMsg2 = new UserGpsMessage() { Lat = 49.000050, Lon = 50.0000050 };
 
             var ctMsg = new ContentMessage() { Id = new byte[] { 5, 12, 3 }, Location = "dbg", Name = "dbgname", ResourceType = DataModel.Common.Messages.ResourceType.APPLE, Type = ContentType.RESOURCE };
-            
+
             instance.SendMessage(regMsg);
             Thread.Sleep(300);
             instance.SendMessage(logMsg);
@@ -106,10 +103,10 @@ namespace ClientIntegration
             var accountid = (response as UserActionMessage).AdditionalInfo;
             var requestInventory = new InventoryContentMessage() { InventoryOwner = accountid, Type = MessageType.REQUEST };
             instance.SendMessage(requestInventory);
-           
+
             Thread.Sleep(1000);
             instance.SendMessage(requestInventory);
-           
+
             Thread.Sleep(1000);
             instance.SendMessage(requestInventory);
             Thread.Sleep(1000);
@@ -120,6 +117,6 @@ namespace ClientIntegration
             var client = ClientFunctions.StartClient(instance);
             Thread.Sleep(1500);
         }
-       
+
     }
 }

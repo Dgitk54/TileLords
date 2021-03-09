@@ -1,7 +1,4 @@
 ﻿using DataModel.Common.GameModel;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace DataModel.Common.Messages
 {
@@ -13,6 +10,6 @@ namespace DataModel.Common.Messages
         public byte[] QuestContainerId { get; set; } // if null => requests level 1 quest
         public MessageType MessageType { get; set; }
         public MessageState MessageState { get; set; }
-        public Quest Quest { get; set; } 
+        public Quest Quest { get; set; }
     }
 }

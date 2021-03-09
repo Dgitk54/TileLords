@@ -1,17 +1,12 @@
-﻿using Google.OpenLocationCode;
-using System;
-using System.Reactive;
-using System.Reactive.Linq;
-using System.Reactive.Joins;
-using System.Reactive.PlatformServices;
-using System.Linq;
-using System.Reactive.Subjects;
-using System.Collections.Generic;
-using DataModel.Common.Messages;
+﻿using DataModel.Common.Messages;
+using Google.OpenLocationCode;
 using Newtonsoft.Json;
-using System.Text;
+using System;
+using System.Collections.Generic;
 using System.Diagnostics;
-using DataModel.Common.GameModel;
+using System.Linq;
+using System.Reactive.Linq;
+using System.Text;
 
 namespace DataModel.Common
 {
@@ -39,7 +34,7 @@ namespace DataModel.Common
                 TypeNameHandling = TypeNameHandling.Auto
             });
         }
-        
+
         // see https://stackoverflow.com/questions/56692/random-weighted-choice
         public static T RandomElementByWeight<T>(this IEnumerable<T> sequence, Func<T, float> weightSelector, Random seed)
         {
@@ -61,7 +56,9 @@ namespace DataModel.Common
         }
 
         public static T ConvertEnumString<T>(this string name)
-            => (T)Enum.Parse(typeof(T), name);
+        {
+            return (T)Enum.Parse(typeof(T), name);
+        }
 
         /// <summary>
         /// Pure function from <see href="https://stackoverflow.com/a/57032216">Stackoverflow</see>
@@ -72,7 +69,7 @@ namespace DataModel.Common
         /// <param name="one"></param>
         /// <param name="other"></param>
         /// <returns>subtracted dictionary with negative values in case the key is missing in the first dictionary </returns>
-        public static Dictionary<K, int> SubtractDictionaries<K>(this Dictionary<K, int> one, Dictionary<K, int> other) where K:IEquatable<K>
+        public static Dictionary<K, int> SubtractDictionaries<K>(this Dictionary<K, int> one, Dictionary<K, int> other) where K : IEquatable<K>
         {
             var distinctKeys = one.Concat(other).Distinct().ToList();
             ;
@@ -134,11 +131,13 @@ namespace DataModel.Common
             return new PlusCode(location, 10);
         }
 
-       
+
         public static IObservable<PlusCode> GetPlusCode(this IObservable<GPS> gps, IObservable<int> precision)
-            => from i in gps
-               from j in precision
-               select new PlusCode(new OpenLocationCode(i.Lat, i.Lon, j).Code, j);
+        {
+            return from i in gps
+                   from j in precision
+                   select new PlusCode(new OpenLocationCode(i.Lat, i.Lon, j).Code, j);
+        }
 
 
         /// <summary>
@@ -148,14 +147,14 @@ namespace DataModel.Common
         /// <param name="precision"></param>
         /// <returns></returns>
         public static PlusCode GetPlusCode(this GPS gps, int precision)
-             => new PlusCode(new OpenLocationCode(gps.Lat, gps.Lon, precision).Code, precision);
-
-
+        {
+            return new PlusCode(new OpenLocationCode(gps.Lat, gps.Lon, precision).Code, precision);
+        }
 
         public static GPS AddOFfset(this GPS gps, double latOffset, double lonOffset)
-            => new GPS(gps.Lat + latOffset, gps.Lon + lonOffset);
-
-
+        {
+            return new GPS(gps.Lat + latOffset, gps.Lon + lonOffset);
+        }
 
         public static List<GPS> GPSNodesWithOffsets(GPS startPos, double latNodeOffset, double lonNodeOffset, int nodeAmount)
         {
@@ -181,8 +180,8 @@ namespace DataModel.Common
         }
 
         public static PlusCode ToLowerResolution(this PlusCode code, int target)
-            => new PlusCode(string.Concat(code.Code.Take(target + 1)), target);
-
-
+        {
+            return new PlusCode(string.Concat(code.Code.Take(target + 1)), target);
+        }
     }
 }

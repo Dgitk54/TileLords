@@ -1,23 +1,16 @@
 ﻿using DataModel.Common;
+using DataModel.Common.GameModel;
+using DataModel.Common.Messages;
+using DataModel.Server.Model;
+using DataModel.Server.Services;
+using LiteDB;
 using System;
 using System.Collections.Generic;
-using System.Text;
-using Newtonsoft.Json;
 using System.Linq;
 using System.Reactive;
 using System.Reactive.Linq;
-using System.Reactive.Joins;
-using Google.OpenLocationCode;
-using DotNetty.Transport.Channels;
-using System.Diagnostics;
-using DotNetty.Buffers;
-using LiteDB;
-using Newtonsoft.Json.Serialization;
 using System.Security.Cryptography;
-using DataModel.Common.Messages;
-using DataModel.Server.Services;
-using DataModel.Server.Model;
-using DataModel.Common.GameModel;
+using System.Text;
 
 namespace DataModel.Server
 {
@@ -26,26 +19,26 @@ namespace DataModel.Server
     /// </summary>
     public static class ServerFunctions
     {
-        public readonly static int CLIENTVISIBILITY = 10;
-        public readonly static int CLIENTLOCATIONPRECISION = 10;
+        public static readonly int CLIENTVISIBILITY = 10;
+        public static readonly int CLIENTLOCATIONPRECISION = 10;
 
-        public readonly static int CLIENT_MAXQUESTS = 5;
+        public static readonly int CLIENT_MAXQUESTS = 5;
 
         //QUESTLEVEL 1:
-        public readonly static int QUESTLEVEL1_DECAYINDAYS = 14;
-        public readonly static int QUESTLEVEL1_MINDISTANCEFROMREQUESTSPAWN_INMINITILES = 40;
-        public readonly static int QUESTLEVEL1_MAXDISTANCEFROMREQUESTSPAWN_INMINITILES = 60;
-        public readonly static int QUESTLEVEL1_SPAWNAREA_INMINITILES = 10;
-        public readonly static int QUESTLEVEL1_REQUIREDAMOUNT_MAX = 15;
+        public static readonly int QUESTLEVEL1_DECAYINDAYS = 14;
+        public static readonly int QUESTLEVEL1_MINDISTANCEFROMREQUESTSPAWN_INMINITILES = 40;
+        public static readonly int QUESTLEVEL1_MAXDISTANCEFROMREQUESTSPAWN_INMINITILES = 60;
+        public static readonly int QUESTLEVEL1_SPAWNAREA_INMINITILES = 10;
+        public static readonly int QUESTLEVEL1_REQUIREDAMOUNT_MAX = 15;
 
         //Magic numbers for spawnchance calculation:
-        public readonly static double ONE_PER_MINUTEAVARAGE = 1.67;
-        public readonly static double TWO_PER_MINUTEAVARAGE = 3.34;
+        public static readonly double ONE_PER_MINUTEAVARAGE = 1.67;
+        public static readonly double TWO_PER_MINUTEAVARAGE = 3.34;
 
         //QUESTCONTAINER LEVEL 1:
-        public readonly static double CONTAINER_1_ITEMSPAWNCHANCE_PERSECOND = TWO_PER_MINUTEAVARAGE;
-        public readonly static int CONTAINER_1_MAXITEMS_PERAREA = 10;
-        public readonly static int CONTAINER_1_ITEMALIVE_INSECONDS = 420;
+        public static readonly double CONTAINER_1_ITEMSPAWNCHANCE_PERSECOND = TWO_PER_MINUTEAVARAGE;
+        public static readonly int CONTAINER_1_MAXITEMS_PERAREA = 10;
+        public static readonly int CONTAINER_1_ITEMALIVE_INSECONDS = 420;
 
 
         public static bool Only5ResourcesInArea(List<MapContent> content)
@@ -121,13 +114,17 @@ namespace DataModel.Server
             return subtracted;
         }
 
-       
+
 
         public static List<DatabaseInventoryStorage> ToDatabaseStorage(this Dictionary<InventoryType, int> dictionary)
-        => dictionary.ToList().ConvertAll(v => new DatabaseInventoryStorage() { ContentType = v.Key.ContentType, ResourceType = v.Key.ResourceType, amount = v.Value }).ToList();
+        {
+            return dictionary.ToList().ConvertAll(v => new DatabaseInventoryStorage() { ContentType = v.Key.ContentType, ResourceType = v.Key.ResourceType, amount = v.Value }).ToList();
+        }
 
         public static Dictionary<InventoryType, int> ToInventoryDictionary(this List<DatabaseInventoryStorage> list)
-        => list.ToDictionary(v => new InventoryType() { ContentType = v.ContentType, ResourceType = v.ResourceType }, v => v.amount);
+        {
+            return list.ToDictionary(v => new InventoryType() { ContentType = v.ContentType, ResourceType = v.ResourceType }, v => v.amount);
+        }
 
         public static bool QuestHasItemAsTarget(this Quest quest, MapContent contentToCheck)
         {
@@ -206,12 +203,19 @@ namespace DataModel.Server
         }
 
         public static MapContent AsMapContent(this Resource resource)
-        => new MapContent() { Id = resource.Id, Location = resource.Location, Name = resource.Name, ResourceType = resource.ResourceType, Type = resource.Type, CanBeLootedByPlayer = true };
+        {
+            return new MapContent() { Id = resource.Id, Location = resource.Location, Name = resource.Name, ResourceType = resource.ResourceType, Type = resource.Type, CanBeLootedByPlayer = true };
+        }
 
         public static ContentMessage AsMessage(this MapContent content)
-        => new ContentMessage() { Id = content.Id, Location = content.Location, Name = content.Name, ResourceType = content.ResourceType, Type = content.Type };
+        {
+            return new ContentMessage() { Id = content.Id, Location = content.Location, Name = content.Name, ResourceType = content.ResourceType, Type = content.Type };
+        }
 
-        public static byte[] Hash(string value, byte[] salt) => Hash(Encoding.UTF8.GetBytes(value), salt);
+        public static byte[] Hash(string value, byte[] salt)
+        {
+            return Hash(Encoding.UTF8.GetBytes(value), salt);
+        }
 
         public static byte[] Hash(byte[] value, byte[] salt)
         {

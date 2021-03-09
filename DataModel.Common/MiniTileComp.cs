@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Text;
 
 namespace DataModel.Common
 {
@@ -10,7 +8,7 @@ namespace DataModel.Common
 
         public int Compare(MiniTile x, MiniTile y)
         {
-          
+
 
             if (IsTileCodeBigger(x.MiniTileId, y.MiniTileId))
             {
@@ -37,7 +35,7 @@ namespace DataModel.Common
             String code = plusCode.Code;
             //remove the plus
             code = code.Replace("+", "");
-         
+
             int[] array = new int[code.Length];
 
             CodeToIntegerValues(code, codeToInt, array);
@@ -46,11 +44,11 @@ namespace DataModel.Common
             String code2 = plusCode2.Code;
             //remove the plus
             code2 = code2.Replace("+", "");
-       
+
             int[] array2 = new int[code.Length];
             CodeToIntegerValues(code2, codeToInt, array2);
 
-     
+
             return IsBigger(array, array2);
 
 
@@ -86,7 +84,7 @@ namespace DataModel.Common
 
                 if (i % 2 == 0)
                 {
-                   
+
                     if (one < two)
                     {
                         return true;
@@ -128,7 +126,7 @@ namespace DataModel.Common
             }
 
             return false;
-            
+
 
 
         }

@@ -2,7 +2,6 @@
 using DataModel.Common.GameModel;
 using DataModel.Common.Messages;
 using DataModel.Server.Model;
-using DataModel.Server.Services;
 using LiteDB;
 using System;
 using System.Collections.Generic;
@@ -10,17 +9,15 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
-using System.Text;
-using System.Threading;
 
 namespace DataModel.Server
 {
     public static class DataBaseFunctions
     {
-        public static string UserDatabaseName { get { return @"Users.db"; } }
-        public static string MapDatabaseName { get { return @"MapData.db"; } }
-        public static string InventoryDatabaseName { get { return @"Inventory.db"; } }
-        public static string QuestDatabaseName { get { return @"Quest.db"; } }
+        public static string UserDatabaseName => @"Users.db";
+        public static string MapDatabaseName => @"MapData.db";
+        public static string InventoryDatabaseName => @"Inventory.db";
+        public static string QuestDatabaseName => @"Quest.db";
         public static void WipeAllDatabases()
         {
             if (File.Exists(UserDatabaseName))
@@ -247,7 +244,7 @@ namespace DataModel.Server
                 {
                     subtractedResult = inventoryDictionary.SubtractInventory(content);
                 }
-                catch(InvalidOperationException)
+                catch (InvalidOperationException)
                 {
                     return false;
                 }
@@ -259,7 +256,7 @@ namespace DataModel.Server
         }
 
 
-        public static bool AddContentToPlayerInventory(byte[] inventoryId, Dictionary<InventoryType,int> content)
+        public static bool AddContentToPlayerInventory(byte[] inventoryId, Dictionary<InventoryType, int> content)
         {
             using (var dataBase = new LiteDatabase(InventoryDatabaseWrite()))
             {
@@ -313,7 +310,7 @@ namespace DataModel.Server
                 return true;
             }
         }
-        public static Dictionary<InventoryType,int> RequestInventory(byte[] requestOwnerId, byte[] targetId)
+        public static Dictionary<InventoryType, int> RequestInventory(byte[] requestOwnerId, byte[] targetId)
         {
             using (var dataBase = new LiteDatabase(InventoryDatabaseRead()))
             {
@@ -461,7 +458,7 @@ namespace DataModel.Server
 
 
                 }
-                catch (System.IO.FileNotFoundException e)
+                catch (System.IO.FileNotFoundException)
                 {
                     using (var dbwrite = new LiteDatabase(MapDataWrite()))
                     {
@@ -480,6 +477,8 @@ namespace DataModel.Server
         }
 
         public static bool NameTaken(string name, ILiteCollection<User> col)
-            => col.Find(v => v.UserName == name).Any();
+        {
+            return col.Find(v => v.UserName == name).Any();
+        }
     }
 }

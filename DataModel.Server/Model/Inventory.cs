@@ -1,9 +1,6 @@
 ﻿using DataModel.Common.GameModel;
-using DataModel.Common.Messages;
 using LiteDB;
-using System;
 using System.Collections.Generic;
-using System.Text;
 
 namespace DataModel.Server.Model
 {
@@ -14,6 +11,6 @@ namespace DataModel.Server.Model
         public byte[] ContainerId { get; set; }
         public int StorageCapacity { get; set; }
         public List<DatabaseInventoryStorage> InventoryItems { get; set; }
-        Dictionary<InventoryType, int> IUserInventory.InventoryItems { get =>  InventoryItems.ToInventoryDictionary(); set { InventoryItems = value.ToDatabaseStorage(); } }
+        Dictionary<InventoryType, int> IUserInventory.InventoryItems { get => InventoryItems.ToInventoryDictionary(); set => InventoryItems = value.ToDatabaseStorage(); }
     }
 }

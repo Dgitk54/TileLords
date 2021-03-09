@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace DataModel.Common
+﻿namespace DataModel.Common
 {
     public enum WorldObjectType
     {
@@ -58,7 +54,7 @@ namespace DataModel.Common
         CrocodilePit,
         SnowBells,
         CherryTree
-   
+
 
 
     }

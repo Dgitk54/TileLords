@@ -5,7 +5,6 @@ using System;
 using System.Collections.Generic;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
-using System.Text;
 
 namespace DataModel.Server.Services
 {
@@ -15,8 +14,8 @@ namespace DataModel.Server.Services
         readonly Func<string, BatchContentMessage> areaLookup;
         readonly Func<string, List<MapContent>> areaLookupAsContent;
         readonly Action<MapContent, string> userContentStorage;
-        
-        public  MapContentService(Func<string, BatchContentMessage> areaLookup, Action<MapContent, string> userContentStorage, Func<string, List<MapContent>> areaLookupAsContent)
+
+        public MapContentService(Func<string, BatchContentMessage> areaLookup, Action<MapContent, string> userContentStorage, Func<string, List<MapContent>> areaLookupAsContent)
         {
             this.areaLookup = areaLookup;
             this.userContentStorage = userContentStorage;
@@ -32,21 +31,23 @@ namespace DataModel.Server.Services
         public IDisposable AddMapContent(MapContent content, IObservable<PlusCode> contentLocation)
         {
             return contentLocation.Sample(TimeSpan.FromSeconds(CONTENTSAMPLE))
-                                  .Finally(()=> userContentStorage(content, null))
-                                  .Subscribe(v => 
+                                  .Finally(() => userContentStorage(content, null))
+                                  .Subscribe(v =>
                                   {
                                       userContentStorage(content, v.Code);
-                                  }, 
-                                      () => { userContentStorage(content, null);
-                                  });
+                                  },
+                                      () =>
+                                      {
+                                          userContentStorage(content, null);
+                                      });
         }
 
-        
+
         public IObservable<List<MapContent>> GetListMapUpdate(string userLocation)
         {
             return Observable.Create<List<MapContent>>(v =>
             {
-                
+
                 List<MapContent> result = null;
                 try
                 {
@@ -83,18 +84,20 @@ namespace DataModel.Server.Services
                 try
                 {
                     result = areaLookup.Invoke(userLocation);
-                } catch (Exception e)
+                }
+                catch (Exception e)
                 {
                     v.OnError(e);
                     return Disposable.Empty;
                 }
 
-                if(result != null)
+                if (result != null)
                 {
                     v.OnNext(result);
                     v.OnCompleted();
                     return Disposable.Empty;
-                } else
+                }
+                else
                 {
                     v.OnCompleted();
                     return Disposable.Empty;
@@ -102,6 +105,6 @@ namespace DataModel.Server.Services
             });
         }
 
-        
+
     }
 }

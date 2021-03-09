@@ -1,19 +1,13 @@
 ﻿using DataModel.Common;
+using DataModel.Common.Messages;
 using DotNetty.Buffers;
 using DotNetty.Common.Internal.Logging;
 using DotNetty.Transport.Channels;
 using System;
-using System.Collections.Generic;
-using System.Text;
 using System.Linq;
-using System.Reactive;
 using System.Reactive.Linq;
-using System.Reactive.Joins;
 using System.Reactive.Subjects;
-using System.Diagnostics;
-using Newtonsoft.Json;
-using System.Reactive.Concurrency;
-using DataModel.Common.Messages;
+using System.Text;
 
 namespace DataModel.Client
 {
@@ -62,12 +56,12 @@ namespace DataModel.Client
             outBoundManager.Dispose();
         }
 
-        public void ShutDown() 
-        { 
-            if (outBoundManager != null) 
-            { 
-                outBoundManager.Dispose(); 
-            } 
+        public void ShutDown()
+        {
+            if (outBoundManager != null)
+            {
+                outBoundManager.Dispose();
+            }
         }
 
         public override bool IsSharable => true;

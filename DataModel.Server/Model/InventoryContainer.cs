@@ -1,9 +1,4 @@
-﻿using LiteDB;
-using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace DataModel.Server.Model
+﻿namespace DataModel.Server.Model
 {
     public class InventoryContainer
     {

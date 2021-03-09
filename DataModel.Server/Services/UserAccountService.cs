@@ -1,15 +1,11 @@
-﻿using DataModel.Common;
-using LiteDB;
+﻿using DataModel.Server.Model;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Reactive.Linq;
-using DotNetty.Transport.Channels;
-using System.Reactive.Subjects;
 using System.Reactive.Disposables;
-using System.Collections.Concurrent;
-using DataModel.Server.Model;
+using System.Reactive.Linq;
+using System.Reactive.Subjects;
+using System.Text;
 
 namespace DataModel.Server.Services
 {
@@ -23,8 +19,8 @@ namespace DataModel.Server.Services
         readonly ISubject<List<IUser>> synchronizedOnlineUsers;
         readonly Func<string, User> userNameLookup;
         readonly Func<byte[], byte[], byte[], bool> passwordMatcher;
-        
-        public UserAccountService(Func<string, User> userDatabaseLookup, Func<byte[], byte[], byte[], bool> passwordMatchAlgorithm )
+
+        public UserAccountService(Func<string, User> userDatabaseLookup, Func<byte[], byte[], byte[], bool> passwordMatchAlgorithm)
         {
             passwordMatcher = passwordMatchAlgorithm;
             userNameLookup = userDatabaseLookup;
@@ -52,7 +48,7 @@ namespace DataModel.Server.Services
                 }
 
                 var pass = Encoding.UTF8.GetBytes(password);
-                if(passwordMatcher(pass, user.SaltedHash, user.Salt))
+                if (passwordMatcher(pass, user.SaltedHash, user.Salt))
                 {
                     var updateOnline = onlineUsers.Value;
                     updateOnline.Add(user);
@@ -66,7 +62,7 @@ namespace DataModel.Server.Services
                     v.OnError(new Exception("Password does not match"));
                     return Disposable.Empty;
                 }
-               
+
             });
         }
 

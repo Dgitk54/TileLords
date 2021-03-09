@@ -1,13 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Text;
+﻿using DataModel.Server.Model;
 using DataModel.Server.Services;
 using NUnit.Framework;
-using System.Reactive;
+using System;
+using System.Collections.Generic;
 using System.Reactive.Linq;
-using System.Reactive.Joins;
-using DataModel.Server.Model;
 
 namespace DataModel.Server.Tests
 {
@@ -40,12 +36,12 @@ namespace DataModel.Server.Tests
 
 
             //Register same username, expect error
-            service.RegisterUser("hans", "hans").Subscribe(v=>registerResults.Add(v));
+            service.RegisterUser("hans", "hans").Subscribe(v => registerResults.Add(v));
             service.RegisterUser("hans", "hans2")
-                .Catch<bool,Exception>(tx => 
-                {
-                    return Observable.Return(false);
-                })
+                .Catch<bool, Exception>(tx =>
+                 {
+                     return Observable.Return(false);
+                 })
                 .Subscribe(v => registerResults.Add(v));
             Assert.IsTrue(registerResults.Count == 2);
             Assert.IsTrue(registerResults[0] == true);
@@ -72,20 +68,20 @@ namespace DataModel.Server.Tests
             service.RegisterUser("hans2", "hans2").Subscribe(v => registerResults.Add(v));
             service.LoginUser("hans2", "hans2").Subscribe(v => userLoginResults.Add(v));
 
-            
+
             Assert.IsTrue(onlineUsers.Count == 2);
 
 
             //Test Log out:
             bool couldLogOut = false;
-            service.LogoutUser(onlineUsers[1]).Subscribe(v=> couldLogOut = v);
+            service.LogoutUser(onlineUsers[1]).Subscribe(v => couldLogOut = v);
             Assert.IsTrue(couldLogOut);
             Assert.IsTrue(onlineUsers.Count == 1);
-            
+
 
         }
 
-        
-    
+
+
     }
 }

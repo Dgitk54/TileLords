@@ -1,15 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Text;
+﻿using DataModel.Common.Messages;
+using DataModel.Server.Model;
 using DataModel.Server.Services;
 using NUnit.Framework;
-using System.Reactive;
+using System;
+using System.Collections.Generic;
 using System.Reactive.Linq;
-using System.Reactive.Joins;
-using DataModel.Common.Messages;
 using System.Reactive.Subjects;
-using DataModel.Server.Model;
 
 namespace DataModel.Server.Tests
 {
@@ -50,7 +46,7 @@ namespace DataModel.Server.Tests
             testInput.OnNext(registerRequest);
             Assert.IsTrue(responses.Count == 1);
             responses.Clear();
-            
+
             //Second register message, expect error due to account existing:
             testInput.OnNext(registerRequest);
             Assert.IsTrue(responses.Count == 1);

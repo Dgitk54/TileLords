@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using LiteDB;
+﻿using LiteDB;
+using System;
 
 namespace DataModel.Server.Model
 {
@@ -10,7 +8,7 @@ namespace DataModel.Server.Model
         byte[] IUser.UserId => UserId.ToByteArray();
         public ObjectId UserId { get; set; }
 
-        public string UserName { get ; set; }
+        public string UserName { get; set; }
 
         public DateTime LastOnline { get; set; }
 
@@ -20,6 +18,6 @@ namespace DataModel.Server.Model
 
         public byte[] SaltedHash { get; set; }
 
-        
+
     }
 }

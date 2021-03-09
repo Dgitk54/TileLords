@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace DataModel.Common.Messages
+﻿namespace DataModel.Common.Messages
 {
     public class MapContentTransactionMessage : IMessage
     {
@@ -12,7 +8,7 @@ namespace DataModel.Common.Messages
 
         public override string ToString()
         {
-            return base.ToString()+ MessageType + " " + MessageState + "";
+            return base.ToString() + MessageType + " " + MessageState + "";
         }
     }
 }

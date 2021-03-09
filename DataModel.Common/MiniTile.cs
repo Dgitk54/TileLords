@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
-using System.Reactive.Linq;
 namespace DataModel.Common
 {
 
@@ -21,11 +19,20 @@ namespace DataModel.Common
 
         public List<ITileContent> Content { get; set; }
 
-        public MiniTile(PlusCode c, MiniTileType t, List<ITileContent> con) => (MiniTileId, TileType, Content) = (c, t, con);
+        public MiniTile(PlusCode c, MiniTileType t, List<ITileContent> con)
+        {
+            (MiniTileId, TileType, Content) = (c, t, con);
+        }
 
-        public MiniTile(PlusCode c, MiniTileType t, List<ITileContent> con, TileType p) => (MiniTileId, TileType, Content, ParentType) = (c, t, con, p);
+        public MiniTile(PlusCode c, MiniTileType t, List<ITileContent> con, TileType p)
+        {
+            (MiniTileId, TileType, Content, ParentType) = (c, t, con, p);
+        }
 
-        public MiniTile(PlusCode c, Enum e, List<ITileContent> con) => (MiniTileId, TileTypeAsEnum, Content) = (c, e, con);
+        public MiniTile(PlusCode c, Enum e, List<ITileContent> con)
+        {
+            (MiniTileId, TileTypeAsEnum, Content) = (c, e, con);
+        }
 
         public MiniTile() { }
         public override string ToString()

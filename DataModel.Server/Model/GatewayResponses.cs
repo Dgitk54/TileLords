@@ -1,22 +1,20 @@
 ﻿using DataModel.Common.GameModel;
 using DataModel.Common.Messages;
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 
 namespace DataModel.Server.Model
 {
     public static class GatewayResponses
     {
-        public readonly static UserActionMessage loginFail = new UserActionMessage()
+        public static readonly UserActionMessage loginFail = new UserActionMessage()
         {
             MessageContext = MessageContext.LOGIN,
             MessageInfo = MessageInfo.LOGINFAIL,
             MessageState = MessageState.ERROR,
             MessageType = MessageType.RESPONSE
         };
-        public readonly static InventoryContentMessage contentRetrievalFail = new InventoryContentMessage()
+        public static readonly InventoryContentMessage contentRetrievalFail = new InventoryContentMessage()
         {
             InventoryContent = null,
             InventoryOwner = null,
@@ -25,7 +23,7 @@ namespace DataModel.Server.Model
 
         };
 
-        public readonly static UserActionMessage loginSuccess = new UserActionMessage()
+        public static readonly UserActionMessage loginSuccess = new UserActionMessage()
         {
             MessageContext = MessageContext.LOGIN,
             MessageInfo = MessageInfo.NONE,
@@ -33,14 +31,14 @@ namespace DataModel.Server.Model
             MessageType = MessageType.RESPONSE
         };
 
-        public readonly static UserActionMessage registerFail = new UserActionMessage()
+        public static readonly UserActionMessage registerFail = new UserActionMessage()
         {
             MessageContext = MessageContext.REGISTER,
             MessageInfo = MessageInfo.NONE,
             MessageState = MessageState.ERROR,
             MessageType = MessageType.RESPONSE
         };
-        public readonly static UserActionMessage registerSuccess = new UserActionMessage()
+        public static readonly UserActionMessage registerSuccess = new UserActionMessage()
         {
             MessageContext = MessageContext.REGISTER,
             MessageInfo = MessageInfo.NONE,
@@ -54,7 +52,7 @@ namespace DataModel.Server.Model
             success.AdditionalInfo = user.UserId;
             return success;
         }
-        public static InventoryContentMessage ContentResponse(byte[] ownerId, Dictionary<InventoryType,int> resources)
+        public static InventoryContentMessage ContentResponse(byte[] ownerId, Dictionary<InventoryType, int> resources)
         {
             return new InventoryContentMessage() { InventoryContent = resources.ToList(), InventoryOwner = ownerId, MessageState = MessageState.SUCCESS, Type = MessageType.RESPONSE };
         }
@@ -64,7 +62,7 @@ namespace DataModel.Server.Model
         }
         public static QuestRequestMessage QuestRequestResponse(Quest quest)
         {
-            if(quest != null)
+            if (quest != null)
             {
                 return new QuestRequestMessage() { MessageState = MessageState.SUCCESS, MessageType = MessageType.RESPONSE, Quest = quest, QuestContainerId = null };
 

@@ -1,21 +1,16 @@
 ﻿using DataModel.Common;
+using DataModel.Common.Messages;
+using DataModel.Server.Model;
+using DataModel.Server.Services;
 using DotNetty.Buffers;
 using DotNetty.Common.Internal.Logging;
 using DotNetty.Transport.Channels;
 using System;
 using System.Collections.Generic;
-using System.Text;
 using System.Linq;
-using System.Reactive;
 using System.Reactive.Linq;
-using System.Reactive.Joins;
 using System.Reactive.Subjects;
-using System.Diagnostics;
-using System.Reactive.Concurrency;
-using LiteDB;
-using DataModel.Common.Messages;
-using DataModel.Server.Services;
-using DataModel.Server.Model;
+using System.Text;
 
 namespace DataModel.Server
 {
@@ -60,7 +55,7 @@ namespace DataModel.Server
             var byteBuffer = message as IByteBuffer;
             if (byteBuffer != null)
             {
-                if(logInConsole)
+                if (logInConsole)
                     Console.WriteLine("Received" + byteBuffer.ToString(Encoding.UTF8));
                 var msgpack = byteBuffer.ToString(Encoding.UTF8).FromString();
                 synchronizedInboundTraffic.OnNext(msgpack);
@@ -72,7 +67,7 @@ namespace DataModel.Server
         {
             apiGatewayService.DetachGateway();
             responseDisposable.Dispose();
-            if(logInConsole)
+            if (logInConsole)
                 Console.WriteLine("Cleaned up ClientHandler");
         }
 

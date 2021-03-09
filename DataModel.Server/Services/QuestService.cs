@@ -1,10 +1,9 @@
-﻿using DataModel.Server.Model;
+﻿using DataModel.Common;
+using DataModel.Server.Model;
 using System;
 using System.Collections.Generic;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
-using System.Text;
-using DataModel.Common;
 
 namespace DataModel.Server.Services
 {
@@ -37,8 +36,8 @@ namespace DataModel.Server.Services
                 {
                     v.OnError(new NotImplementedException());
                     return Disposable.Empty;
-                } 
-            }); 
+                }
+            });
         }
         public IObservable<List<QuestContainer>> RequestActiveQuests(byte[] playerId)
         {

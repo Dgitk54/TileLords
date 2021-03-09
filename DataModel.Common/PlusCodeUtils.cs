@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 
 namespace DataModel.Common
 {
@@ -45,7 +44,7 @@ namespace DataModel.Common
 
             int numIterations = one.Precision / 2; //1..5
             int tileDistance = 0;
-            
+
             //Removes +
             var code1 = one.Code.Remove(8, 1);
             var code2 = two.Code.Remove(8, 1);

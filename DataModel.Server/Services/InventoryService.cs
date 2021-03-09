@@ -1,13 +1,8 @@
 ﻿using DataModel.Common.GameModel;
-using DataModel.Common.Messages;
-using DataModel.Server.Model;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
-using System.Text;
 
 namespace DataModel.Server.Services
 {

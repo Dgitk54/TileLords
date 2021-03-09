@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace DataModel.Client
@@ -26,7 +25,7 @@ namespace DataModel.Client
         readonly int port;
         readonly List<IDisposable> forwardDisposables = new List<IDisposable>();
         readonly List<IDisposable> reconnectDisposables = new List<IDisposable>();
-        
+
         ClientInstance instance;
         Task runningClient;
         bool hasBeenRunningFlag = false;
@@ -54,13 +53,13 @@ namespace DataModel.Client
                                                                                             .Where(v => !v.state)
                                                                                             .Where(v => hasBeenRunningFlag)
                                                                                             .Do(v => Console.WriteLine("CreateNewInstanceAndSubscribe"))
-                                                                                            .Subscribe(v => 
+                                                                                            .Subscribe(v =>
                                                                                             {
                                                                                                 try
                                                                                                 {
-                                                                                                CreateNewInstanceAndSubscribe();
+                                                                                                    CreateNewInstanceAndSubscribe();
                                                                                                 }
-                                                                                                catch (Exception e)
+                                                                                                catch (Exception)
                                                                                                 {
                                                                                                     Console.WriteLine("Could not connect with the client instance");
                                                                                                 }
@@ -73,24 +72,24 @@ namespace DataModel.Client
 
             var outboundTrafficForward = outboundTraffic.Subscribe(v =>
             {
-                
+
                 if (instance != null)
                     instance.SendMessage(v);
             });
 
-            var consoleContentLogger = inboundTraffic.OfType<BatchContentMessage>().Select(v=> v.ContentList).Subscribe(v => 
-            {
-                if (shouldLogConsole)
-                {
-                    string visibleContentString = "\n \n";
-                    visibleContentString += "Visible Contentamount:" + v.Count + " \n";
-                    var players = v.Where(v2 => v2.Type == ContentType.PLAYER).Select(v2 => "[Player:" + v2.Name + " id:" + v2.Id + " on location " + v2.Location + "] \n").ToList();
-                    var resources = v.Where(v2 => v2.Type == ContentType.RESOURCE).Select(v2 => "[Resource:" + v2.Name + " id:" + v2.Id + " on location " + v2.Location + "] \n").ToList();
-                    players.ForEach(v2 => visibleContentString += v2);
-                    resources.ForEach(v2 => visibleContentString += v2);
-                    Console.WriteLine(visibleContentString);
-                }
-            } );
+            var consoleContentLogger = inboundTraffic.OfType<BatchContentMessage>().Select(v => v.ContentList).Subscribe(v =>
+             {
+                 if (shouldLogConsole)
+                 {
+                     string visibleContentString = "\n \n";
+                     visibleContentString += "Visible Contentamount:" + v.Count + " \n";
+                     var players = v.Where(v2 => v2.Type == ContentType.PLAYER).Select(v2 => "[Player:" + v2.Name + " id:" + v2.Id + " on location " + v2.Location + "] \n").ToList();
+                     var resources = v.Where(v2 => v2.Type == ContentType.RESOURCE).Select(v2 => "[Resource:" + v2.Name + " id:" + v2.Id + " on location " + v2.Location + "] \n").ToList();
+                     players.ForEach(v2 => visibleContentString += v2);
+                     resources.ForEach(v2 => visibleContentString += v2);
+                     Console.WriteLine(visibleContentString);
+                 }
+             });
 
             reconnectDisposables.Add(reconnectionResetDisposable);
             reconnectDisposables.Add(autoRelog);
@@ -133,27 +132,27 @@ namespace DataModel.Client
             StopRunningClientInstance();
             instance = new ClientInstance();
 
-            
+
             var disp1 = instance.InboundTraffic.Subscribe(v => inboundTraffic.OnNext(v));
 
             var disp2 = instance.ClientConnectionState.Subscribe(v => connectionState.OnNext(v));
 
             var disp3 = instance.ClientMapStream.Subscribe(v => mapForwarding.OnNext(v));
-           
+
             forwardDisposables.Add(disp1);
             forwardDisposables.Add(disp2);
             forwardDisposables.Add(disp3);
-          
-            runningClient = ClientFunctions.StartClient(instance,ip,port);
+
+            runningClient = ClientFunctions.StartClient(instance, ip, port);
         }
         void StopRunningClientInstance()
         {
             forwardDisposables.ForEach(v => v.Dispose());
-            if(instance != null)
+            if (instance != null)
             {
                 instance.CloseClient();
             }
-            if(runningClient != null)
+            if (runningClient != null)
             {
                 runningClient.Wait();
             }
@@ -161,9 +160,9 @@ namespace DataModel.Client
             runningClient = null;
             forwardDisposables.Clear();
         }
-        
 
-        IObservable<AccountMessage> GetWorkingAccountDetails(IObservable<IMessage> inbound, IObservable<IMessage> outbound) 
+
+        IObservable<AccountMessage> GetWorkingAccountDetails(IObservable<IMessage> inbound, IObservable<IMessage> outbound)
         {
             var inboundLoginSuccess = inbound.Where(v => v is UserActionMessage)
                           .Select(v => v as UserActionMessage)
@@ -173,7 +172,7 @@ namespace DataModel.Client
                                                 .Select(v => v as AccountMessage);
 
             return inboundLoginSuccess.WithLatestFrom(outboundLoginRequests, (successMessage, loginMessage) => new { successMessage, loginMessage })
-                                      .Select(v=> v.loginMessage)
+                                      .Select(v => v.loginMessage)
                                       .Take(1);
         }
     }

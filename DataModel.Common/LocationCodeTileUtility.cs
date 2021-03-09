@@ -8,7 +8,7 @@ namespace DataModel.Common
 
     public static class LocationCodeTileUtility
     {
-        
+
         /// <summary>
         /// Function which sorts the list in the order from top left tile (north west) to bottom right (south east)
         /// </summary>
@@ -35,8 +35,8 @@ namespace DataModel.Common
             return ret;
         }
 
-       
-        
+
+
 
         public static Dictionary<int, string> IntegerPlusCodeLookup = new Dictionary<int, string>()
         {
@@ -60,7 +60,7 @@ namespace DataModel.Common
             {18,"V" },
             {19,"W" },
             {20,"X" },
-        
+
         };
 
         public static Dictionary<string, int> PlusCodeIntegerLookup = new Dictionary<string, int>()
@@ -86,8 +86,8 @@ namespace DataModel.Common
             {"W", 19},
             {"X", 20}
         };
-    
-        public static Dictionary<String, int> CreateDictionary() 
+
+        public static Dictionary<String, int> CreateDictionary()
         {
 
             var codeToInt = new Dictionary<String, int>();
@@ -148,7 +148,7 @@ namespace DataModel.Common
             int[] xSaveArray = new int[arraySize];
             int[] ySaveArray = new int[arraySize];
 
-       
+
 
             for (int i = 0; i < precision / 2; i++)
             {
@@ -161,7 +161,7 @@ namespace DataModel.Common
             }
 
             code = code.Replace("+", "");
-         
+
             //create the list to return later
             List<string> locationCodes = new List<string>();
 
@@ -388,32 +388,32 @@ namespace DataModel.Common
         static void DetermineLocationCodesSorted(List<string> plusCodes, int radius, int precision, int[] yArray, int[] xArray)
         {
             StringBuilder sb = new StringBuilder();
-          
+
             //get to top left corner
             for (int k = 1; k <= radius; k++)
             {
-               
+
                 GoLeft(xArray);
-            
+
                 GoUp(yArray);
-      
+
             }
             //copy area by value (not by reference!)
             int[] saveX = xArray.ToArray();
             //go from top left to bottom right
-            for (int i = 1; i <= (radius*2) +1; i++)
+            for (int i = 1; i <= (radius * 2) + 1; i++)
             {
 
-                for(int j = 1; j <= (radius*2) +1; j++)
+                for (int j = 1; j <= (radius * 2) + 1; j++)
                 {
-            
+
                     plusCodes.Add(ConvertBackToString(precision, yArray, xArray, sb));
                     GoRight(xArray);
-                
+
 
                 }
-               
-               //reset x value (first column again)
+
+                //reset x value (first column again)
                 xArray = saveX.ToArray();
 
                 GoDown(yArray);
@@ -422,135 +422,135 @@ namespace DataModel.Common
         }
 
 
-     /*       static void DetermineLocationCodes(string code, List<string> plusCodes, Dictionary<string, int> codeToInt, int radius, int precision, int[] xArray, int[] yArray, int[] xSaveArray, int[] ySaveArray)
-        {
-            StringBuilder sb = new StringBuilder();
-            //set top left
-            for (int k = 1; k <= radius; k++)
-            {   
-                GoRight(yArray);
-                for (int l = 1; l <= radius; l++)
-                {
-                    
-                    GoDown(xArray);
-                  
-                    plusCodes.Add(ConvertBackToString(precision, xArray, yArray, sb));
-                }
-                Array.Copy(ResetX(xSaveArray), xArray, xArray.Length);
-            }
-            Array.Copy(ResetX(xSaveArray), xArray, xArray.Length);
-            Array.Copy(ResetY(ySaveArray), yArray, yArray.Length);
+        /*       static void DetermineLocationCodes(string code, List<string> plusCodes, Dictionary<string, int> codeToInt, int radius, int precision, int[] xArray, int[] yArray, int[] xSaveArray, int[] ySaveArray)
+           {
+               StringBuilder sb = new StringBuilder();
+               //set top left
+               for (int k = 1; k <= radius; k++)
+               {   
+                   GoRight(yArray);
+                   for (int l = 1; l <= radius; l++)
+                   {
 
-            //set top
-            for (int k = 1; k <= radius; k++)
-            {
-                
-                GoRight(yArray);
-                plusCodes.Add(ConvertBackToString(precision, xArray, yArray, sb));
-            }
-            Array.Copy(ResetX(xSaveArray), xArray, xArray.Length);
-            Array.Copy(ResetY(ySaveArray), yArray, yArray.Length);
+                       GoDown(xArray);
 
+                       plusCodes.Add(ConvertBackToString(precision, xArray, yArray, sb));
+                   }
+                   Array.Copy(ResetX(xSaveArray), xArray, xArray.Length);
+               }
+               Array.Copy(ResetX(xSaveArray), xArray, xArray.Length);
+               Array.Copy(ResetY(ySaveArray), yArray, yArray.Length);
 
-            //set top right
-            for (int k = 1; k <= radius; k++)
-            {
-                GoRight(yArray);
+               //set top
+               for (int k = 1; k <= radius; k++)
+               {
 
-                for (int l = 1; l <= radius; l++)
-                {
-                    
-                    GoUp(xArray);
-                    //convert the code back into a location code and add it to the list
-                    plusCodes.Add(ConvertBackToString(precision, xArray, yArray, sb));
-                }
-                //resetting X values to original one
-                Array.Copy(ResetX(xSaveArray), xArray, xArray.Length);
+                   GoRight(yArray);
+                   plusCodes.Add(ConvertBackToString(precision, xArray, yArray, sb));
+               }
+               Array.Copy(ResetX(xSaveArray), xArray, xArray.Length);
+               Array.Copy(ResetY(ySaveArray), yArray, yArray.Length);
 
 
-            }
-            Array.Copy(ResetX(xSaveArray), xArray, xArray.Length);
-            Array.Copy(ResetY(ySaveArray), yArray, yArray.Length);
+               //set top right
+               for (int k = 1; k <= radius; k++)
+               {
+                   GoRight(yArray);
+
+                   for (int l = 1; l <= radius; l++)
+                   {
+
+                       GoUp(xArray);
+                       //convert the code back into a location code and add it to the list
+                       plusCodes.Add(ConvertBackToString(precision, xArray, yArray, sb));
+                   }
+                   //resetting X values to original one
+                   Array.Copy(ResetX(xSaveArray), xArray, xArray.Length);
 
 
-
-            //set left
-            for (int k = 1; k <= radius; k++)
-            {
-
-                GoDown(xArray);
-                plusCodes.Add(ConvertBackToString(precision, xArray, yArray, sb));
-
-            }
-            Array.Copy(ResetX(xSaveArray), xArray, xArray.Length);
-            Array.Copy(ResetY(ySaveArray), yArray, yArray.Length);
-
-
-            //set middle
-            var codeWithPlus = code.Insert(8, "+") ;
-            plusCodes.Add(codeWithPlus);
+               }
+               Array.Copy(ResetX(xSaveArray), xArray, xArray.Length);
+               Array.Copy(ResetY(ySaveArray), yArray, yArray.Length);
 
 
 
-            //set right
-            for (int k = 1; k <= radius; k++)
-            {
+               //set left
+               for (int k = 1; k <= radius; k++)
+               {
 
-                GoUp(xArray);
-                plusCodes.Add(ConvertBackToString(precision, xArray, yArray, sb));
+                   GoDown(xArray);
+                   plusCodes.Add(ConvertBackToString(precision, xArray, yArray, sb));
 
-            }
-            Array.Copy(ResetX(xSaveArray), xArray, xArray.Length);
-            Array.Copy(ResetY(ySaveArray), yArray, yArray.Length);
+               }
+               Array.Copy(ResetX(xSaveArray), xArray, xArray.Length);
+               Array.Copy(ResetY(ySaveArray), yArray, yArray.Length);
 
 
-
-            //set bottom left
-            for (int k = 1; k <= radius; k++)
-            {
-                GoLeft(yArray);
-                for (int l = 1; l <= radius; l++)
-                {
-                    
-                    GoDown(xArray);
-
-                    plusCodes.Add(ConvertBackToString(precision, xArray, yArray, sb));
-                }
-                Array.Copy(ResetX(xSaveArray), xArray, xArray.Length);
-            }
-            Array.Copy(ResetX(xSaveArray), xArray, xArray.Length);
-            Array.Copy(ResetY(ySaveArray), yArray, yArray.Length);
+               //set middle
+               var codeWithPlus = code.Insert(8, "+") ;
+               plusCodes.Add(codeWithPlus);
 
 
 
-            //set bottom
-            for (int k = 1; k <= radius; k++)
-            {
-                GoLeft(yArray);
-                plusCodes.Add(ConvertBackToString(precision, xArray, yArray, sb));
+               //set right
+               for (int k = 1; k <= radius; k++)
+               {
 
-            }
+                   GoUp(xArray);
+                   plusCodes.Add(ConvertBackToString(precision, xArray, yArray, sb));
 
-            Array.Copy(ResetX(xSaveArray), xArray, xArray.Length);
-            Array.Copy(ResetY(ySaveArray), yArray, yArray.Length);
-
-
-
-            //set bottom right
-            for (int k = 1; k <= radius; k++)
-            {
-                GoLeft(yArray);
-                for (int l = 1; l <= radius; l++)
-                {
-                    GoUp(xArray);
-                    plusCodes.Add(ConvertBackToString(precision, xArray, yArray, sb));
-                }
-                Array.Copy(ResetX(xSaveArray), xArray, xArray.Length);
-            }
+               }
+               Array.Copy(ResetX(xSaveArray), xArray, xArray.Length);
+               Array.Copy(ResetY(ySaveArray), yArray, yArray.Length);
 
 
 
-        }*/
+               //set bottom left
+               for (int k = 1; k <= radius; k++)
+               {
+                   GoLeft(yArray);
+                   for (int l = 1; l <= radius; l++)
+                   {
+
+                       GoDown(xArray);
+
+                       plusCodes.Add(ConvertBackToString(precision, xArray, yArray, sb));
+                   }
+                   Array.Copy(ResetX(xSaveArray), xArray, xArray.Length);
+               }
+               Array.Copy(ResetX(xSaveArray), xArray, xArray.Length);
+               Array.Copy(ResetY(ySaveArray), yArray, yArray.Length);
+
+
+
+               //set bottom
+               for (int k = 1; k <= radius; k++)
+               {
+                   GoLeft(yArray);
+                   plusCodes.Add(ConvertBackToString(precision, xArray, yArray, sb));
+
+               }
+
+               Array.Copy(ResetX(xSaveArray), xArray, xArray.Length);
+               Array.Copy(ResetY(ySaveArray), yArray, yArray.Length);
+
+
+
+               //set bottom right
+               for (int k = 1; k <= radius; k++)
+               {
+                   GoLeft(yArray);
+                   for (int l = 1; l <= radius; l++)
+                   {
+                       GoUp(xArray);
+                       plusCodes.Add(ConvertBackToString(precision, xArray, yArray, sb));
+                   }
+                   Array.Copy(ResetX(xSaveArray), xArray, xArray.Length);
+               }
+
+
+
+           }*/
 
 
         /// <summary>
@@ -612,7 +612,7 @@ namespace DataModel.Common
         /// <summary>
         /// Function which converts int to PlusCode back
         /// </summary>
-        static string ConvertBackToString( int precision, int[] xArray, int[] yArray, StringBuilder sb)
+        static string ConvertBackToString(int precision, int[] xArray, int[] yArray, StringBuilder sb)
         {
             sb.Clear();
             int xArrayCounter = 0;
@@ -624,7 +624,7 @@ namespace DataModel.Common
                 {
                     sb.Append(IntegerPlusCodeLookup[xArray[xArrayCounter]]);
                     //string sign = IntegerPlusCodeLookup[xArray[xArrayCounter]];
-                 
+
                     xArrayCounter++;
                     //newCode += sign;
                 }
@@ -634,7 +634,7 @@ namespace DataModel.Common
                     // string sign = IntegerPlusCodeLookup[yArray[yArrayCounter]];
 
                     yArrayCounter++;
-                   // newCode += sign;
+                    // newCode += sign;
                 }
 
 
@@ -645,7 +645,7 @@ namespace DataModel.Common
             return newCode;
         }
 
-        
+
 
         /// <summary>
         /// Function which determines the upper PlusCode

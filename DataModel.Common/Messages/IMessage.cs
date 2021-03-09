@@ -1,12 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace DataModel.Common.Messages
+﻿namespace DataModel.Common.Messages
 {
-   
-    
-    public interface IMessage 
+
+
+    public interface IMessage
     {
 
     }

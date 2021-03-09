@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Runtime.ConstrainedExecution;
-using System.Text;
+﻿using System.Collections.Generic;
 
 namespace DataModel.Common
 {
@@ -12,16 +9,23 @@ namespace DataModel.Common
     public class Tile
     {
         public int Id { get; set; }
-        public  PlusCode PlusCode { get; set; }
-        public  TileType Ttype { get; set; }
+        public PlusCode PlusCode { get; set; }
+        public TileType Ttype { get; set; }
 
         public List<MiniTile> MiniTiles { get; set; }
 
-        public Tile(PlusCode c, TileType t, List<MiniTile> miniTiles) => (PlusCode, Ttype, MiniTiles) = (c, t, miniTiles );
-        public Tile(PlusCode c, TileType t) => (PlusCode, Ttype) = (c, t);
+        public Tile(PlusCode c, TileType t, List<MiniTile> miniTiles)
+        {
+            (PlusCode, Ttype, MiniTiles) = (c, t, miniTiles);
+        }
+
+        public Tile(PlusCode c, TileType t)
+        {
+            (PlusCode, Ttype) = (c, t);
+        }
 
         public Tile() { }
-      
+
 
     }
 }

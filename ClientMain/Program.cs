@@ -1,12 +1,9 @@
-﻿using System;
+﻿using DataModel.Client;
+using DataModel.Common;
+using System;
 using System.Collections.Generic;
-using System.Reactive.Concurrency;
-using System.Reactive.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using DataModel.Client;
-using DataModel.Common;
-using DataModel.Common.Messages;
 
 namespace ClientMain
 {
@@ -36,7 +33,7 @@ namespace ClientMain
                 }
             }
 
-            
+
         }
         static void LargeScaleTests()
         {
@@ -124,7 +121,7 @@ namespace ClientMain
             instance.ShutDown();
 
         }
-        static void DebugRegisterAndLoginClient(string name, string password, List<GPS> path , CancellationToken cancellationToken)
+        static void DebugRegisterAndLoginClient(string name, string password, List<GPS> path, CancellationToken cancellationToken)
         {
             var instance = new ClientInstanceManager();
             instance.StartClient();
@@ -179,9 +176,6 @@ namespace ClientMain
             var random = new Random();
             double mainzLatMin = 49.9;  //max should be 50.025
             double mainzLonMin = 8.16;  //max should be 8.334
-            //Mainz rolls: lat:  0.168653    lon:  0.068825
-            
-            double square = 0.000500;
 
             var list = new List<GPS>();
 
