@@ -72,6 +72,13 @@ namespace DataModel.Server.Model
                 return new QuestRequestMessage() { MessageState = MessageState.ERROR, QuestContainerId = null, Quest = null, MessageType = MessageType.RESPONSE };
             }
         }
+
+        public static TurnInQuestMessage TurnInFail() 
+        => new TurnInQuestMessage() { QuestId = null, MessageState = MessageState.ERROR, MessageType = MessageType.RESPONSE };
+
+        public static TurnInQuestMessage TurnInSuccess() => new TurnInQuestMessage() { QuestId = null, MessageState = MessageState.SUCCESS, MessageType = MessageType.RESPONSE };
+
+
         public static ActiveUserQuestsMessage ActiveQuestListResponse(List<QuestContainer> quests)
         {
             if (quests == null)

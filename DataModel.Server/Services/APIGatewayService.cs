@@ -70,6 +70,7 @@ namespace DataModel.Server.Services
                                             disposables.Add(spawnDisposable);
                                             disposables.Add(handleInventoryRequests);
                                             disposables.Add(handlePickupRequests);
+                                            disposables.Add(HandleQuestTurnIn(v, inboundtraffic));
                                         });
         }
 
@@ -110,6 +111,34 @@ namespace DataModel.Server.Services
                               responses.OnNext(GatewayResponses.ContentResponse(v.Item2, v.Item1));
                           });
         }
+
+        IDisposable HandleQuestTurnIn(IUser user, IObservable<IMessage> inboundtraffic)
+        {
+            return inboundtraffic.OfType<TurnInQuestMessage>()
+                                     .Where(v => v.MessageType == MessageType.REQUEST)
+                                     .Where(v => v.QuestId != null)
+                                     .SelectMany(v =>
+                                     {
+                                         return questService.TurnInQuest(user, v.QuestId).Catch<bool, Exception>(v2 =>
+                                         {
+                                             responses.OnNext(GatewayResponses.TurnInFail());
+                                             return Observable.Empty<bool>();
+                                         });
+                                     })
+                                     .Subscribe(v =>
+                                     {
+                                         if (v)
+                                         {
+                                             responses.OnNext(GatewayResponses.TurnInSuccess());
+                                         }
+                                         else
+                                         {
+                                             responses.OnNext(GatewayResponses.TurnInFail());
+                                         }
+                                     });
+        }
+
+
         IDisposable HandleMapContentPickup(IUser user, IObservable<IMessage> inboundtraffic)
         {
             return inboundtraffic.OfType<MapContentTransactionMessage>()
