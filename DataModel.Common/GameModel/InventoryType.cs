@@ -25,10 +25,9 @@ namespace DataModel.Common.GameModel
             return other != null && other.ContentType == ContentType && other.ResourceType == ResourceType;
         }
 
-        //TODO: Shift and wrap method? evaluate!
         public override int GetHashCode()
         {
-            return Tuple.Create((int)ContentType ^ (int)ResourceType).GetHashCode();
+            return Tuple.Create((int)ContentType,(int)ResourceType).GetHashCode();
         }
     }
 }

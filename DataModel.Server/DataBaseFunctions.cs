@@ -135,7 +135,7 @@ namespace DataModel.Server
                 col.EnsureIndex(v => v.QuestItemSpawnChancePerSecond);
             }
         }
-
+        
         public static bool RemoveContentAndAddToPlayer(byte[] playerId, byte[] mapcontentId)
         {
             //Check if the player can loot the item first with readonly db queries:
@@ -178,6 +178,44 @@ namespace DataModel.Server
             }
         }
 
+        public static bool TurnInQuest(byte[] userId, byte[] questId)
+        {
+            //Get write locks and loot it:
+            using (LiteDatabase questData = new LiteDatabase(QuestDatabaseWrite()),
+                              inventory = new LiteDatabase(InventoryDatabaseWrite()))
+            {
+                var userQuests = GetQuestsForUser(userId);
+                var enumerable = userQuests.Where(e => e.Quest.QuestId.SequenceEqual(questId));
+                var count = enumerable.Count();
+                if (count > 1)
+                    throw new Exception("Error in queststate! Multiple Quests for same ID");
+                if (count == 0)
+                    return false;
+                var quest = enumerable.First();
+
+                
+                var currentUserInventory = RequestInventory(userId, userId);
+                var itemKey = quest.Quest.GetQuestItemDictionaryKey();
+                var questItems = 0;
+                var userHasQuestItems = currentUserInventory.TryGetValue(itemKey, out questItems);
+                
+                if (!userHasQuestItems)
+                    return false;
+                if (questItems < quest.Quest.RequiredAmountForCompletion)
+                    return false;
+                if (!RemoveQuestForUser(userId, questId))
+                    return false;
+                var subtractDictionary = new Dictionary<InventoryType, int>()
+                { {itemKey, quest.Quest.RequiredAmountForCompletion} };
+                var removeResult = RemoveContentFromInventory(userId, userId, subtractDictionary);
+                if (!removeResult)
+                    return false;
+                var addReward = AddContentToPlayerInventory(userId, quest.Quest.QuestReward.ToResourceDictionary());
+
+                return addReward;
+            }
+        }
+
         public static bool AddQuestForUser(byte[] userId, QuestContainer container)
         {
             using (LiteDatabase dataBase = new LiteDatabase(QuestDatabaseWrite()))
@@ -187,6 +225,23 @@ namespace DataModel.Server
                 return true;
             }
 
+        }
+        public static bool RemoveQuestForUser(byte[] userId, byte[] questId)
+        {
+            using (LiteDatabase dataBase = new LiteDatabase(QuestDatabaseWrite()))
+            {
+                var col = dataBase.GetCollection<QuestContainer>("quests");
+
+                var userQuests = col.Find(v => v.OwnerId == userId);
+                var enumerable = userQuests.Where(e => e.Quest.QuestId.SequenceEqual(questId));
+                if (enumerable.Count() > 1)
+                    throw new Exception("Invalid state in database");
+                if (enumerable.Count() == 0)
+                    return false;
+
+                var questContainer = enumerable.First();
+                return col.Delete(questContainer.Id);
+            }
         }
 
         public static List<QuestContainer> GetQuestsForUser(byte[] userid)
@@ -471,6 +526,15 @@ namespace DataModel.Server
                 var user = enumerable.First();
                 user.CurrentlyOnline = state;
                 return col.Update(user);
+            }
+        }
+        public static int GetOnlineUsers()
+        {
+            using (var dataBase = new LiteDatabase(UserDatabaseRead()))
+            {
+                var col = dataBase.GetCollection<User>("users");
+                var enumerable = col.Find(v => v.CurrentlyOnline);
+                return enumerable.Count();
             }
         }
 

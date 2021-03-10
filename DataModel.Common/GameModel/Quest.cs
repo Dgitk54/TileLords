@@ -1,5 +1,6 @@
 ﻿using DataModel.Common.Messages;
 using System;
+using System.Collections.Generic;
 
 namespace DataModel.Common.GameModel
 {
@@ -14,6 +15,6 @@ namespace DataModel.Common.GameModel
         public string QuestTurninLocation { get; set; }
         public int AreaRadiusFromLocation { get; set; }
         public DateTime ExpiringDate { get; set; }
-        public QuestReward QuestReward { get; set; }
+        public List<QuestReward> QuestReward { get; set; }
     }
 }

@@ -48,6 +48,7 @@ namespace DataModel.Server.Services
                                                                                                               .Select(v2 => mapService.GetMapUpdate(v2.Code))
                                                                                                               .Switch()
                                                                                                               .Subscribe(v2 => responses.OnNext(v2));
+                                            //TODO: Equals and Hashcode for DistinctUntilChanged updates.
 
 
                                             var spawnDisposable = resourceSpawnService.AddMovableResourceSpawnArea(v.UserId, LatestClientLocation(inboundtraffic));

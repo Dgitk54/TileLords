@@ -46,7 +46,13 @@ namespace DataModel.Server
             return content.Where(v => v.Type == ContentType.RESOURCE).Count() < 5;
         }
 
+        public static InventoryType GetQuestItemDictionaryKey(this Quest quest)
+            => new InventoryType() { ContentType = quest.QuestLevel, ResourceType = quest.TypeToPickUp };
 
+        public static Dictionary<InventoryType, int> ToResourceDictionary(this List<QuestReward> reward)
+        {
+           return reward.GroupBy(x => new InventoryType() { ContentType = x.ContentType, ResourceType = x.ResourceType }, x => x.Amount).ToDictionary(x=> x.Key, x=> x.Sum());
+        }
 
         public static Dictionary<InventoryType, int> ToResourceDictionary(this MapContent content)
         {
@@ -121,6 +127,11 @@ namespace DataModel.Server
             return dictionary.ToList().ConvertAll(v => new DatabaseInventoryStorage() { ContentType = v.Key.ContentType, ResourceType = v.Key.ResourceType, amount = v.Value }).ToList();
         }
 
+        /// <summary>
+        /// ASSERTS NO DUPLICATE KEYS IN LIST! (same content & resourcetype). Function is only used to convert dictionary to a database compatible custom type.
+        /// </summary>
+        /// <param name="list">List without duplicate Keys</param>
+        /// <returns></returns>
         public static Dictionary<InventoryType, int> ToInventoryDictionary(this List<DatabaseInventoryStorage> list)
         {
             return list.ToDictionary(v => new InventoryType() { ContentType = v.ContentType, ResourceType = v.ResourceType }, v => v.amount);
@@ -193,10 +204,11 @@ namespace DataModel.Server
                 RequiredAmountForCompletion = QUESTLEVEL1_REQUIREDAMOUNT_MAX,
                 TypeToPickUp = resourceTypeForQuest,
                 QuestId = ObjectId.NewObjectId().ToByteArray(),
-                QuestReward = new QuestReward() { Qpts = 10}
+                QuestReward = new List<QuestReward>() { new QuestReward() { Amount = 10, ContentType = ContentType.QUESTREWARDPOINTS, ResourceType = ResourceType.NONE } }
             };
             return quest;
         }
+
 
         public static MapContent AsMapContent(this IUser user)
         {
