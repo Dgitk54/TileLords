@@ -11,7 +11,7 @@ namespace DataModel.Common.Tests
         [Test]
         public void DictionarySubtractionFindsKeys()
         {
-            var key = new InventoryType() { ContentType = Messages.ContentType.RESOURCE, ResourceType = Messages.ResourceType.AMETHYST };
+            var key = new InventoryType() { ContentType = ContentType.RESOURCE, ResourceType = ResourceType.AMETHYST };
 
             Dictionary<InventoryType, int> one = new Dictionary<InventoryType, int>()
             {

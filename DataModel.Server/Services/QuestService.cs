@@ -9,6 +9,7 @@ namespace DataModel.Server.Services
 {
     public class QuestService
     {
+        //TODO: QuestTurnin
 
 
         public IObservable<QuestContainer> GenerateNewQuest(IUser player, byte[] questTarget, string startLocation)

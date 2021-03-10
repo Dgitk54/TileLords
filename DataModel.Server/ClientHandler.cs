@@ -18,7 +18,7 @@ namespace DataModel.Server
     {
         static readonly IInternalLogger Logger = InternalLoggerFactory.GetInstance<ClientHandler>();
 
-        static bool logInConsole = false;
+        static bool logInConsole = true;
         readonly Subject<IMessage> clientInboundTraffic = new Subject<IMessage>();
         readonly ISubject<IMessage> synchronizedInboundTraffic;
         readonly UserAccountService userAccountService;
@@ -51,7 +51,6 @@ namespace DataModel.Server
 
         public override void ChannelRead(IChannelHandlerContext context, object message)
         {
-            ;
             var byteBuffer = message as IByteBuffer;
             if (byteBuffer != null)
             {

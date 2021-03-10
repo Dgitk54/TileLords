@@ -76,7 +76,7 @@ namespace DataModel.Server.Services
         }
         public IDisposable LogOffUseronDispose(IUser user)
         {
-            return Disposable.Create(() => DataBaseFunctions.UpdateUserOnlineState(user.UserId, false));
+            return Disposable.Create(() => {DataBaseFunctions.UpdateUserOnlineState(user.UserId, false); });
         }
         
         public IObservable<bool> LogoutUser(string name)

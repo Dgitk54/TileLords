@@ -1,4 +1,5 @@
 ﻿using DataModel.Common;
+using DataModel.Common.GameModel;
 using DataModel.Common.Messages;
 using DataModel.Server.Model;
 using DataModel.Server.Services;

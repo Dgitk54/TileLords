@@ -1,4 +1,5 @@
-﻿using DataModel.Common.Messages;
+﻿using DataModel.Common.GameModel;
+using DataModel.Common.Messages;
 using System;
 using System.Collections.Generic;
 using System.Linq;

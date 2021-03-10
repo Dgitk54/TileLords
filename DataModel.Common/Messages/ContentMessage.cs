@@ -1,4 +1,6 @@
-﻿namespace DataModel.Common.Messages
+﻿using DataModel.Common.GameModel;
+
+namespace DataModel.Common.Messages
 {
     public class ContentMessage : IMessage
     {

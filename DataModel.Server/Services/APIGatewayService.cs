@@ -77,7 +77,6 @@ namespace DataModel.Server.Services
             disposables.ForEach(v => v.Dispose());
         }
 
-        //TODO: Check for multiple logins via accumulator function on inboundtraffic
         IObservable<IUser> LoggedInUser(IObservable<IMessage> inboundtraffic)
         {
             return inboundtraffic.OfType<AccountMessage>()

@@ -1,4 +1,5 @@
 using DataModel.Client;
+using DataModel.Common.GameModel;
 using DataModel.Common.Messages;
 using DataModel.Server;
 using NUnit.Framework;
@@ -52,7 +53,7 @@ namespace ClientIntegration
             var gpsMsg = new UserGpsMessage() { Lat = 49.000000, Lon = 50.00000 };
             var gspMsg2 = new UserGpsMessage() { Lat = 49.000050, Lon = 50.0000050 };
 
-            var ctMsg = new ContentMessage() { Id = new byte[] { 5, 12, 3 }, Location = "dbg", Name = "dbgname", ResourceType = DataModel.Common.Messages.ResourceType.APPLE, Type = ContentType.RESOURCE };
+            var ctMsg = new ContentMessage() { Id = new byte[] { 5, 12, 3 }, Location = "dbg", Name = "dbgname", ResourceType = ResourceType.APPLE, Type = ContentType.RESOURCE };
 
             instance.SendMessage(regMsg);
             Thread.Sleep(300);
