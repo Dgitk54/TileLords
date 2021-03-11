@@ -118,7 +118,14 @@ namespace DataModel.Client
         {
             if (hasBeenRunningFlag)
                 throw new Exception("Can not start a ClientInstanceManager once it has been shut down!");
-            CreateNewInstanceAndSubscribe();
+            try
+            {
+                CreateNewInstanceAndSubscribe();
+            } 
+            catch(Exception e)
+            {
+                Console.WriteLine("Could not connect! Exception:" + e.Message);
+            }
             hasBeenRunningFlag = true;
         }
 
