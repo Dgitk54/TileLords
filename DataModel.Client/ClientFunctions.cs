@@ -71,8 +71,10 @@ namespace DataModel.Client
             return received.Result;
         }
 
-        public static void TryRegisterAndLogIn(ClientInstanceManager instance, string name, string password)
+        public static void TryRegisterAndLogInInfiniteAttempts(ClientInstanceManager instance, string name, string password)
         {
+            
+            
             var tryRegister = GetsEvent<UserActionMessage, AccountMessage>(instance, new AccountMessage() { Name = name, Password = password, Context = MessageContext.REGISTER }, 5);
             tryRegister.Wait();
             var registerResponse = tryRegister.Result;
@@ -82,10 +84,23 @@ namespace DataModel.Client
             }
             //Log in after register:
             Thread.Sleep(300);
-            var tryLogin = GetsEvent<UserActionMessage, AccountMessage>(instance, new AccountMessage() { Name = name, Password = password, Context = MessageContext.LOGIN }, 5);
-            tryLogin.Wait();
-            var loginResponse = tryLogin.Result;
-            tryLogin.Dispose();
+            UserActionMessage loginResponse = null;
+            while(loginResponse == null)
+            {
+                try
+                {
+                    var tryLogin = GetsEvent<UserActionMessage, AccountMessage>(instance, new AccountMessage() { Name = name, Password = password, Context = MessageContext.LOGIN }, 5);
+                    tryLogin.Wait();
+                    loginResponse = tryLogin.Result;
+                    tryLogin.Dispose();
+                } catch(Exception e)
+                {
+                    Console.WriteLine("Log in timed out, retrying!");
+                }
+                
+            }
+            
+            
             if (!(loginResponse.MessageState == MessageState.SUCCESS && loginResponse.MessageContext == MessageContext.LOGIN))
             {
                 throw new Exception("Error logging in after registering");
