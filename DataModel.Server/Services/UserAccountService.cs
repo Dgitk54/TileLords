@@ -3,9 +3,11 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Reactive.Concurrency;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
+using System.Security.Cryptography;
 using System.Text;
 
 namespace DataModel.Server.Services
@@ -30,6 +32,9 @@ namespace DataModel.Server.Services
         {
             return Observable.Create<IUser>(v =>
             {
+                Stopwatch stopwatch = new Stopwatch();
+                stopwatch.Start();
+
                 var user = userNameLookup(name);
                 if (user == null)
                 {
@@ -46,7 +51,11 @@ namespace DataModel.Server.Services
                 var pass = Encoding.UTF8.GetBytes(password);
                 if (passwordMatcher(pass, user.SaltedHash, user.Salt))
                 {
-                    DataBaseFunctions.UpdateUserOnlineState(user.UserId.ToByteArray(), true);
+                    //DataBaseFunctions.UpdateUserOnlineState(user.UserId.ToByteArray(), true);
+
+                    stopwatch.Stop();
+                    Console.WriteLine("LOG IN: Elapsed Time is {0} ms" + name, stopwatch.ElapsedMilliseconds);
+
                     v.OnNext(user);
                     v.OnCompleted();
                     return Disposable.Empty;
@@ -64,11 +73,20 @@ namespace DataModel.Server.Services
         {
             return Observable.Create<bool>(v =>
             {
+                Stopwatch stopwatch = new Stopwatch();
+                stopwatch.Start();
+
                 var user = userNameLookup(name);
                 if (user != null)
                     v.OnError(new Exception("Username taken"));
 
-                var result = DataBaseFunctions.CreateAccount(name, password);
+                byte[] salt;
+                new RNGCryptoServiceProvider().GetBytes(salt = new byte[16]);
+
+                var hashedpass = ServerFunctions.Hash(password, salt);
+                var result = DataBaseFunctions.CreateAccount(name, password, salt, hashedpass);
+                stopwatch.Stop();
+                Console.WriteLine("REGISTER IN: Elapsed Time is {0} ms" + name, stopwatch.ElapsedMilliseconds);
                 v.OnNext(result);
                 v.OnCompleted();
                 return Disposable.Empty;

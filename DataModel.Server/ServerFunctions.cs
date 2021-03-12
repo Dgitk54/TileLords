@@ -232,13 +232,13 @@ namespace DataModel.Server
 
         public static byte[] Hash(byte[] value, byte[] salt)
         {
-            var pbkdf2 = new Rfc2898DeriveBytes(value, salt, 10000);
+            var pbkdf2 = new Rfc2898DeriveBytes(value, salt, 1000);
             return pbkdf2.GetBytes(20);
         }
 
         public static bool PasswordMatches(byte[] password, byte[] originalPassword, byte[] originalSalt)
         {
-            var pbkdf2 = new Rfc2898DeriveBytes(password, originalSalt, 10000);
+            var pbkdf2 = new Rfc2898DeriveBytes(password, originalSalt, 1000);
             var result = pbkdf2.GetBytes(20);
             return result.SequenceEqual(originalPassword);
         }

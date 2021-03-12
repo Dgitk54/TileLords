@@ -2,13 +2,16 @@
 using DataModel.Common.GameModel;
 using DataModel.Common.Messages;
 using DataModel.Server.Model;
+using DotNetty.Buffers;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Reactive.Concurrency;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
+using System.Text;
 
 namespace DataModel.Server.Services
 {
@@ -33,8 +36,12 @@ namespace DataModel.Server.Services
             this.questService = questService;
         }
         public IObservable<IMessage> GatewayResponse => responses.AsObservable();
-        public void AttachGateway(IObservable<IMessage> inboundtraffic)
+        public void AttachGateway(IObservable<IByteBuffer> inbound)
         {
+            var inboundtraffic = inbound.Select(v => v.ToString(Encoding.UTF8))
+                                        .Select(v => v.FromString());
+                                        
+
             disposables.Add(HandleRegister(inboundtraffic));
 
             LoggedInUser(inboundtraffic).Where(v => v != null)
@@ -70,7 +77,7 @@ namespace DataModel.Server.Services
                                             disposables.Add(spawnDisposable);
                                             disposables.Add(handleInventoryRequests);
                                             disposables.Add(handlePickupRequests);
-                                            disposables.Add(HandleQuestTurnIn(v, inboundtraffic));
+                                            disposables.Add(HandleQuestTurnIn(v, inboundtraffic));    
                                         });
         }
 
@@ -205,18 +212,19 @@ namespace DataModel.Server.Services
         {
             return inboundtraffic.OfType<AccountMessage>()
                                 .Where(v => v.Context == MessageContext.REGISTER)
-                                .Select(v => userService.RegisterUser(v.Name, v.Password))
-                                .Switch()
-                                .Catch<bool, Exception>(tx =>
+                                .SelectMany(v=>
                                 {
-                                    responses.OnNext(GatewayResponses.registerFail);
-                                    return Observable.Return(false);
+                                    return userService.RegisterUser(v.Name, v.Password).Catch<bool, Exception>(tx => Observable.Return(false));
                                 })
                                 .Subscribe(v =>
                                 {
                                     if (v)
                                     {
                                         responses.OnNext(GatewayResponses.registerSuccess);
+                                    }
+                                    else
+                                    {
+                                        responses.OnNext(GatewayResponses.registerFail);
                                     }
                                 });
         }

@@ -7,7 +7,9 @@ using DotNetty.Common.Internal.Logging;
 using DotNetty.Transport.Channels;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
+using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Text;
@@ -18,9 +20,9 @@ namespace DataModel.Server
     {
         static readonly IInternalLogger Logger = InternalLoggerFactory.GetInstance<ClientHandler>();
 
-        static bool logInConsole = true;
-        readonly Subject<IMessage> clientInboundTraffic = new Subject<IMessage>();
-        readonly ISubject<IMessage> synchronizedInboundTraffic;
+        static bool logInConsole = false;
+        readonly Subject<IByteBuffer> clientInboundTraffic = new Subject<IByteBuffer>();
+        readonly ISubject<IByteBuffer> synchronizedInboundTraffic;
         readonly UserAccountService userAccountService;
         readonly MapContentService mapContentService;
         readonly ResourceSpawnService resourceSpawnService;
@@ -28,6 +30,7 @@ namespace DataModel.Server
         IDisposable responseDisposable;
         public ClientHandler()
         {
+
             userAccountService = new UserAccountService(DataBaseFunctions.FindUserInDatabase, ServerFunctions.PasswordMatches);
             mapContentService = new MapContentService(DataBaseFunctions.AreaContentAsMessageRequest, DataBaseFunctions.UpdateOrDeleteContent, DataBaseFunctions.AreaContentAsListRequest);
             resourceSpawnService = new ResourceSpawnService(mapContentService, DataBaseFunctions.UpdateOrDeleteContent, new List<Func<List<MapContent>, bool>>() { ServerFunctions.Only5ResourcesInArea });
@@ -35,6 +38,7 @@ namespace DataModel.Server
             var questService = new QuestService();
             apiGatewayService = new APIGatewayService(userAccountService, mapContentService, resourceSpawnService, InventoryService, questService);
             synchronizedInboundTraffic = Subject.Synchronize(clientInboundTraffic);
+
         }
 
         public override void ChannelActive(IChannelHandlerContext ctx)
@@ -56,8 +60,9 @@ namespace DataModel.Server
             {
                 if (logInConsole)
                     Console.WriteLine("Received" + byteBuffer.ToString(Encoding.UTF8));
-                var msgpack = byteBuffer.ToString(Encoding.UTF8).FromString();
-                synchronizedInboundTraffic.OnNext(msgpack);
+                //transformed = var msgpack = byteBuffer.ToString(Encoding.UTF8).FromString();
+                //raw 
+                synchronizedInboundTraffic.OnNext(byteBuffer);
             }
         }
 
@@ -70,7 +75,7 @@ namespace DataModel.Server
                 Console.WriteLine("Cleaned up ClientHandler");
         }
 
-        public override bool IsSharable => true;
+        public override bool IsSharable => false;
     }
 
 

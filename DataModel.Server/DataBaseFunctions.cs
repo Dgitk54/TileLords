@@ -549,7 +549,7 @@ namespace DataModel.Server
         /// <param name="name"></param>
         /// <param name="password"></param>
         /// <returns>false if username is already taken</returns>
-        public static bool CreateAccount(string name, string password)
+        public static bool CreateAccount(string name, string password, byte[] salt, byte[] hashedpass)
         {
 
             using (var dataBase = new LiteDatabase(UserDatabaseWrite()))
@@ -557,12 +557,6 @@ namespace DataModel.Server
                 var col = dataBase.GetCollection<User>("users");
                 if (NameTaken(name, col))
                     return false;
-
-                byte[] salt;
-                new RNGCryptoServiceProvider().GetBytes(salt = new byte[16]);
-
-                var hashedpass = ServerFunctions.Hash(password, salt);
-
                 var userForDb = new User
                 {
                     AccountCreated = DateTime.Now,
@@ -572,7 +566,6 @@ namespace DataModel.Server
                     CurrentlyOnline = false,
                    
                 };
-
                 col.Insert(userForDb);
                 return true;
             }
