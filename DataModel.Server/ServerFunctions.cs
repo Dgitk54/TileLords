@@ -29,7 +29,7 @@ namespace DataModel.Server
         public static readonly int QUESTLEVEL1_MINDISTANCEFROMREQUESTSPAWN_INMINITILES = 40;
         public static readonly int QUESTLEVEL1_MAXDISTANCEFROMREQUESTSPAWN_INMINITILES = 60;
         public static readonly int QUESTLEVEL1_SPAWNAREA_INMINITILES = 10;
-        public static readonly int QUESTLEVEL1_REQUIREDAMOUNT_MAX = 15;
+        public static readonly int QUESTLEVEL1_REQUIREDAMOUNT_MAX = 2;
 
         //Magic numbers for spawnchance calculation:
         public static readonly double ONE_PER_MINUTEAVARAGE = 1.67;

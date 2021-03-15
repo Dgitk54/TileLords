@@ -161,8 +161,13 @@ namespace DataModel.Common
 
         public static String PlusCodeToTileName(PlusCode code)
         {
+            string plusCode = code.Code;
+            if (plusCode.Length > 8)
+            {
+               plusCode = plusCode.Substring(0, 8);
+            }
             var md5Hasher = MD5.Create();
-            var hashed = md5Hasher.ComputeHash(Encoding.UTF8.GetBytes(code.Code));
+            var hashed = md5Hasher.ComputeHash(Encoding.UTF8.GetBytes(plusCode));
             var asInt = BitConverter.ToInt32(hashed, 0);
             var rnd = new Random(asInt);
             string newName = townNames[rnd.Next(0, townNames.Count)] + townNames[rnd.Next(0, townNames.Count)].ToLower();
