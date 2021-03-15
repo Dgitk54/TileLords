@@ -58,7 +58,7 @@ namespace DataModel.Server
             return new ConnectionString(UserDatabaseName)
             {
                 Connection = ConnectionType.Shared,
-                ReadOnly = true
+                ReadOnly = true 
             };
         }
 
@@ -549,24 +549,14 @@ namespace DataModel.Server
         /// <param name="name"></param>
         /// <param name="password"></param>
         /// <returns>false if username is already taken</returns>
-        public static bool CreateAccount(string name, string password, byte[] salt, byte[] hashedpass)
+        public static bool CreateAccount(User user)
         {
-
             using (var dataBase = new LiteDatabase(UserDatabaseWrite()))
             {
                 var col = dataBase.GetCollection<User>("users");
-                if (NameTaken(name, col))
+                if (NameTaken(user.UserName, col))
                     return false;
-                var userForDb = new User
-                {
-                    AccountCreated = DateTime.Now,
-                    Salt = salt,
-                    SaltedHash = hashedpass,
-                    UserName = name,
-                    CurrentlyOnline = false,
-                   
-                };
-                col.Insert(userForDb);
+                col.Insert(user);
                 return true;
             }
         }
@@ -581,9 +571,8 @@ namespace DataModel.Server
             using (var dataBase = new LiteDatabase(UserDatabaseRead()))
             {
                 var col = dataBase.GetCollection<User>("users");
-                if (col.Find(v => v.UserName == name).Any())
-                    return col.Find(v => v.UserName == name).First();
-                return null;
+                var enumerable = col.Find(v => v.UserName == name);
+                return enumerable.FirstOrDefault();
             }
         }
         

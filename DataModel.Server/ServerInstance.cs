@@ -34,10 +34,9 @@ namespace DataModel.Server
             }
 
 
-            bossGroup = new MultithreadEventLoopGroup(1); //  accepts an incoming connection
-            workerGroup = new MultithreadEventLoopGroup(3); // handles the traffic of the accepted connection once the boss accepts the connection and registers the accepted connection to the worker
-
-            //   X509Certificate2 tlsCertificate = new X509Certificate2("tilelordss.com.pfx", "mach_irgendwas_random_und_schreibs_auf_XD");
+            bossGroup = new MultithreadEventLoopGroup(2); //  accepts an incoming connection
+            workerGroup = new MultithreadEventLoopGroup(2); // handles the traffic of the accepted connection once the boss accepts the connection and registers the accepted connection to the worker
+            
 
             bootstrap = new ServerBootstrap();
 
@@ -52,7 +51,6 @@ namespace DataModel.Server
                     //  pipeline.AddLast(TlsHandler.Server(tlsCertificate));
                     pipeline.AddLast("framing-enc", new LengthFieldPrepender(2));
                     pipeline.AddLast("framing-dec", new LengthFieldBasedFrameDecoder(short.MaxValue, 0, 2, 0, 2));
-                    //pipeline.AddLast(new DotNettyByteToMessageDecoder());
                     pipeline.AddLast(new ClientHandler());
                 }));
 
