@@ -104,7 +104,7 @@ namespace DataModel.Server
             using (var dataBase = new LiteDatabase(MapDataWrite()))
             {
                 var col = dataBase.GetCollection<MapContent>("mapcontent");
-                col.EnsureIndex(v => v.Id);
+                col.EnsureIndex(v => v.MapId);
                 col.EnsureIndex(v => v.Location);
                 col.EnsureIndex(v => v.Name);
                 col.EnsureIndex(v => v.ResourceType);
@@ -183,7 +183,7 @@ namespace DataModel.Server
             using (LiteDatabase dataBase = new LiteDatabase(MapDataRead()))
             {
                 var col = dataBase.GetCollection<MapContent>("mapcontent");
-                var enumerable = col.Find(v => v.Id == mapcontentid);
+                var enumerable = col.Find(v => v.MapId == mapcontentid);
                 if (enumerable.Count() > 1)
                     throw new Exception("Multiple objects with same ID in database");
                 if (enumerable.Count() == 0)
@@ -305,14 +305,14 @@ namespace DataModel.Server
             using (var dataBase = new LiteDatabase(MapDataWrite()))
             {
                 var col = dataBase.GetCollection<MapContent>("mapcontent");
-                var enumerable = col.Find(v => v.Id == contentId);
+                var enumerable = col.Find(v => v.MapId == contentId);
 
                 if (enumerable.Count() > 1)
                     throw new Exception("Multiple objects with same ID in database");
                 if (enumerable.Count() == 0)
                     return null;
                 var ret = enumerable.First();
-                var deleted = col.DeleteMany(v => v.Id == contentId);
+                var deleted = col.DeleteMany(v => v.MapId == contentId);
                 Debug.Assert(deleted == 1);
                 return ret;
             }
@@ -459,7 +459,7 @@ namespace DataModel.Server
             using (var dataBase = new LiteDatabase(MapDataWrite()))
             {
                 var col = dataBase.GetCollection<MapContent>("mapcontent");
-                var enumerable = col.Find(v => v.Id == content.Id);
+                var enumerable = col.Find(v => v.MapId == content.MapId);
                 if (enumerable.Count() > 1)
                     throw new Exception("Multiple objects with same ID in database");
 
@@ -482,7 +482,7 @@ namespace DataModel.Server
                 //Delte value out of database, if it is still present.
                 if (enumerable.Count() != 0 && location == null)
                 {
-                    var deletedAmount = col.DeleteMany(v => v.Id == first.Id);
+                    var deletedAmount = col.DeleteMany(v => v.MapId == first.MapId);
                     return;
                 }
 
@@ -584,7 +584,7 @@ namespace DataModel.Server
         /// <returns>true if action was successful.</returns>
         public static bool UpdateUserOnlineState(byte[] id, bool state)
         {
-            var objId = new MongoDB.Bson.ObjectId(id);
+            var objId = new LiteDB.ObjectId(id);
             using (var dataBase = new LiteDatabase(UserDatabaseWrite()))
             {
                 var col = dataBase.GetCollection<User>("users");

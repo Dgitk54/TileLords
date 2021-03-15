@@ -6,6 +6,7 @@ using DataModel.Server.Services;
 using LiteDB;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Reactive;
 using System.Reactive.Linq;
@@ -64,12 +65,12 @@ namespace DataModel.Server
             Array values = Enum.GetValues(typeof(ResourceType));
             Random random = new Random();
             ResourceType randomType = (ResourceType)values.GetValue(random.Next(1, values.Length));
-            var id = MongoDB.Bson.MongoDB.Bson.ObjectId.GenerateNewId().ToByteArray();
+            var id = MongoDB.Bson.ObjectId.GenerateNewId().ToByteArray();
             return new Resource() { Id = id, Location = null, Name = randomType.ToString(), ResourceType = randomType, Type = ContentType.RESOURCE };
         }
         public static Resource ExtractQuestResource(this QuestContainer quest, string location)
         {
-            return new Resource() { Id = MongoDB.Bson.ObjectId.NewMongoDB.Bson.ObjectId().ToByteArray(), Location = location, Name = quest.Quest.TypeToPickUp.ToString(), ResourceType = quest.Quest.TypeToPickUp, Type = quest.Quest.QuestLevel };
+            return new Resource() { Id = MongoDB.Bson.ObjectId.GenerateNewId().ToByteArray(), Location = location, Name = quest.Quest.TypeToPickUp.ToString(), ResourceType = quest.Quest.TypeToPickUp, Type = quest.Quest.QuestLevel };
         }
 
         public static bool PlayerCanLootObject(List<QuestContainer> currentPlayerQuests, MapContent contentToCheck)
@@ -203,7 +204,7 @@ namespace DataModel.Server
                 QuestTurninLocation = null,
                 RequiredAmountForCompletion = QUESTLEVEL1_REQUIREDAMOUNT_MAX,
                 TypeToPickUp = resourceTypeForQuest,
-                QuestId = MongoDB.Bson.ObjectId.NewMongoDB.Bson.ObjectId().ToByteArray(),
+                QuestId = MongoDB.Bson.ObjectId.GenerateNewId().ToByteArray(),
                 QuestReward = new List<QuestReward>() { new QuestReward() { Amount = 10, ContentType = ContentType.QUESTREWARDPOINTS, ResourceType = ResourceType.NONE } }
             };
             return quest;
@@ -212,17 +213,17 @@ namespace DataModel.Server
 
         public static MapContent AsMapContent(this IUser user)
         {
-            return new MapContent() { Id = user.UserId, Name = user.UserName, ResourceType = ResourceType.NONE, Type = ContentType.PLAYER, Location = null, MapContentId = null, CanBeLootedByPlayer = false };
+            return new MapContent() { MapId = user.UserId, Name = user.UserName, ResourceType = ResourceType.NONE, Type = ContentType.PLAYER, Location = null, CanBeLootedByPlayer = false };
         }
 
         public static MapContent AsMapContent(this Resource resource)
         {
-            return new MapContent() { Id = resource.Id, Location = resource.Location, Name = resource.Name, ResourceType = resource.ResourceType, Type = resource.Type, CanBeLootedByPlayer = true };
+            return new MapContent() { MapId = resource.Id, Location = resource.Location, Name = resource.Name, ResourceType = resource.ResourceType, Type = resource.Type, CanBeLootedByPlayer = true };
         }
 
         public static ContentMessage AsMessage(this MapContent content)
         {
-            return new ContentMessage() { Id = content.Id, Location = content.Location, Name = content.Name, ResourceType = content.ResourceType, Type = content.Type };
+            return new ContentMessage() { Id = content.MapId, Location = content.Location, Name = content.Name, ResourceType = content.ResourceType, Type = content.Type };
         }
 
         public static byte[] Hash(string value, byte[] salt)

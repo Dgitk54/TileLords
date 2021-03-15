@@ -6,10 +6,13 @@ using System.Threading.Tasks;
 using System.Linq;
 using MongoDB.Driver.Linq;
 using NUnit.Framework;
+using System.Diagnostics;
+using MongoDB.Bson.Serialization.Attributes;
 
 namespace DataModel.Server.Tests
 {
     [TestFixture]
+  
     public class MongoDBTests
     {
         [SetUp]
@@ -36,11 +39,14 @@ namespace DataModel.Server.Tests
             };
 
             MapContent randomContent = ServerFunctions.GetRandomNonQuestResource().AsMapContent();
+  
             var startLocation = new PlusCode("8FX9XW2F+9X", 10);
             randomContent.Location = startLocation.Code;
 
             DatabaseMongoDBFunctions.UpdateOrDeleteContent(randomContent, startLocation.Code).Wait();
-            var result =  DatabaseMongoDBFunctions.RemoveContentAndAddToPlayer(user1.UserId, randomContent.Id).Result;
+            var result =  DatabaseMongoDBFunctions.RemoveContentAndAddToPlayer(user1.UserId, randomContent.MapId).Result;
+
+            Debug.WriteLine("4");
 
             Assert.IsTrue(result);
             var userInventory =  DatabaseMongoDBFunctions.RequestInventory(user1.UserId, user1.UserId).Result;

@@ -39,7 +39,7 @@ namespace DataModel.Server.Tests
             randomContent.Location = startLocation.Code;
 
             DataBaseFunctions.UpdateOrDeleteContent(randomContent, startLocation.Code);
-            var result = DataBaseFunctions.RemoveContentAndAddToPlayer(user1.UserId, randomContent.Id);
+            var result = DataBaseFunctions.RemoveContentAndAddToPlayer(user1.UserId, randomContent.MapId);
 
             Assert.IsTrue(result);
             var userInventory = DataBaseFunctions.RequestInventory(user1.UserId, user1.UserId);
