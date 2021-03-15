@@ -1,5 +1,5 @@
 ﻿using DataModel.Server.Model;
-using LiteDB;
+using MongoDB.Bson;
 using System;
 using System.Collections.Generic;
 using System.Reactive.Linq;
@@ -14,7 +14,7 @@ namespace DataModel.Server.Services
     {
         public static IObservable<IUser> LoginUser(string name, string password)
         {
-            return Observable.Return(new User() { UserId = ObjectId.NewObjectId() });
+            return Observable.Return(new User() { UserId = MongoDB.Bson.ObjectId.GenerateNewId() });
         }
 
         public static IObservable<bool> RegisterUser(string name, string password)

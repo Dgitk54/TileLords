@@ -42,13 +42,13 @@ namespace DataModel.Server.Tests
 
             IUser user1 = new User()
             {
-                UserId = ObjectId.NewObjectId(),
+                UserIdLite = ObjectId.NewObjectId(),
                 UserName = "TestUser",
 
             };
             IUser user2 = new User()
             {
-                UserId = ObjectId.NewObjectId(),
+                UserIdLite = ObjectId.NewObjectId(),
                 UserName = "TestUser2",
 
             };

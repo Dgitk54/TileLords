@@ -1,12 +1,13 @@
 ﻿using DataModel.Common.GameModel;
-using LiteDB;
+using MongoDB.Bson;
 using System;
 
 namespace DataModel.Server.Model
 {
     public class QuestContainer
     {
-        public ObjectId Id { get; set; }
+        public MongoDB.Bson.ObjectId Id { get; set; }
+        public LiteDB.MongoDB.Bson.ObjectId IdLite { get; set; }
         public byte[] OwnerId { get; set; }  //Player having the Quest
         public DateTime QuestCreatedOn { get; set; }
         public bool QuestHasExpired { get; set; }

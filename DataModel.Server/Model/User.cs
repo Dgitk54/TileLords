@@ -1,4 +1,5 @@
-﻿using LiteDB;
+﻿
+using MongoDB.Bson;
 using System;
 
 namespace DataModel.Server.Model
@@ -6,7 +7,10 @@ namespace DataModel.Server.Model
     public class User : IUser
     {
         byte[] IUser.UserId => UserId.ToByteArray();
-        public ObjectId UserId { get; set; }
+
+        public MongoDB.Bson.ObjectId UserId { get; set; }
+
+        public LiteDB.MongoDB.Bson.ObjectId UserIdLite { get; set; }
 
         public string UserName { get; set; }
 

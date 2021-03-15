@@ -6,7 +6,7 @@ namespace DataModel.Server.Model
 {
     public class MapContent
     {
-        public ObjectId MapContentId { get; set; }
+        public MongoDB.Bson.ObjectId MapContentId { get; set; }
 
         public ContentType Type { get; set; }
 

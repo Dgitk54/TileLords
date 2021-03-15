@@ -27,7 +27,9 @@ namespace DataModel.Server.Tests
         {
             IUser user1 = new User()
             {
-                UserId = ObjectId.NewObjectId(),
+                UserIdLite = ObjectId.NewObjectId(),
+              
+
                 UserName = "TestUser",
 
             };
@@ -52,7 +54,7 @@ namespace DataModel.Server.Tests
         [Test]
         public void CanCreateUserLoginAndLogOut()
         {
-            var user = DataBaseFunctions.CreateAccount("test", "test");
+           // var user = DataBaseFunctions.CreateAccount("test", "test");
             var findUser = DataBaseFunctions.FindUserInDatabase("test");
             Assert.IsTrue(findUser != null);
             var logOn = DataBaseFunctions.UpdateUserOnlineState(findUser.UserId.ToByteArray(), true);

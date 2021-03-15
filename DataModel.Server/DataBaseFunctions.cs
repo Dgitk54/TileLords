@@ -274,7 +274,7 @@ namespace DataModel.Server
                     return false;
 
                 var questContainer = enumerable.First();
-                return col.Delete(questContainer.Id);
+                return col.Delete(questContainer.IdLite);
             }
         }
 
@@ -584,11 +584,11 @@ namespace DataModel.Server
         /// <returns>true if action was successful.</returns>
         public static bool UpdateUserOnlineState(byte[] id, bool state)
         {
-            var objId = new ObjectId(id);
+            var objId = new MongoDB.Bson.ObjectId(id);
             using (var dataBase = new LiteDatabase(UserDatabaseWrite()))
             {
                 var col = dataBase.GetCollection<User>("users");
-                var enumerable = col.Find(v => v.UserId == objId);
+                var enumerable = col.Find(v => v.UserIdLite == objId);
                 if (enumerable.Count() > 1)
                     throw new Exception("More than one user with same name");
                 if (enumerable.Count() == 0)

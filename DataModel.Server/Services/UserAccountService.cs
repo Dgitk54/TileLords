@@ -33,16 +33,16 @@ namespace DataModel.Server.Services
         {
             
             
-            return Observable.Start(() => userNameLookup(name))
+           /* return Observable.Start(() => userNameLookup(name))
                                 .Where(v => !v.CurrentlyOnline)
                                 .Select(v =>
                                 {
                                     var debug = Observable.Start(() => passwordMatcher(Encoding.UTF8.GetBytes(password), v.SaltedHash, v.Salt)).Where(e => e);
                                     return (debug, v);
-                                }).Select(v => v.v);
+                                }).Select(v => v.v); */
 
             
-            /*    
+               
             return Observable.Create<IUser>(v =>
             {
                 Stopwatch stopwatch = new Stopwatch();
@@ -80,7 +80,7 @@ namespace DataModel.Server.Services
                 }
 
             });
-            */
+            
             
         }
 
@@ -88,7 +88,7 @@ namespace DataModel.Server.Services
         {
 
             
-               return Observable.Defer(() => Observable.Start(() =>
+             /*  return Observable.Defer(() => Observable.Start(() =>
                       {
                           byte[] salt;
                           new RNGCryptoServiceProvider().GetBytes(salt = new byte[16]);
@@ -109,10 +109,10 @@ namespace DataModel.Server.Services
                       })
                       .Switch()
                       .Select(v => { return Observable.Defer(() => Observable.Start(() => DataBaseFunctions.CreateAccount(v))); })
-                      .Switch();
+                      .Switch(); */
             
 
-            /*
+            
             return Observable.Create<bool>(v =>
             {
                 Stopwatch stopwatch = new Stopwatch();
@@ -135,7 +135,7 @@ namespace DataModel.Server.Services
                 v.OnCompleted();
                 return Disposable.Empty;
             }); 
-            */
+            
         }
         public IDisposable LogOffUseronDispose(IUser user)
         {

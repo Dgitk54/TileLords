@@ -1,12 +1,15 @@
 ﻿using DataModel.Common.GameModel;
-using LiteDB;
+using MongoDB.Bson;
 using System.Collections.Generic;
 
 namespace DataModel.Server.Model
 {
     public class Inventory : IUserInventory
     {
-        public ObjectId InventoryId { get; set; }
+        public MongoDB.Bson.ObjectId InventoryId { get; set; }
+
+        public LiteDB.MongoDB.Bson.ObjectId InventoryIdLite { get; set; }
+
         public byte[] OwnerId { get; set; }
         public byte[] ContainerId { get; set; }
         public int StorageCapacity { get; set; }
