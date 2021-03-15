@@ -104,7 +104,7 @@ namespace ClientMain
         {
             var instance = new ClientInstanceManager("127.0.0.1", 8080, true);
             instance.StartClient();
-            ClientFunctions.TryRegisterAndLogIn(instance, name, password);
+            ClientFunctions.TryRegisterAndLogInInfiniteAttempts(instance, name, password);
             var tokenSrc = new CancellationTokenSource();
 
             var sendPath = Task.Run(() => ClientFunctions.SendGpsPath(instance, tokenSrc.Token, path, 4000));
@@ -129,10 +129,10 @@ namespace ClientMain
             var tokenSrc = new CancellationTokenSource();
 
             //Try to log in, create account if cant log in:
-            ClientFunctions.TryRegisterAndLogIn(instance, name, password);
+            ClientFunctions.TryRegisterAndLogInInfiniteAttempts(instance, name, password);
 
             Console.Write("Connected and logged in!");
-            var sendPath = Task.Run(() => ClientFunctions.SendGpsPath(instance, tokenSrc.Token, path, 4000));
+            var sendPath = Task.Run(() => ClientFunctions.SendGpsPath(instance, tokenSrc.Token, path, 8000));
             do
             {
                 if (cancellationToken.IsCancellationRequested)

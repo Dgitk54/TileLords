@@ -2,16 +2,21 @@
 using DataModel.Common.GameModel;
 using DataModel.Common.Messages;
 using DataModel.Server.Model;
+using DotNetty.Buffers;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Reactive.Concurrency;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
+using System.Text;
+using System.Threading.Tasks;
 
 namespace DataModel.Server.Services
 {
+    //TODO: Refactor architecture!
     public class APIGatewayService
     {
 
@@ -32,22 +37,27 @@ namespace DataModel.Server.Services
             this.resourceSpawnService = spawnService;
             this.questService = questService;
         }
-        public IObservable<IMessage> GatewayResponse => responses.AsObservable();
-        public void AttachGateway(IObservable<IMessage> inboundtraffic)
+        public IObservable<IMessage> GatewayResponse => responses.ObserveOn(TaskPoolScheduler.Default).AsObservable();
+        public void AttachGateway(IObservable<IByteBuffer> inbound)
         {
+
+            var inboundtraffic = inbound.ObserveOn(TaskPoolScheduler.Default)
+                                .Select(v => Observable.Defer(() => Observable.Start(() => v.ToString(Encoding.UTF8).FromString())))
+                                .SelectMany(v => v);
+
             disposables.Add(HandleRegister(inboundtraffic));
 
             LoggedInUser(inboundtraffic).Where(v => v != null)
                                         .Take(1)
-                                        .Do(v => { responses.OnNext(GatewayResponses.loginSuccessWithId(v)); })
+                                        .Do(v => { TaskPoolScheduler.Default.Schedule(() => responses.OnNext(GatewayResponses.loginSuccessWithId(v))); })
                                         .Subscribe(v =>
                                         {
                                             var mapServicePlayerUpdate = mapService.AddMapContent(v.AsMapContent(), LatestClientLocation(inboundtraffic));
                                             var mapDataRequests = Observable.Interval(TimeSpan.FromSeconds(3)).WithLatestFrom(LatestClientLocation(inboundtraffic), (time, location) => new { time, location })
-                                                                                                              .Select(v2 => v2.location)
-                                                                                                              .Select(v2 => mapService.GetMapUpdate(v2.Code))
-                                                                                                              .Switch()
-                                                                                                              .Subscribe(v2 => responses.OnNext(v2));
+                                                                                                                          .Select(v2 => v2.location)
+                                                                                                                          .Select(v2 => mapService.GetMapUpdate(v2.Code))
+                                                                                                                          .Switch()
+                                                                                                                          .Subscribe(v2 => TaskPoolScheduler.Default.Schedule(() => responses.OnNext(v2)));
                                             //TODO: Equals and Hashcode for DistinctUntilChanged updates.
 
 
@@ -60,7 +70,7 @@ namespace DataModel.Server.Services
                                             var handleQuestGenerationRequests = HandleQuestGenerationRequests(v, inboundtraffic);
                                             var handleQuestList = HandleQuestlistRequest(v, inboundtraffic);
 
-                                            disposables.Add(userService.LogOffUseronDispose(v)); 
+                                            disposables.Add(userService.LogOffUseronDispose(v));
                                             disposables.Add(handleQuestList);
                                             disposables.Add(handleQuestGenerationRequests);
                                             disposables.Add(spawnQuestDisposable);
@@ -72,6 +82,7 @@ namespace DataModel.Server.Services
                                             disposables.Add(handlePickupRequests);
                                             disposables.Add(HandleQuestTurnIn(v, inboundtraffic));
                                         });
+
         }
 
         public void DetachGateway()
@@ -87,7 +98,7 @@ namespace DataModel.Server.Services
                           {
                               return userService.LoginUser(v.Name, v.Password).Catch<IUser, Exception>(tx =>
                               {
-                                  responses.OnNext(GatewayResponses.loginFail);
+                                  TaskPoolScheduler.Default.Schedule(() => responses.OnNext(GatewayResponses.loginFail));
                                   return Observable.Empty<IUser>();
                               });
                           });
@@ -205,25 +216,26 @@ namespace DataModel.Server.Services
         {
             return inboundtraffic.OfType<AccountMessage>()
                                 .Where(v => v.Context == MessageContext.REGISTER)
-                                .Select(v => userService.RegisterUser(v.Name, v.Password))
-                                .Switch()
-                                .Catch<bool, Exception>(tx =>
+                                .SelectMany(v =>
                                 {
-                                    responses.OnNext(GatewayResponses.registerFail);
-                                    return Observable.Return(false);
+                                    return userService.RegisterUser(v.Name, v.Password).Catch<bool, Exception>(tx => Observable.Return(false));
                                 })
                                 .Subscribe(v =>
                                 {
                                     if (v)
                                     {
-                                        responses.OnNext(GatewayResponses.registerSuccess);
+                                        TaskPoolScheduler.Default.Schedule(() => responses.OnNext(GatewayResponses.registerSuccess));
+                                    }
+                                    else
+                                    {
+                                        TaskPoolScheduler.Default.Schedule(() => responses.OnNext(GatewayResponses.registerFail));
                                     }
                                 });
         }
 
         IObservable<PlusCode> LatestClientLocation(IObservable<IMessage> inboundtraffic)
         {
-            return inboundtraffic.OfType<UserGpsMessage>()
+            return inboundtraffic.ObserveOn(TaskPoolScheduler.Default).OfType<UserGpsMessage>()
                           .Select(v => { return new GPS(v.Lat, v.Lon); })
                           .Select(v => v.GetPlusCode(10));
         }

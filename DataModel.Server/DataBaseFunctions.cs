@@ -58,7 +58,7 @@ namespace DataModel.Server
             return new ConnectionString(UserDatabaseName)
             {
                 Connection = ConnectionType.Shared,
-                ReadOnly = true
+                ReadOnly = true 
             };
         }
 
@@ -95,6 +95,10 @@ namespace DataModel.Server
                 Connection = ConnectionType.Shared
             };
         }
+        
+        /// <summary>
+        /// Creates all databases in the server enviroment.
+        /// </summary>
         public static void InitializeDataBases()
         {
             using (var dataBase = new LiteDatabase(MapDataWrite()))
@@ -136,6 +140,12 @@ namespace DataModel.Server
             }
         }
         
+        /// <summary>
+        /// Function which removes content on the map identified by the id and transfers it to the player inventory.
+        /// </summary>
+        /// <param name="playerId"></param>
+        /// <param name="mapcontentId"></param>
+        /// <returns>true if action was successful</returns>
         public static bool RemoveContentAndAddToPlayer(byte[] playerId, byte[] mapcontentId)
         {
             //Check if the player can loot the item first with readonly db queries:
@@ -163,6 +173,11 @@ namespace DataModel.Server
             }
         }
 
+        /// <summary>
+        /// Finds a MapContent by the ID
+        /// </summary>
+        /// <param name="mapcontentid"></param>
+        /// <returns>MapContent if any was found, null if not</returns>
         public static MapContent GetMapContentById(byte[] mapcontentid)
         {
             using (LiteDatabase dataBase = new LiteDatabase(MapDataRead()))
@@ -178,6 +193,12 @@ namespace DataModel.Server
             }
         }
 
+        /// <summary>
+        /// Turns a quest in, granting the user the rewards to their inventory.
+        /// </summary>
+        /// <param name="userId"></param>
+        /// <param name="questId"></param>
+        /// <returns>true if operation was successful</returns>
         public static bool TurnInQuest(byte[] userId, byte[] questId)
         {
             //Get write locks and loot it:
@@ -216,6 +237,12 @@ namespace DataModel.Server
             }
         }
 
+        /// <summary>
+        /// Adds a quest for a given userid, identified by the byte id.
+        /// </summary>
+        /// <param name="userId"></param>
+        /// <param name="container"></param>
+        /// <returns>true if operation was successful</returns>
         public static bool AddQuestForUser(byte[] userId, QuestContainer container)
         {
             using (LiteDatabase dataBase = new LiteDatabase(QuestDatabaseWrite()))
@@ -226,6 +253,13 @@ namespace DataModel.Server
             }
 
         }
+        
+        /// <summary>
+        /// Removes a quest for a given user, both identified by their byte[] ids
+        /// </summary>
+        /// <param name="userId"></param>
+        /// <param name="questId"></param>
+        /// <returns>true if operation was successful</returns>
         public static bool RemoveQuestForUser(byte[] userId, byte[] questId)
         {
             using (LiteDatabase dataBase = new LiteDatabase(QuestDatabaseWrite()))
@@ -244,6 +278,11 @@ namespace DataModel.Server
             }
         }
 
+        /// <summary>
+        /// returns a List of QuestContainer for the playerid
+        /// </summary>
+        /// <param name="userid">The ID of the player</param>
+        /// <returns>List of QuestContainers, null if none found.</returns>
         public static List<QuestContainer> GetQuestsForUser(byte[] userid)
         {
             using (LiteDatabase dataBase = new LiteDatabase(QuestDatabaseRead()))
@@ -280,6 +319,13 @@ namespace DataModel.Server
 
         }
 
+        /// <summary>
+        /// Removes content by subtracting the current inventory identified by the two byte[] ids with the given content
+        /// </summary>
+        /// <param name="inventoryId">ID of the Container, for example a Town</param>
+        /// <param name="ownerId">Owner of the Inventory</param>
+        /// <param name="content">Contentdictionary to subtract</param>
+        /// <returns>true if operation suceeded, false if the inventory does not contain enough items to subtract the given content dictionary</returns>
         public static bool RemoveContentFromInventory(byte[] inventoryId, byte[] ownerId, Dictionary<InventoryType, int> content)
         {
             using (var dataBase = new LiteDatabase(InventoryDatabaseWrite()))
@@ -310,7 +356,12 @@ namespace DataModel.Server
             }
         }
 
-
+        /// <summary>
+        /// Adds the given content dictionary to a player inventory
+        /// </summary>
+        /// <param name="inventoryId"></param>
+        /// <param name="content"></param>
+        /// <returns>true if the transaction was successful</returns>
         public static bool AddContentToPlayerInventory(byte[] inventoryId, Dictionary<InventoryType, int> content)
         {
             using (var dataBase = new LiteDatabase(InventoryDatabaseWrite()))
@@ -348,6 +399,12 @@ namespace DataModel.Server
                 }
             }
         }
+        
+        /// <summary>
+        /// Creates a player inventory for a player id
+        /// </summary>
+        /// <param name="playerId"></param>
+        /// <returns>true if the transaction was successful</returns>
         public static bool CreatePlayerInventory(byte[] playerId)
         {
             using (var dataBase = new LiteDatabase(InventoryDatabaseWrite()))
@@ -436,6 +493,11 @@ namespace DataModel.Server
                     throw new Exception("Could not update entity");
             }
         }
+        
+        /// <summary>
+        /// Function which wipes all the mapcontent in the map database.
+        /// </summary>
+        /// <returns>amount of items wiped</returns>
         public static int ResetMapContent()
         {
             using (var dataBase = new LiteDatabase(MapDataWrite()))
@@ -448,6 +510,11 @@ namespace DataModel.Server
 
         }
 
+        /// <summary>
+        /// Requests a list of visible mapcontent around a location.
+        /// </summary>
+        /// <param name="location">Middle Location</param>
+        /// <returns>List of visible content. </returns>
         public static List<MapContent> AreaContentAsListRequest(string location)
         {
             var nearbyCodes = LocationCodeTileUtility.GetTileSection(location, ServerFunctions.CLIENTVISIBILITY, ServerFunctions.CLIENTLOCATIONPRECISION);
@@ -459,7 +526,11 @@ namespace DataModel.Server
             }
         }
 
-
+        /// <summary>
+        /// See <see cref="AreaContentAsListRequest"/> wrapped in a batchcontentmessage
+        /// </summary>
+        /// <param name="location">Middle Location</param>
+        /// <returns>Message with the List containing all content. </returns>
         public static BatchContentMessage AreaContentAsMessageRequest(string location)
         {
             var nearbyCodes = LocationCodeTileUtility.GetTileSection(location, ServerFunctions.CLIENTVISIBILITY, ServerFunctions.CLIENTLOCATIONPRECISION);
@@ -472,46 +543,45 @@ namespace DataModel.Server
             }
         }
 
-        public static bool CreateAccount(string name, string password)
+        /// <summary>
+        /// Function which creates a new user account
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="password"></param>
+        /// <returns>false if username is already taken</returns>
+        public static bool CreateAccount(User user)
         {
-
             using (var dataBase = new LiteDatabase(UserDatabaseWrite()))
             {
                 var col = dataBase.GetCollection<User>("users");
-                if (NameTaken(name, col))
+                if (NameTaken(user.UserName, col))
                     return false;
-
-                byte[] salt;
-                new RNGCryptoServiceProvider().GetBytes(salt = new byte[16]);
-
-                var hashedpass = ServerFunctions.Hash(password, salt);
-
-                var userForDb = new User
-                {
-                    AccountCreated = DateTime.Now,
-                    Salt = salt,
-                    SaltedHash = hashedpass,
-                    UserName = name,
-                    CurrentlyOnline = false,
-                   
-                };
-
-                col.Insert(userForDb);
+                col.Insert(user);
                 return true;
             }
         }
 
+        /// <summary>
+        /// Function which finds a user identified with the name
+        /// </summary>
+        /// <param name="name"></param>
+        /// <returns>User object, null if none found</returns>
         public static User FindUserInDatabase(string name)
         {
             using (var dataBase = new LiteDatabase(UserDatabaseRead()))
             {
                 var col = dataBase.GetCollection<User>("users");
-                if (col.Find(v => v.UserName == name).Any())
-                    return col.Find(v => v.UserName == name).First();
-                return null;
+                var enumerable = col.Find(v => v.UserName == name);
+                return enumerable.FirstOrDefault();
             }
         }
         
+        /// <summary>
+        /// Function which updates the user online state in the database
+        /// </summary>
+        /// <param name="id">ID of the user</param>
+        /// <param name="state">Current online state</param>
+        /// <returns>true if action was successful.</returns>
         public static bool UpdateUserOnlineState(byte[] id, bool state)
         {
             var objId = new ObjectId(id);
@@ -528,6 +598,11 @@ namespace DataModel.Server
                 return col.Update(user);
             }
         }
+        
+        /// <summary>
+        /// Function which returns the amount of currently online users.
+        /// </summary>
+        /// <returns>Amount of online users as int</returns>
         public static int GetOnlineUsers()
         {
             using (var dataBase = new LiteDatabase(UserDatabaseRead()))
@@ -538,6 +613,12 @@ namespace DataModel.Server
             }
         }
 
+        /// <summary>
+        /// Works similar as <see cref="UpdateUserOnlineState(byte[], bool)"/> but queries the user with the name.
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="state"></param>
+        /// <returns>true if action was successful.</returns>
         public static bool UpdateUserOnlineState(string id, bool state)
         {
             using (var dataBase = new LiteDatabase(UserDatabaseWrite()))
@@ -554,7 +635,12 @@ namespace DataModel.Server
             }
         }
 
-
+        /// <summary>
+        /// Checks the collection if the username is already taken.
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="col">Collection to check</param>
+        /// <returns>true if the name is already taken.</returns>
         public static bool NameTaken(string name, ILiteCollection<User> col)
         {
             return col.Find(v => v.UserName == name).Any();

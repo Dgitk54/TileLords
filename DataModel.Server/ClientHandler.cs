@@ -7,10 +7,14 @@ using DotNetty.Common.Internal.Logging;
 using DotNetty.Transport.Channels;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
+using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace DataModel.Server
 {
@@ -18,9 +22,9 @@ namespace DataModel.Server
     {
         static readonly IInternalLogger Logger = InternalLoggerFactory.GetInstance<ClientHandler>();
 
-        static bool logInConsole = true;
-        readonly Subject<IMessage> clientInboundTraffic = new Subject<IMessage>();
-        readonly ISubject<IMessage> synchronizedInboundTraffic;
+        static bool logInConsole = false;
+        readonly Subject<IByteBuffer> clientInboundTraffic = new Subject<IByteBuffer>();
+        readonly ISubject<IByteBuffer> synchronizedInboundTraffic;
         readonly UserAccountService userAccountService;
         readonly MapContentService mapContentService;
         readonly ResourceSpawnService resourceSpawnService;
@@ -41,11 +45,11 @@ namespace DataModel.Server
         {
             if (logInConsole)
                 Console.WriteLine("Client connected");
-            apiGatewayService.AttachGateway(synchronizedInboundTraffic);
+            apiGatewayService.AttachGateway(synchronizedInboundTraffic.ObserveOn(TaskPoolScheduler.Default).SubscribeOn(TaskPoolScheduler.Default));
 
-            responseDisposable = apiGatewayService.GatewayResponse.Do(v => { if (logInConsole) { Console.WriteLine(v); } }).Select(v => v.ToJsonPayload()).Subscribe(v =>
+            responseDisposable = apiGatewayService.GatewayResponse.Do(v => { if (logInConsole) { Console.WriteLine(v); } }).ObserveOn(TaskPoolScheduler.Default).Select(v => v.ToJsonPayload()).Select(v=> Unpooled.WrappedBuffer(v)).Subscribe(v =>
             {
-                ctx.WriteAndFlushAsync(Unpooled.WrappedBuffer(v));
+                TaskPoolScheduler.Default.Schedule(() => ctx.WriteAndFlushAsync(Unpooled.WrappedBuffer(v)));
             });
         }
 
@@ -56,11 +60,10 @@ namespace DataModel.Server
             {
                 if (logInConsole)
                     Console.WriteLine("Received" + byteBuffer.ToString(Encoding.UTF8));
-                var msgpack = byteBuffer.ToString(Encoding.UTF8).FromString();
-                synchronizedInboundTraffic.OnNext(msgpack);
+                TaskPoolScheduler.Default.Schedule(() => synchronizedInboundTraffic.OnNext(byteBuffer));
             }
         }
-
+       
         // The Channel is closed hence the connection is closed
         public override void ChannelInactive(IChannelHandlerContext ctx)
         {
@@ -70,7 +73,7 @@ namespace DataModel.Server
                 Console.WriteLine("Cleaned up ClientHandler");
         }
 
-        public override bool IsSharable => true;
+        public override bool IsSharable => false;
     }
 
 
