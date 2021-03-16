@@ -1,4 +1,5 @@
-﻿using DotNetty.Buffers;
+﻿using DataModel.Common.Messages;
+using DotNetty.Buffers;
 using DotNetty.Codecs;
 using DotNetty.Transport.Channels;
 using MessagePack;
@@ -11,6 +12,7 @@ namespace DataModel.Client
 {
     public class DotNettyMessagePackDecoder : MessageToMessageDecoder<IByteBuffer>
     {
+        MessagePackSerializerOptions lz4Options = MessagePackSerializerOptions.Standard.WithCompression(MessagePackCompression.Lz4BlockArray);
         protected override void Decode(IChannelHandlerContext context, IByteBuffer message, List<object> output)
         {
             try
@@ -18,14 +20,14 @@ namespace DataModel.Client
                 var length = message.ReadableBytes;
                 var array = new byte[length];
                 message.GetBytes(message.ReaderIndex, array, 0, length);
-                var deserialized = MessagePackSerializer.Deserialize<object>(array, MessagePack.Resolvers.TypelessContractlessStandardResolver.Options);
+                var deserialized = MessagePackSerializer.Deserialize<IMessage>(array, lz4Options);
                 output.Add(deserialized);
             }
             catch (Exception e)
             {
-                Console.WriteLine("ERROR DECODING!");
+                Console.WriteLine("ERROR DECODING!" + e);
             }
-            
+
         }
     }
 }

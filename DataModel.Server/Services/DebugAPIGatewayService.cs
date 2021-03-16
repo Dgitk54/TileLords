@@ -21,7 +21,34 @@ namespace DataModel.Server.Services
     /// </summary>
     public class DebugAPIGatewayService
     {
-
+        static readonly UserActionMessage loginFail = new UserActionMessage()
+        {
+            MessageContext = MessageContext.LOGIN,
+            MessageInfo = MessageInfo.LOGINFAIL,
+            MessageState = MessageState.ERROR,
+            MessageType = MessageType.RESPONSE
+        };
+        static readonly UserActionMessage loginSuccess = new UserActionMessage()
+        {
+            MessageContext = MessageContext.LOGIN,
+            MessageInfo = MessageInfo.NONE,
+            MessageState = MessageState.SUCCESS,
+            MessageType = MessageType.RESPONSE
+        };
+        static readonly UserActionMessage registerFail = new UserActionMessage()
+        {
+            MessageContext = MessageContext.REGISTER,
+            MessageInfo = MessageInfo.NONE,
+            MessageState = MessageState.ERROR,
+            MessageType = MessageType.RESPONSE
+        };
+        static readonly UserActionMessage registerSuccess = new UserActionMessage()
+        {
+            MessageContext = MessageContext.REGISTER,
+            MessageInfo = MessageInfo.NONE,
+            MessageState = MessageState.SUCCESS,
+            MessageType = MessageType.RESPONSE
+        };
         public static IObservable<IMessage> AttachGateWay(IObservable<IByteBuffer> inbound)
         {
             return inbound.Select(v => Observable.Defer(() => Observable.Start(() => v.ToString(Encoding.UTF8).FromString())))
@@ -59,11 +86,11 @@ namespace DataModel.Server.Services
                                 {
                                     if (v)
                                     {
-                                        return GatewayResponses.registerSuccess;
+                                        return registerSuccess;
                                     }
                                     else
                                     {
-                                        return GatewayResponses.registerFail;
+                                        return registerFail;
                                     }
                                 });
 
@@ -86,11 +113,11 @@ namespace DataModel.Server.Services
 
                                           if (v != null)
                                           {
-                                              return GatewayResponses.loginSuccess;
+                                              return loginSuccess;
                                           }
                                           else
                                           {
-                                              return GatewayResponses.loginFail;
+                                              return loginFail;
                                           }
                                       });
 

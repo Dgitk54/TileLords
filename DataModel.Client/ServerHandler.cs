@@ -41,8 +41,6 @@ namespace DataModel.Client
         {
             var asMsg = message as IMessage;
             inboundTraffic.OnNext(asMsg);    
-
-            
         }
 
         public override void ChannelInactive(IChannelHandlerContext ctx)

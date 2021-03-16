@@ -132,7 +132,7 @@ namespace ClientMain
             ClientFunctions.TryRegisterAndLogInInfiniteAttempts(instance, name, password);
 
             Console.Write("Connected and logged in!");
-            var sendPath = Task.Run(() => ClientFunctions.SendGpsPath(instance, tokenSrc.Token, path, 8000));
+            var sendPath = Task.Run(() => ClientFunctions.SendGpsPath(instance, tokenSrc.Token, path, 16000));
             do
             {
                 if (cancellationToken.IsCancellationRequested)

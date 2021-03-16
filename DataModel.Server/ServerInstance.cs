@@ -34,20 +34,41 @@ namespace DataModel.Server
             {
                 throw new Exception("Server already running!");
             }
+            UserActionMessage registerSuccess = new UserActionMessage()
+            {
+                MessageContext = MessageContext.REGISTER,
+                MessageInfo = MessageInfo.NONE,
+                MessageState = MessageState.SUCCESS,
+                MessageType = MessageType.RESPONSE
+            };
 
+            UserActionMessage loginSuccess = new UserActionMessage()
+            {
+                MessageContext = MessageContext.LOGIN,
+                MessageInfo = MessageInfo.NONE,
+                MessageState = MessageState.SUCCESS,
+                MessageType = MessageType.RESPONSE
+            };
 
             bossGroup = new MultithreadEventLoopGroup(1); //  accepts an incoming connection
-            workerGroup = new MultithreadEventLoopGroup(); // handles the traffic of the accepted connection once the boss accepts the connection and registers the accepted connection to the worker
+            workerGroup = new MultithreadEventLoopGroup(3); // handles the traffic of the accepted connection once the boss accepts the connection and registers the accepted connection to the worker
             bootstrap = new ServerBootstrap();
             bootstrap
                 .Group(bossGroup, workerGroup)
                 .Channel<TcpServerSocketChannel>()
-                .Option(ChannelOption.SoBacklog, 100) // maximum queue length for incoming connection
-                .ChildOption(ChannelOption.SoSndbuf, 1024 * 1024)
-                .ChildOption(ChannelOption.SoRcvbuf, 32 * 1024)
-                .ChildHandler(new ActionChannelInitializer<ISocketChannel>(channel =>
+                .Option(ChannelOption.SoBacklog, 8196)
+                .ChildOption(ChannelOption.SoReuseaddr, true)
+                .ChildOption(ChannelOption.SoReuseport, false)
+                //.ChildOption(ChannelOption.SoBroadcast, true)
+                //.ChildOption(ChannelOption.SoKeepalive, true)
+               // .ChildOption(ChannelOption.TcpNodelay, true)
+                .ChildOption(ChannelOption.SoSndbuf, 2048)
+                .ChildOption(ChannelOption.SoRcvbuf, 8196)
+                .ChildHandler(new ActionChannelInitializer<TcpSocketChannel>(channel =>
                 {
+
                     IChannelPipeline pipeline = channel.Pipeline;
+                    
                     //  pipeline.AddLast(TlsHandler.Server(tlsCertificate));
                     pipeline.AddLast("framing-enc", new LengthFieldPrepender(2));
                     pipeline.AddLast("framing-dec", new LengthFieldBasedFrameDecoder(short.MaxValue, 0, 2, 0, 2));
@@ -55,6 +76,7 @@ namespace DataModel.Server
                     pipeline.AddLast(new DotNettyMessagePackEncoder());
                     pipeline.AddLast(new ClientHandler());
                 }));
+               
 
             bootstrapChannel = await bootstrap.BindAsync(serverPort);
 

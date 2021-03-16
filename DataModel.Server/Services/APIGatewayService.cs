@@ -29,6 +29,98 @@ namespace DataModel.Server.Services
         readonly List<IDisposable> disposables = new List<IDisposable>();
 
 
+        readonly UserActionMessage loginFail = new UserActionMessage()
+        {
+            MessageContext = MessageContext.LOGIN,
+            MessageInfo = MessageInfo.LOGINFAIL,
+            MessageState = MessageState.ERROR,
+            MessageType = MessageType.RESPONSE
+        };
+        readonly UserActionMessage loginSuccess = new UserActionMessage()
+        {
+            MessageContext = MessageContext.LOGIN,
+            MessageInfo = MessageInfo.NONE,
+            MessageState = MessageState.SUCCESS,
+            MessageType = MessageType.RESPONSE
+        };
+        readonly UserActionMessage registerFail = new UserActionMessage()
+        {
+            MessageContext = MessageContext.REGISTER,
+            MessageInfo = MessageInfo.NONE,
+            MessageState = MessageState.ERROR,
+            MessageType = MessageType.RESPONSE
+        };
+        readonly UserActionMessage registerSuccess = new UserActionMessage()
+        {
+            MessageContext = MessageContext.REGISTER,
+            MessageInfo = MessageInfo.NONE,
+            MessageState = MessageState.SUCCESS,
+            MessageType = MessageType.RESPONSE
+        };
+        readonly InventoryContentMessage contentRetrievalFail = new InventoryContentMessage()
+        {
+            InventoryContent = null,
+            InventoryOwner = null,
+            Type = MessageType.RESPONSE,
+            MessageState = MessageState.ERROR
+
+        };
+        UserActionMessage loginSuccessWithId(IUser user)
+        {
+            var success = loginSuccess;
+            success.MessageInfo = MessageInfo.USERID;
+            success.AdditionalInfo = user.UserId;
+            return success;
+        }
+        InventoryContentMessage ContentResponse(byte[] ownerId, Dictionary<InventoryType, int> resources)
+        {
+            return new InventoryContentMessage() { InventoryContent = resources.ToList(), InventoryOwner = ownerId, MessageState = MessageState.SUCCESS, Type = MessageType.RESPONSE };
+        }
+        MapContentTransactionMessage MapContentTransactionFail(byte[] targetId)
+        {
+            return new MapContentTransactionMessage() { MapContentId = targetId, MessageState = MessageState.ERROR, MessageType = MessageType.RESPONSE };
+        }
+        QuestRequestMessage QuestRequestResponse(Quest quest)
+        {
+            if (quest != null)
+            {
+                return new QuestRequestMessage() { MessageState = MessageState.SUCCESS, MessageType = MessageType.RESPONSE, Quest = quest, QuestContainerId = null };
+
+            }
+            else
+            {
+                return new QuestRequestMessage() { MessageState = MessageState.ERROR, QuestContainerId = null, Quest = null, MessageType = MessageType.RESPONSE };
+            }
+        }
+
+        readonly TurnInQuestMessage TurnInFail
+        = new TurnInQuestMessage() { QuestId = null, MessageState = MessageState.ERROR, MessageType = MessageType.RESPONSE };
+        
+        readonly TurnInQuestMessage TurnInSuccess = new TurnInQuestMessage() { QuestId = null, MessageState = MessageState.SUCCESS, MessageType = MessageType.RESPONSE };
+
+
+        ActiveUserQuestsMessage ActiveQuestListResponse(List<QuestContainer> quests)
+        {
+            if (quests == null)
+                return new ActiveUserQuestsMessage() { CurrentUserQuests = null, MessageState = MessageState.ERROR, MessageType = MessageType.RESPONSE };
+
+            var activeQuests = quests.Where(v => !v.QuestHasExpired)
+                  .Where(v => v.Quest != null);
+            if (activeQuests.Any())
+            {
+                var questList = activeQuests.Select(v => v.Quest).ToList();
+                var msg = new ActiveUserQuestsMessage() { CurrentUserQuests = questList, MessageState = MessageState.SUCCESS, MessageType = MessageType.RESPONSE };
+                return msg;
+            }
+            else
+            {
+                return new ActiveUserQuestsMessage() { CurrentUserQuests = null, MessageState = MessageState.SUCCESS, MessageType = MessageType.RESPONSE };
+            }
+        }
+
+
+
+
         public APIGatewayService(UserAccountService userService, MapContentService mapService, ResourceSpawnService spawnService, InventoryService inventoryService, QuestService questService)
         {
             this.userService = userService;
@@ -36,6 +128,8 @@ namespace DataModel.Server.Services
             this.inventoryService = inventoryService;
             this.resourceSpawnService = spawnService;
             this.questService = questService;
+
+
         }
         public IObservable<IMessage> GatewayResponse => responses.ObserveOn(TaskPoolScheduler.Default).AsObservable();
         public void AttachGateway(IObservable<IMessage> inboundtraffic)
@@ -44,7 +138,7 @@ namespace DataModel.Server.Services
 
             LoggedInUser(inboundtraffic).Where(v => v != null)
                                         .Take(1)
-                                        .Do(v => { TaskPoolScheduler.Default.Schedule(() => responses.OnNext(GatewayResponses.loginSuccessWithId(v))); })
+                                        .Do(v => { TaskPoolScheduler.Default.Schedule(() => responses.OnNext(loginSuccessWithId(v))); })
                                         .Subscribe(v =>
                                         {
                                             var mapServicePlayerUpdate = mapService.AddMapContent(v.AsMapContent(), LatestClientLocation(inboundtraffic));
@@ -93,7 +187,7 @@ namespace DataModel.Server.Services
                           {
                               return userService.LoginUser(v.Name, v.Password).Catch<IUser, Exception>(tx =>
                               {
-                                  TaskPoolScheduler.Default.Schedule(() => responses.OnNext(GatewayResponses.loginFail));
+                                  TaskPoolScheduler.Default.Schedule(() => responses.OnNext(loginFail));
                                   return Observable.Empty<IUser>();
                               });
                           });
@@ -108,13 +202,13 @@ namespace DataModel.Server.Services
                           {
                               return inventoryService.RequestContainerInventory(user.UserId, v.InventoryOwner).Catch<(Dictionary<InventoryType, int>, byte[]), Exception>(v2 =>
                               {
-                                  responses.OnNext(GatewayResponses.contentRetrievalFail);
+                                  responses.OnNext(contentRetrievalFail);
                                   return Observable.Empty<(Dictionary<InventoryType, int>, byte[])>();
                               });
                           })
                           .Subscribe(v =>
                           {
-                              responses.OnNext(GatewayResponses.ContentResponse(v.Item2, v.Item1));
+                              responses.OnNext(ContentResponse(v.Item2, v.Item1));
                           });
         }
 
@@ -127,7 +221,7 @@ namespace DataModel.Server.Services
                                      {
                                          return questService.TurnInQuest(user, v.QuestId).Catch<bool, Exception>(v2 =>
                                          {
-                                             responses.OnNext(GatewayResponses.TurnInFail());
+                                             responses.OnNext(TurnInFail);
                                              return Observable.Empty<bool>();
                                          });
                                      })
@@ -135,11 +229,11 @@ namespace DataModel.Server.Services
                                      {
                                          if (v)
                                          {
-                                             responses.OnNext(GatewayResponses.TurnInSuccess());
+                                             responses.OnNext(TurnInSuccess);
                                          }
                                          else
                                          {
-                                             responses.OnNext(GatewayResponses.TurnInFail());
+                                             responses.OnNext(TurnInFail);
                                          }
                                      });
         }
@@ -180,7 +274,7 @@ namespace DataModel.Server.Services
                                                                    })
                                                                    .Subscribe(v =>
                                                                    {
-                                                                       responses.OnNext(GatewayResponses.ActiveQuestListResponse(v));
+                                                                       responses.OnNext(ActiveQuestListResponse(v));
                                                                    });
         }
         IDisposable HandleQuestGenerationRequests(IUser user, IObservable<IMessage> inboundtraffic)
@@ -198,11 +292,11 @@ namespace DataModel.Server.Services
                                                                           if (v != null)
                                                                           {
                                                                               Debug.Assert(v.Quest != null);
-                                                                              responses.OnNext(GatewayResponses.QuestRequestResponse(v.Quest));
+                                                                              responses.OnNext(QuestRequestResponse(v.Quest));
                                                                           }
                                                                           else
                                                                           {
-                                                                              responses.OnNext(GatewayResponses.QuestRequestResponse(null));
+                                                                              responses.OnNext(QuestRequestResponse(null));
                                                                           }
                                                                       });
         }
@@ -219,11 +313,11 @@ namespace DataModel.Server.Services
                                 {
                                     if (v)
                                     {
-                                        TaskPoolScheduler.Default.Schedule(() => responses.OnNext(GatewayResponses.registerSuccess));
+                                        TaskPoolScheduler.Default.Schedule(() => responses.OnNext(registerSuccess));
                                     }
                                     else
                                     {
-                                        TaskPoolScheduler.Default.Schedule(() => responses.OnNext(GatewayResponses.registerFail));
+                                        TaskPoolScheduler.Default.Schedule(() => responses.OnNext(registerFail));
                                     }
                                 });
         }

@@ -20,9 +20,13 @@ namespace DataModel.Server
 {
     public class DebugNonRxClientHandler : ChannelHandlerAdapter
     {
-        public DebugNonRxClientHandler()
-        {
+        UserActionMessage loginSuccess;
+        UserActionMessage registerSuccess;
 
+        public DebugNonRxClientHandler(UserActionMessage registerSuccess, UserActionMessage loginSuccess)
+        {
+            this.loginSuccess = loginSuccess;
+            this.registerSuccess = registerSuccess;
         }
         public override void ChannelActive(IChannelHandlerContext ctx)
         {
@@ -31,19 +35,19 @@ namespace DataModel.Server
 
         public override void ChannelRead(IChannelHandlerContext context, object message)
         {
-            var msg  = (IMessage) message;
-            Task.Factory.StartNew(() => 
+            var msg = (IMessage)message;
+            Task.Factory.StartNew(() =>
             {
                 switch (msg)
                 {
                     case AccountMessage x:
                         if (x.Context == MessageContext.REGISTER)
                         {
-                            context.WriteAndFlushAsync(GatewayResponses.registerSuccess);
+                            context.WriteAndFlushAsync(registerSuccess);
                         }
                         if (x.Context == MessageContext.LOGIN)
                         {
-                            context.WriteAndFlushAsync(GatewayResponses.loginSuccess);
+                            context.WriteAndFlushAsync(loginSuccess);
                         }
                         break;
                 }
