@@ -33,21 +33,16 @@ namespace DataModel.Client
 
         public override void ChannelActive(IChannelHandlerContext context)
         {
-            outBoundManager = instance.OutboundTraffic.Select(v => v.ToJsonPayload()).Subscribe(v =>
-             {
-                 context.WriteAndFlushAsync(Unpooled.WrappedBuffer(v));
-             });
+            outBoundManager = instance.OutboundTraffic.Subscribe(v => context.WriteAndFlushAsync(v));
             connectionState.OnNext(true);
         }
 
         public override void ChannelRead(IChannelHandlerContext context, object message)
         {
-            var byteBuffer = message as IByteBuffer;
-            if (byteBuffer != null)
-            {
-                var msgpack = byteBuffer.ToString(Encoding.UTF8).FromString();
-                inboundTraffic.OnNext(msgpack);
-            }
+            var asMsg = message as IMessage;
+            inboundTraffic.OnNext(asMsg);    
+
+            
         }
 
         public override void ChannelInactive(IChannelHandlerContext ctx)

@@ -1,4 +1,6 @@
-﻿namespace DataModel.Common.Messages
+﻿using MessagePack;
+
+namespace DataModel.Common.Messages
 {
     /// <summary>
     /// Used to finish quests and trade in the resources into reward points

@@ -34,9 +34,9 @@ namespace DataModel.Server
 
         public override void ChannelActive(IChannelHandlerContext ctx)
         {
-            DebugAPIGatewayService.AttachGateWay(clientInboundTraffic).Select(v => v.ToJsonPayload()).Subscribe(v =>
+            DebugAPIGatewayService.AttachGateWay(clientInboundTraffic).Select(v => v.ToJsonPayload()).Buffer(TimeSpan.FromMilliseconds(300)).Subscribe(v =>
             {
-                 ctx.WriteAndFlushAsync(Unpooled.WrappedBuffer(v));
+                ctx.WriteAndFlushAsync(Unpooled.WrappedBuffer(v.ToArray()));
             });
         }
 

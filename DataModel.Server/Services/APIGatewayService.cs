@@ -38,13 +38,8 @@ namespace DataModel.Server.Services
             this.questService = questService;
         }
         public IObservable<IMessage> GatewayResponse => responses.ObserveOn(TaskPoolScheduler.Default).AsObservable();
-        public void AttachGateway(IObservable<IByteBuffer> inbound)
+        public void AttachGateway(IObservable<IMessage> inboundtraffic)
         {
-
-            var inboundtraffic = inbound.ObserveOn(TaskPoolScheduler.Default)
-                                .Select(v => Observable.Defer(() => Observable.Start(() => v.ToString(Encoding.UTF8).FromString())))
-                                .SelectMany(v => v);
-
             disposables.Add(HandleRegister(inboundtraffic));
 
             LoggedInUser(inboundtraffic).Where(v => v != null)

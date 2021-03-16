@@ -1,4 +1,5 @@
 ﻿using DataModel.Common.GameModel;
+using MessagePack;
 using System.Collections.Generic;
 
 namespace DataModel.Common.Messages

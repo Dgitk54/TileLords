@@ -23,8 +23,8 @@ namespace DataModel.Server
         static readonly IInternalLogger Logger = InternalLoggerFactory.GetInstance<ClientHandler>();
 
         static bool logInConsole = false;
-        readonly Subject<IByteBuffer> clientInboundTraffic = new Subject<IByteBuffer>();
-        readonly ISubject<IByteBuffer> synchronizedInboundTraffic;
+        readonly Subject<IMessage> clientInboundTraffic = new Subject<IMessage>();
+        readonly ISubject<IMessage> synchronizedInboundTraffic;
         readonly UserAccountService userAccountService;
         readonly MapContentService mapContentService;
         readonly ResourceSpawnService resourceSpawnService;
@@ -45,22 +45,22 @@ namespace DataModel.Server
         {
             if (logInConsole)
                 Console.WriteLine("Client connected");
-            apiGatewayService.AttachGateway(synchronizedInboundTraffic.ObserveOn(TaskPoolScheduler.Default).SubscribeOn(TaskPoolScheduler.Default));
+            apiGatewayService.AttachGateway(synchronizedInboundTraffic);
 
-            responseDisposable = apiGatewayService.GatewayResponse.Do(v => { if (logInConsole) { Console.WriteLine(v); } }).ObserveOn(TaskPoolScheduler.Default).Select(v => v.ToJsonPayload()).Select(v=> Unpooled.WrappedBuffer(v)).Subscribe(v =>
+            responseDisposable = apiGatewayService.GatewayResponse.Do(v => { if (logInConsole) { Console.WriteLine(v); } }).ObserveOn(TaskPoolScheduler.Default).Subscribe(v =>
             {
-                TaskPoolScheduler.Default.Schedule(() => ctx.WriteAndFlushAsync(Unpooled.WrappedBuffer(v)));
+                TaskPoolScheduler.Default.Schedule(() => ctx.WriteAndFlushAsync(v));
             });
         }
 
         public override void ChannelRead(IChannelHandlerContext context, object message)
         {
-            var byteBuffer = message as IByteBuffer;
-            if (byteBuffer != null)
+            var msg = (IMessage)message;
+            if (msg != null)
             {
                 if (logInConsole)
-                    Console.WriteLine("Received" + byteBuffer.ToString(Encoding.UTF8));
-                TaskPoolScheduler.Default.Schedule(() => synchronizedInboundTraffic.OnNext(byteBuffer));
+                    Console.WriteLine("Received" + msg);
+                TaskPoolScheduler.Default.Schedule(() => synchronizedInboundTraffic.OnNext(msg));
             }
         }
        

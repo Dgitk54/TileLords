@@ -1,4 +1,6 @@
-﻿namespace DataModel.Common.Messages
+﻿using MessagePack;
+
+namespace DataModel.Common.Messages
 {
     public class AccountMessage : IMessage
     {

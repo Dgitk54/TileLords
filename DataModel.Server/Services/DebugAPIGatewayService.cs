@@ -24,13 +24,12 @@ namespace DataModel.Server.Services
 
         public static IObservable<IMessage> AttachGateWay(IObservable<IByteBuffer> inbound)
         {
-            return inbound.ObserveOn(TaskPoolScheduler.Default)
-                          .Select(v => Observable.Defer(() => Observable.Start(() => v.ToString(Encoding.UTF8).FromString())))
+            return inbound.Select(v => Observable.Defer(() => Observable.Start(() => v.ToString(Encoding.UTF8).FromString())))
                           .SelectMany(v =>
                           {
                               var register = HandleRegisterResponse(v);
                               var login = LoginRequestsResponse(v);
-                              //var userAndMore = CurrentlyLoggedInUser(v).Where(e => e != null).SelectMany(e => { return Observable.Concat(DoRandomStuff(v, e), DoRandomStuff2(v, e)); });
+                              var userAndMore = CurrentlyLoggedInUser(v).Where(e => e != null).SelectMany(e => { return Observable.Concat(DoRandomStuff(v, e), DoRandomStuff2(v, e)); });
 
                               return Observable.Concat(register, login);
                           });
@@ -50,7 +49,7 @@ namespace DataModel.Server.Services
 
         public static IObservable<IMessage> HandleRegisterResponse(IObservable<IMessage> inbound)
         {
-            return inbound.ObserveOn(TaskPoolScheduler.Default).OfType<AccountMessage>()
+            return inbound.OfType<AccountMessage>()
                                 .Where(v => v.Context == MessageContext.REGISTER)
                                 .SelectMany(v =>
                                 {
@@ -73,7 +72,7 @@ namespace DataModel.Server.Services
 
         public static IObservable<IMessage> LoginRequestsResponse(IObservable<IMessage> inbound)
         {
-            return inbound.ObserveOn(TaskPoolScheduler.Default).OfType<AccountMessage>()
+            return inbound.OfType<AccountMessage>()
                                       .Where(v => v.Context == MessageContext.LOGIN)
                                       .SelectMany(v =>
                                       {
@@ -100,7 +99,7 @@ namespace DataModel.Server.Services
 
         public static IObservable<IUser> CurrentlyLoggedInUser(IObservable<IMessage> inbound)
         {
-            return inbound.ObserveOn(TaskPoolScheduler.Default).OfType<AccountMessage>()
+            return inbound.OfType<AccountMessage>()
                                       .Where(v => v.Context == MessageContext.LOGIN)
                                       .SelectMany(v =>
                                       {

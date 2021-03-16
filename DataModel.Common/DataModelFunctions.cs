@@ -1,5 +1,6 @@
 ﻿using DataModel.Common.Messages;
 using Google.OpenLocationCode;
+using MessagePack;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -12,27 +13,39 @@ namespace DataModel.Common
 {
     public static class DataModelFunctions
     {
+        readonly static JsonSerializerSettings objectSettings;
+        readonly static JsonSerializerSettings autoSetttings;
+        static DataModelFunctions()
+        {
+            objectSettings = new JsonSerializerSettings()
+            {
+                TypeNameHandling = TypeNameHandling.Objects
+            };
+            autoSetttings = new JsonSerializerSettings()
+            {
+                TypeNameHandling = TypeNameHandling.Auto
+            };
+        }
 
         public static byte[] ToJsonPayload(this IMessage msg)
         {
-            var serialized = JsonConvert.SerializeObject(msg, new JsonSerializerSettings()
-            {
-                TypeNameHandling = TypeNameHandling.Objects
-            });
+            var serialized = JsonConvert.SerializeObject(msg, objectSettings);
             return Encoding.UTF8.GetBytes(serialized);
         }
+        public static IMessage FromMessagePackPayload(this byte[] payload)
+        {
+            var msg = MessagePackSerializer.Deserialize<IMessage>(payload);
+            return msg;
+        }
+
 
         public static IMessage FromJsonPayload(this byte[] payload)
         {
             return JsonConvert.DeserializeObject<IMessage>(Encoding.UTF8.GetString(payload));
         }
-
         public static IMessage FromString(this string payload)
         {
-            return JsonConvert.DeserializeObject<IMessage>(payload, new JsonSerializerSettings()
-            {
-                TypeNameHandling = TypeNameHandling.Auto
-            });
+            return JsonConvert.DeserializeObject<IMessage>(payload, autoSetttings);
         }
 
         // see https://stackoverflow.com/questions/56692/random-weighted-choice

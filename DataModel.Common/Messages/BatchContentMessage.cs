@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using MessagePack;
+using System.Collections.Generic;
 
 namespace DataModel.Common.Messages
 {

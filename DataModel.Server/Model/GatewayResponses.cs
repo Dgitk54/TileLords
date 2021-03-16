@@ -1,6 +1,9 @@
-﻿using DataModel.Common.GameModel;
+﻿using DataModel.Common;
+using DataModel.Common.GameModel;
 using DataModel.Common.Messages;
+using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 
 namespace DataModel.Server.Model
@@ -14,15 +17,8 @@ namespace DataModel.Server.Model
             MessageState = MessageState.ERROR,
             MessageType = MessageType.RESPONSE
         };
-        public static readonly InventoryContentMessage contentRetrievalFail = new InventoryContentMessage()
-        {
-            InventoryContent = null,
-            InventoryOwner = null,
-            Type = MessageType.RESPONSE,
-            MessageState = MessageState.ERROR
-
-        };
-
+        public static ReadOnlyCollection<byte> loginFailBytes => Array.AsReadOnly(loginFail.ToJsonPayload()); 
+        
         public static readonly UserActionMessage loginSuccess = new UserActionMessage()
         {
             MessageContext = MessageContext.LOGIN,
@@ -30,6 +26,7 @@ namespace DataModel.Server.Model
             MessageState = MessageState.SUCCESS,
             MessageType = MessageType.RESPONSE
         };
+        public static ReadOnlyCollection<byte> loginSuccessBytes => Array.AsReadOnly(loginSuccess.ToJsonPayload());
 
         public static readonly UserActionMessage registerFail = new UserActionMessage()
         {
@@ -38,12 +35,26 @@ namespace DataModel.Server.Model
             MessageState = MessageState.ERROR,
             MessageType = MessageType.RESPONSE
         };
+        public static ReadOnlyCollection<byte> registerFailBytes => Array.AsReadOnly(registerFail.ToJsonPayload());
         public static readonly UserActionMessage registerSuccess = new UserActionMessage()
         {
             MessageContext = MessageContext.REGISTER,
             MessageInfo = MessageInfo.NONE,
             MessageState = MessageState.SUCCESS,
             MessageType = MessageType.RESPONSE
+        };
+
+        public static ReadOnlyCollection<byte> registerSuccessBytes => Array.AsReadOnly(registerSuccess.ToJsonPayload());
+        
+         
+
+        public static readonly InventoryContentMessage contentRetrievalFail = new InventoryContentMessage()
+        {
+            InventoryContent = null,
+            InventoryOwner = null,
+            Type = MessageType.RESPONSE,
+            MessageState = MessageState.ERROR
+
         };
         public static UserActionMessage loginSuccessWithId(IUser user)
         {
@@ -97,8 +108,7 @@ namespace DataModel.Server.Model
                 return new ActiveUserQuestsMessage() { CurrentUserQuests = null, MessageState = MessageState.SUCCESS, MessageType = MessageType.RESPONSE };
             }
         }
-
-
-
+        
+       
     }
 }
