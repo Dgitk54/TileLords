@@ -5,21 +5,20 @@ using System;
 using System.Collections.Generic;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
+using System.Threading.Tasks;
 
 namespace DataModel.Server.Services
 {
     public class MapContentService
     {
         const int CONTENTSAMPLE = 3;
-        readonly Func<string, BatchContentMessage> areaLookup;
-        readonly Func<string, List<MapContent>> areaLookupAsContent;
+        readonly Func<string, Task<BatchContentMessage>> areaLookup;
         readonly Action<MapContent, string> userContentStorage;
 
-        public MapContentService(Func<string, BatchContentMessage> areaLookup, Action<MapContent, string> userContentStorage, Func<string, List<MapContent>> areaLookupAsContent)
+        public MapContentService(Func<string, Task<BatchContentMessage>> areaLookup, Action<MapContent, string> userContentStorage)
         {
             this.areaLookup = areaLookup;
             this.userContentStorage = userContentStorage;
-            this.areaLookupAsContent = areaLookupAsContent;
         }
 
         /// <summary>
@@ -30,7 +29,8 @@ namespace DataModel.Server.Services
         /// <returns>Disposable to remove the content.</returns>
         public IDisposable AddMapContent(MapContent content, IObservable<PlusCode> contentLocation)
         {
-            return contentLocation.Sample(TimeSpan.FromSeconds(CONTENTSAMPLE))
+            return contentLocation
+                                  //.Sample(TimeSpan.FromSeconds(CONTENTSAMPLE))
                                   .Finally(() => userContentStorage(content, null))
                                   .Subscribe(v =>
                                   {
@@ -45,13 +45,15 @@ namespace DataModel.Server.Services
 
         public IObservable<List<MapContent>> GetListMapUpdate(string userLocation)
         {
-            return Observable.Create<List<MapContent>>(v =>
+            return Observable.Create<List<MapContent>>( v =>
             {
 
                 List<MapContent> result = null;
                 try
                 {
-                    result = areaLookupAsContent.Invoke(userLocation);
+                    var task = MongoDBFunctions.AreaContentAsListRequest(userLocation);
+                    task.Wait();
+                    result  = task.Result;
                 }
                 catch (Exception e)
                 {
@@ -83,7 +85,9 @@ namespace DataModel.Server.Services
                 BatchContentMessage result = null;
                 try
                 {
-                    result = areaLookup.Invoke(userLocation);
+                    var task = MongoDBFunctions.AreaContentAsMessageRequest(userLocation);
+                    task.Wait();
+                    result = task.Result;
                 }
                 catch (Exception e)
                 {

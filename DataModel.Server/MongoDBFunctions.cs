@@ -10,25 +10,28 @@ using MongoDB.Driver.Linq;
 using System.Diagnostics;
 using DataModel.Common.GameModel;
 using MongoDB.Bson.Serialization.Attributes;
+using DataModel.Common.Messages;
+using DataModel.Common;
+using System.Linq.Expressions;
 
 namespace DataModel.Server
 {
     [BsonIgnoreExtraElements]
-    public static class DatabaseMongoDBFunctions
+    public static class MongoDBFunctions
     {
 
         public static string UserDatabaseName => "Users";
-        public static string MapDatabaseName => "MapData";
+        public static string MapContentDatabaseName => "MapContent";
         public static string InventoryDatabaseName => "Inventory";
         public static string QuestDatabaseName => "Quest";
 
         static MongoClient client = new MongoClient("mongodb://localhost:27017");
 
-   
+
         public static void WipeAllDatabases()
         {
             client.DropDatabase(UserDatabaseName);
-            client.DropDatabase(MapDatabaseName);
+            client.DropDatabase(MapContentDatabaseName);
             client.DropDatabase(InventoryDatabaseName);
             client.DropDatabase(QuestDatabaseName);
         }
@@ -36,7 +39,7 @@ namespace DataModel.Server
         public static void InitializeDataBases()
         {
             client.GetDatabase(UserDatabaseName);
-            client.GetDatabase(MapDatabaseName);
+            client.GetDatabase(MapContentDatabaseName);
             client.GetDatabase(InventoryDatabaseName);
             client.GetDatabase(QuestDatabaseName);
         }
@@ -74,6 +77,22 @@ namespace DataModel.Server
             return enumerable.Count();
 
         }
+        
+        
+
+        public static async Task<BatchContentMessage> AreaContentAsMessageRequest(string location)
+        {
+            var nearbyCodes = LocationCodeTileUtility.GetTileSection(location, ServerFunctions.CLIENTVISIBILITY, ServerFunctions.CLIENTLOCATIONPRECISION);
+            var database = client.GetDatabase("MapContent");
+            var col = database.GetCollection<MapContent>("mapcontent");
+            //unsupported filter//
+            var all = await col.Find(Builders<MapContent>.Filter.Empty).ToListAsync();
+
+            var enumerable = all.Where(v => nearbyCodes.Any(v2 => v2.Equals(v.Location)));
+            var list = enumerable.ToList().ConvertAll(v => v.AsMessage());
+            return new BatchContentMessage() { ContentList = list };
+
+        }
 
 
         public static async Task<bool> AddQuestForUser(QuestContainer container)
@@ -92,28 +111,28 @@ namespace DataModel.Server
 
         public static async Task<MapContent> GetMapContentById(byte[] mapcontentid)
         {
+            Debug.WriteLine("1");
             var database = client.GetDatabase("MapContent");
             var col = database.GetCollection<MapContent>("mapcontent");
 
-       
+
             var filter = Builders<MapContent>.Filter.Eq<byte[]>(m => m.MapId, mapcontentid);
 
-         
+            Debug.WriteLine("2");
             var enumerable = await col.Find(filter).ToListAsync();
 
             if (enumerable.Count() > 1)
                 throw new Exception("Multiple objects with same ID in database");
             if (enumerable.Count() == 0)
             {
-                Debug.WriteLine("count 0");
+                Debug.WriteLine("count 0 ");
                 return null;
             }
+            Debug.WriteLine("3");
             var ret = enumerable.First();
 
-
-            Debug.WriteLine("1");
-
             return ret;
+  
 
         }
 
@@ -131,9 +150,37 @@ namespace DataModel.Server
             user.CurrentlyOnline = state;
 
             var filter = Builders<User>.Filter.Eq<MongoDB.Bson.ObjectId>(m => m.UserId, user.UserId);
- 
+
             var result = await col.ReplaceOneAsync(filter, user);
             return result.IsAcknowledged;
+
+        }
+
+        public static async Task<bool> UpdateUserOnlineState(string id, bool state)
+        {
+            var database = client.GetDatabase("Users");
+            var col = database.GetCollection<User>("users");
+            var enumerable = await col.Find(v => v.UserName == id).ToListAsync();
+            if (enumerable.Count() > 1)
+                throw new Exception("More than one user with same name");
+            if (enumerable.Count() == 0)
+                return false;
+            var user = enumerable.First();
+            user.CurrentlyOnline = state;
+            var filter = Builders<User>.Filter.Eq<MongoDB.Bson.ObjectId>(m => m.UserId, user.UserId);
+
+            var result = await col.ReplaceOneAsync(filter, user);
+            return result.IsAcknowledged;
+        }
+
+        public static int ResetMapContent()
+        {
+            var database = client.GetDatabase("MapContent");
+            var col = database.GetCollection<MapContent>("mapcontent");
+            int players = (int)col.DeleteMany(v => v.Type == ContentType.PLAYER).DeletedCount;
+            int resources = (int)col.DeleteMany(v => v.Type == ContentType.RESOURCE).DeletedCount;
+            return players + resources;
+
 
         }
 
@@ -239,7 +286,7 @@ namespace DataModel.Server
             Debug.Assert(subtractedResult != null);
             inventory.InventoryItems = subtractedResult.ToDatabaseStorage();
             var filter = Builders<Inventory>.Filter.Eq<byte[]>(m => m.ContainerId, inventoryId);
-           
+
             var result = await col.ReplaceOneAsync(filter, inventory);
 
 
@@ -281,13 +328,12 @@ namespace DataModel.Server
                 inventory.InventoryItems = inventoryDictionary.ToDatabaseStorage();
 
 
-                Debug.WriteLine("2");
                 var filter = Builders<Inventory>.Filter.Eq<byte[]>(m => m.ContainerId, inventoryId);
 
                 var result = await col.ReplaceOneAsync(filter, inventory);
 
 
-                Debug.WriteLine("3");
+
                 return result.IsAcknowledged;
 
             }
@@ -298,23 +344,27 @@ namespace DataModel.Server
 
         public static async Task<bool> RemoveContentAndAddToPlayer(byte[] playerId, byte[] mapcontentId)
         {
-            Debug.WriteLine("test");
+
             //Check if the player can loot the item first with readonly db queries:
             var contentAsRead = await GetMapContentById(mapcontentId);
             if (contentAsRead == null)
             {
-                Debug.WriteLine("content not read");
+                Debug.WriteLine("content as read null");
                 return false;
             }
             if (!contentAsRead.CanBeLootedByPlayer)
+            {
 
-
+                Debug.WriteLine("content not lootable");
                 return false;
 
-
+            }
             var playerCanLoot = ServerFunctions.PlayerCanLootObject(await GetQuestsForUser(playerId), contentAsRead);
             if (!playerCanLoot)
+            {
+                Debug.WriteLine("player cant loot");
                 return false;
+            }
 
 
 
@@ -324,6 +374,7 @@ namespace DataModel.Server
             var content = await RemoveMapContent(mapcontentId);
             if (content == null)
             {
+                Debug.WriteLine("content null");
                 return false;
             }
             var asDictionary = content.ToResourceDictionary();
@@ -368,13 +419,34 @@ namespace DataModel.Server
 
 
             var filter = Builders<MapContent>.Filter.Eq<byte[]>(m => m.MapId, content.MapId);
-        
+
             var result = await col.ReplaceOneAsync(filter, first);
 
 
 
             if (!result.IsAcknowledged)
                 throw new Exception("Could not update entity");
+
+            return;
+        }
+        public static async Task<bool> AddQuestForUser(byte[] userId, QuestContainer container)
+        {
+            var database = client.GetDatabase("Quest");
+            var col = database.GetCollection<QuestContainer>("quests");
+            await col.InsertOneAsync(container);
+            return true;
+
+
+        }
+
+        public static async Task<List<MapContent>> AreaContentAsListRequest(string location)
+        {
+            var nearbyCodes = LocationCodeTileUtility.GetTileSection(location, ServerFunctions.CLIENTVISIBILITY, ServerFunctions.CLIENTLOCATIONPRECISION);
+            var database = client.GetDatabase("MapContent");
+
+            var col = database.GetCollection<MapContent>("mapcontent");
+            var enumerable = await col.Find(v => nearbyCodes.Any(v2 => v2.Equals(v.Location))).ToListAsync();
+            return enumerable.ToList();
 
         }
 
@@ -446,15 +518,3 @@ namespace DataModel.Server
     }
 
 }
-
-
-
-
-
-
-
-
-
-
-
-

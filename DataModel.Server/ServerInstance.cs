@@ -18,8 +18,8 @@ namespace DataModel.Server
         IChannel bootstrapChannel;
         public ServerInstance()
         {
-            DataBaseFunctions.WipeAllDatabases();
-            DataBaseFunctions.InitializeDataBases();
+            MongoDBFunctions.WipeAllDatabases();
+            MongoDBFunctions.InitializeDataBases();
             
         }
         public async Task RunServerAsync()

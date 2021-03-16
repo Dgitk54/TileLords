@@ -15,22 +15,22 @@ namespace DataModel.Server.Tests
         [SetUp]
         public void Setup()
         {
-            DataBaseFunctions.WipeAllDatabases();
-            DataBaseFunctions.InitializeDataBases();
+            MongoDBFunctions.WipeAllDatabases();
+            MongoDBFunctions.InitializeDataBases();
         }
 
         [TearDown]
         public void TearDown()
         {
-            DataBaseFunctions.WipeAllDatabases();
+            MongoDBFunctions.WipeAllDatabases();
         }
 
         [Test]
-        public void RegisterGetsResponse()
+        public void RegisterGetsResponse() //UNSUPPORTED FILTER!!!
         {
-            var accountservice = new UserAccountService(DataBaseFunctions.FindUserInDatabase, ServerFunctions.PasswordMatches);
-            var mapservice = new MapContentService(DataBaseFunctions.AreaContentAsMessageRequest, DataBaseFunctions.UpdateOrDeleteContent, DataBaseFunctions.AreaContentAsListRequest);
-            var resourceSpawnService = new ResourceSpawnService(mapservice, DataBaseFunctions.UpdateOrDeleteContent, new List<Func<List<MapContent>, bool>>() { ServerFunctions.Only5ResourcesInArea });
+            var accountservice = new UserAccountService(MongoDBFunctions.FindUserInDatabase, ServerFunctions.PasswordMatches);
+            var mapservice = new MapContentService(MongoDBFunctions.AreaContentAsMessageRequest, async (v, e) => await MongoDBFunctions.UpdateOrDeleteContent(v, e));
+            var resourceSpawnService = new ResourceSpawnService(mapservice, async (v, e) => await MongoDBFunctions.UpdateOrDeleteContent(v, e), new List<Func<List<MapContent>, bool>>() { ServerFunctions.Only5ResourcesInArea });
             var inventoryService = new InventoryService();
             var questService = new QuestService();
             var responses = new List<IMessage>();

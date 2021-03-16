@@ -32,9 +32,10 @@ namespace DataModel.Server
         IDisposable responseDisposable;
         public ClientHandler()
         {
-            userAccountService = new UserAccountService(DataBaseFunctions.FindUserInDatabase, ServerFunctions.PasswordMatches);
-            mapContentService = new MapContentService(DataBaseFunctions.AreaContentAsMessageRequest, DataBaseFunctions.UpdateOrDeleteContent, DataBaseFunctions.AreaContentAsListRequest);
-            resourceSpawnService = new ResourceSpawnService(mapContentService, DataBaseFunctions.UpdateOrDeleteContent, new List<Func<List<MapContent>, bool>>() { ServerFunctions.Only5ResourcesInArea });
+            userAccountService = new UserAccountService(MongoDBFunctions.FindUserInDatabase, ServerFunctions.PasswordMatches);
+          
+            mapContentService = new MapContentService(MongoDBFunctions.AreaContentAsMessageRequest, async (v, e) => await MongoDBFunctions.UpdateOrDeleteContent(v,e));
+            resourceSpawnService = new ResourceSpawnService(mapContentService, async (v,e) => await MongoDBFunctions.UpdateOrDeleteContent(v,e), new List<Func<List<MapContent>, bool>>() { ServerFunctions.Only5ResourcesInArea });
             var InventoryService = new InventoryService();
             var questService = new QuestService();
             apiGatewayService = new APIGatewayService(userAccountService, mapContentService, resourceSpawnService, InventoryService, questService);

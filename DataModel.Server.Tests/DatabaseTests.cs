@@ -12,14 +12,14 @@ namespace DataModel.Server.Tests
         [SetUp]
         public void Setup()
         {
-            DataBaseFunctions.WipeAllDatabases();
-            DataBaseFunctions.InitializeDataBases();
+            MongoDBFunctions.WipeAllDatabases();
+            MongoDBFunctions.InitializeDataBases();
         }
 
         [TearDown]
         public void TearDown()
         {
-            DataBaseFunctions.WipeAllDatabases();
+            MongoDBFunctions.WipeAllDatabases();
         }
 
         [Test]
@@ -38,34 +38,34 @@ namespace DataModel.Server.Tests
             var startLocation = new PlusCode("8FX9XW2F+9X", 10);
             randomContent.Location = startLocation.Code;
 
-            DataBaseFunctions.UpdateOrDeleteContent(randomContent, startLocation.Code);
-            var result = DataBaseFunctions.RemoveContentAndAddToPlayer(user1.UserId, randomContent.MapId);
+            MongoDBFunctions.UpdateOrDeleteContent(randomContent, startLocation.Code);
+            var result = MongoDBFunctions.RemoveContentAndAddToPlayer(user1.UserId, randomContent.MapId).Result;
 
             Assert.IsTrue(result);
-            var userInventory = DataBaseFunctions.RequestInventory(user1.UserId, user1.UserId);
+            var userInventory = MongoDBFunctions.RequestInventory(user1.UserId, user1.UserId).Result;
             Assert.IsTrue(userInventory.Count == 1);
 
-            var removeResult = DataBaseFunctions.RemoveContentFromInventory(user1.UserId, user1.UserId, randomContent.ToResourceDictionary());
+            var removeResult = MongoDBFunctions.RemoveContentFromInventory(user1.UserId, user1.UserId, randomContent.ToResourceDictionary()).Result;
             Assert.IsTrue(removeResult);
 
-            userInventory = DataBaseFunctions.RequestInventory(user1.UserId, user1.UserId);
+            userInventory = MongoDBFunctions.RequestInventory(user1.UserId, user1.UserId).Result;
             Assert.IsTrue(userInventory.Values.All(v => v == 0));
         }
         [Test]
         public void CanCreateUserLoginAndLogOut()
         {
-           // var user = DataBaseFunctions.CreateAccount("test", "test");
-            var findUser = DataBaseFunctions.FindUserInDatabase("test");
+           // var user = MongoDBFunctions.CreateAccount("test", "test");
+            var findUser = MongoDBFunctions.FindUserInDatabase("test").Result;
             Assert.IsTrue(findUser != null);
-            var logOn = DataBaseFunctions.UpdateUserOnlineState(findUser.UserId.ToByteArray(), true);
+            var logOn = MongoDBFunctions.UpdateUserOnlineState(findUser.UserId.ToByteArray(), true).Result;
             Assert.IsTrue(logOn);
-            var updatedUser = DataBaseFunctions.FindUserInDatabase("test");
+            var updatedUser = MongoDBFunctions.FindUserInDatabase("test").Result;
             Assert.IsTrue(updatedUser != null);
             Assert.IsTrue(updatedUser.CurrentlyOnline);
 
-            var logOff = DataBaseFunctions.UpdateUserOnlineState(findUser.UserId.ToByteArray(), false);
+            var logOff = MongoDBFunctions.UpdateUserOnlineState(findUser.UserId.ToByteArray(), false).Result;
             Assert.IsTrue(logOff);
-            updatedUser = DataBaseFunctions.FindUserInDatabase("test");
+            updatedUser = MongoDBFunctions.FindUserInDatabase("test").Result;
             Assert.IsTrue(updatedUser != null);
             Assert.IsTrue(!updatedUser.CurrentlyOnline);
         }

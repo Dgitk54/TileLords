@@ -12,7 +12,7 @@ namespace ServerMain
         public static void Main(String[] args)
         {
              var server = new ServerInstance();
-             var resourceCleanup = DataBaseFunctions.ResetMapContent();
+             var resourceCleanup = MongoDBFunctions.ResetMapContent();
              Console.WriteLine("Cleaned up resources amount:" + resourceCleanup);
              //var task = server.RunServerAsync();
 

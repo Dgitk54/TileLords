@@ -17,21 +17,22 @@ namespace DataModel.Server.Tests
         [SetUp]
         public void Setup()
         {
-            DataBaseFunctions.WipeAllDatabases();
-            DataBaseFunctions.InitializeDataBases();
+            MongoDBFunctions.WipeAllDatabases();
+            MongoDBFunctions.InitializeDataBases();
         }
 
         [TearDown]
         public void TearDown()
         {
-            DataBaseFunctions.WipeAllDatabases();
+            MongoDBFunctions.WipeAllDatabases();
         }
 
         [Test]
-        public void PushedContentIsVisible()
+        public void PushedContentIsVisible()  //ERROR UNSUPPORTED FILTER -> CHANGE THE LINQ!!!
         {
             //Data setup
-            MapContentService service = new MapContentService(DataBaseFunctions.AreaContentAsMessageRequest, DataBaseFunctions.UpdateOrDeleteContent, DataBaseFunctions.AreaContentAsListRequest);
+            MapContentService service = new MapContentService(MongoDBFunctions.AreaContentAsMessageRequest,
+                                                              (v, e) => MongoDBFunctions.UpdateOrDeleteContent(v, e).Wait());
 
             var givenOne = new PlusCode("8FX9XW2F+9X", 10);
             var givenTwo = new PlusCode("8FX9XW2F+8X", 10);

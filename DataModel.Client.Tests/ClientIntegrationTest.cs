@@ -20,8 +20,8 @@ namespace ClientIntegration
         [SetUp]
         public void Setup()
         {
-            DataBaseFunctions.WipeAllDatabases();
-            DataBaseFunctions.InitializeDataBases();
+            MongoDBFunctions.WipeAllDatabases();
+            MongoDBFunctions.InitializeDataBases();
             server = new ServerInstance();
             serverRunning = server.RunServerAsync();
         }
@@ -29,7 +29,7 @@ namespace ClientIntegration
         [TearDown]
         public void TearDown()
         {
-            DataBaseFunctions.WipeAllDatabases();
+            MongoDBFunctions.WipeAllDatabases();
             server.ShutDownServer().Wait();
         }
         [Test]

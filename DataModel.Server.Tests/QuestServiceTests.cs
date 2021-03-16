@@ -15,14 +15,14 @@ namespace DataModel.Server.Tests
         [SetUp]
         public void Setup()
         {
-            DataBaseFunctions.WipeAllDatabases();
-            DataBaseFunctions.InitializeDataBases();
+            MongoDBFunctions.WipeAllDatabases();
+            MongoDBFunctions.InitializeDataBases();
         }
 
         [TearDown]
         public void TearDown()
         {
-            DataBaseFunctions.WipeAllDatabases();
+            MongoDBFunctions.WipeAllDatabases();
         }
 
         [Test]
@@ -75,12 +75,12 @@ namespace DataModel.Server.Tests
 
 
             //for testing purposes:
-            DataBaseFunctions.AddContentToPlayerInventory(user1.UserId, doubleQuestItemsDictionary);
+            MongoDBFunctions.AddContentToPlayerInventory(user1.UserId, doubleQuestItemsDictionary).Wait();
             var result = service.TurnInQuest(user1, questsRequest[0].Quest.QuestId).Take(1).Wait();
             Assert.IsTrue(result);
 
             //After turn in, the user inventory should have at least 2 inventorytype keys with some values:
-            var userInventory = DataBaseFunctions.RequestInventory(user1.UserId, user1.UserId);
+            var userInventory = MongoDBFunctions.RequestInventory(user1.UserId, user1.UserId).Result;
             Assert.IsTrue(userInventory.Keys.Count == 2);
 
             //User should not have any quests:

@@ -15,7 +15,7 @@ namespace DataModel.Server.Services
         {
             return Observable.Create<Dictionary<InventoryType, int>>(v =>
              {
-                 var result = DataBaseFunctions.RequestInventory(playerId, playerId);
+                 var result = MongoDBFunctions.RequestInventory(playerId, playerId).Result;
                  if (result == null)
                  {
                      v.OnError(new Exception("No inventory for player found!"));
@@ -31,13 +31,13 @@ namespace DataModel.Server.Services
         {
             return Observable.Create<(Dictionary<InventoryType, int>, byte[])>(v =>
              {
-                 var inventory = DataBaseFunctions.RequestInventory(playerId, containerId);
+                 var inventory = MongoDBFunctions.RequestInventory(playerId, containerId);
                  if (inventory == null)
                  {
                      v.OnError(new Exception("Could not fetch inventory for id"));
                      return Disposable.Empty;
                  }
-                 v.OnNext((inventory, containerId));
+                 v.OnNext((inventory.Result, containerId));
                  v.OnCompleted();
                  return Disposable.Empty;
              });
@@ -47,7 +47,7 @@ namespace DataModel.Server.Services
         {
             return Observable.Create<(bool, byte[])>(v =>
             {
-                var result = DataBaseFunctions.RemoveContentAndAddToPlayer(requestId, mapContentTarget);
+                var result = MongoDBFunctions.RemoveContentAndAddToPlayer(requestId, mapContentTarget).Result;
                 v.OnNext((result, mapContentTarget));
                 v.OnCompleted();
                 return Disposable.Empty;

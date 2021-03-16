@@ -69,7 +69,7 @@ namespace DataModel.Server.Services
             return Observable.Interval(TimeSpan.FromSeconds(RESOURCESPAWNCHECKTHROTTLEINSECONDS))
                                 .WithLatestFrom(location, (_, loc) => new { _, loc })
                                 .Select(v => v.loc)
-                                .Select(v => (DataBaseFunctions.GetQuestsForUser(moveableOwnerId), v))
+                                .Select(v => (MongoDBFunctions.GetQuestsForUser(moveableOwnerId).Result, v))
                                 .Where(v => v.Item1 != null)
                                 .Select(v => ServerFunctions.LocationIsInsideQuestSpawnableArea(v.v, v.Item1))
                                 .Where(v => v.Any())

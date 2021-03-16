@@ -17,7 +17,7 @@ namespace DataModel.Server.Services
             {
                 //Perform read only checks if player is capable of turning quest in: 
 
-                var userQuests = DataBaseFunctions.GetQuestsForUser(player.UserId);
+                var userQuests = MongoDBFunctions.GetQuestsForUser(player.UserId).Result;
                 var enumerable = userQuests.Where(e => e.Quest.QuestId.SequenceEqual(questId));
                 if(enumerable.Count() == 0)
                 {
@@ -28,11 +28,8 @@ namespace DataModel.Server.Services
                 if(enumerable.Count() > 1)
                 {
                     throw new Exception("duplicate state");
-                    v.OnNext(false);
-                    v.OnCompleted();
-                    return Disposable.Empty;
                 }
-                var inventory = DataBaseFunctions.RequestInventory(player.UserId, player.UserId);
+                var inventory = MongoDBFunctions.RequestInventory(player.UserId, player.UserId).Result;
 
                 var quest = enumerable.First();
 
@@ -56,7 +53,7 @@ namespace DataModel.Server.Services
 
 
                 //Performa action with write locks:
-                v.OnNext(DataBaseFunctions.TurnInQuest(player.UserId, questId));
+                v.OnNext(MongoDBFunctions.TurnInQuest(player.UserId, questId).Result);
                 v.OnCompleted();
                 return Disposable.Empty;
             });
@@ -71,7 +68,7 @@ namespace DataModel.Server.Services
                 {
                     var randomQuest = ServerFunctions.GetLevel1QuestForUser(startLocation.From10String());
                     var wrappedLevel1Quest = ServerFunctions.WrapLevel1Quest(randomQuest, player.UserId);
-                    var result = DataBaseFunctions.AddQuestForUser(player.UserId, wrappedLevel1Quest);
+                    var result = MongoDBFunctions.AddQuestForUser(player.UserId, wrappedLevel1Quest).Result;
                     if (result)
                     {
                         v.OnNext(wrappedLevel1Quest);
@@ -95,7 +92,7 @@ namespace DataModel.Server.Services
         {
             return Observable.Create<List<QuestContainer>>(v =>
             {
-                var quests = DataBaseFunctions.GetQuestsForUser(playerId);
+                var quests = MongoDBFunctions.GetQuestsForUser(playerId).Result;
                 v.OnNext(quests);
                 v.OnCompleted();
                 return Disposable.Empty;

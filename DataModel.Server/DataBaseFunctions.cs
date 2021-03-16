@@ -10,9 +10,9 @@ using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
 
-namespace DataModel.Server
+/*namespace DataModel.Server
 {
-    public static class DataBaseFunctions
+    public static class MongoDBFunctions
     {
         public static string UserDatabaseName => @"Users.db";
         public static string MapDatabaseName => @"MapData.db";
@@ -646,4 +646,4 @@ namespace DataModel.Server
             return col.Find(v => v.UserName == name).Any();
         }
     }
-}
+} */

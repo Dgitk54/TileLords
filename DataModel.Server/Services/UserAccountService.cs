@@ -10,6 +10,7 @@ using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Security.Cryptography;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace DataModel.Server.Services
 {
@@ -19,10 +20,10 @@ namespace DataModel.Server.Services
     public class UserAccountService
     {
 
-        readonly Func<string, User> userNameLookup;
+        readonly Func<string, Task<User>> userNameLookup;
         readonly Func<byte[], byte[], byte[], bool> passwordMatcher;
 
-        public UserAccountService(Func<string, User> userDatabaseLookup, Func<byte[], byte[], byte[], bool> passwordMatchAlgorithm)
+        public UserAccountService(Func<string, Task<User>> userDatabaseLookup, Func<byte[], byte[], byte[], bool> passwordMatchAlgorithm)
         {
             passwordMatcher = passwordMatchAlgorithm;
             userNameLookup = userDatabaseLookup;
@@ -48,7 +49,7 @@ namespace DataModel.Server.Services
                 Stopwatch stopwatch = new Stopwatch();
                 stopwatch.Start();
 
-                var user = userNameLookup(name);
+                var user = userNameLookup(name).Result;
                 if (user == null)
                 {
                     v.OnError(new Exception("Unkown User"));
@@ -64,7 +65,7 @@ namespace DataModel.Server.Services
                 var pass = Encoding.UTF8.GetBytes(password);
                 if (passwordMatcher(pass, user.SaltedHash, user.Salt))
                 {
-                    DataBaseFunctions.UpdateUserOnlineState(user.UserId.ToByteArray(), true);
+                    MongoDBFunctions.UpdateUserOnlineState(user.UserId.ToByteArray(), true).Wait();
 
                     stopwatch.Stop();
                     Console.WriteLine("LOG IN: Elapsed Time is {0} ms" + name, stopwatch.ElapsedMilliseconds);
@@ -108,7 +109,7 @@ namespace DataModel.Server.Services
                           
                       })
                       .Switch()
-                      .Select(v => { return Observable.Defer(() => Observable.Start(() => DataBaseFunctions.CreateAccount(v))); })
+                      .Select(v => { return Observable.Defer(() => Observable.Start(() => MongoDBFunctions.CreateAccount(v))); })
                       .Switch(); */
             
 
@@ -122,13 +123,14 @@ namespace DataModel.Server.Services
                 var hashedpass = ServerFunctions.Hash(password, salt);
                 var userForDb = new User
                 {
+                    UserId = MongoDB.Bson.ObjectId.GenerateNewId(),
                     AccountCreated = DateTime.Now,
                     Salt = salt,
                     SaltedHash = hashedpass,
                     UserName = name,
                     CurrentlyOnline = false,
                 };
-                var result = DataBaseFunctions.CreateAccount(userForDb);
+                var result = MongoDBFunctions.InsertUser(userForDb).Result;
                 stopwatch.Stop();
                 Console.WriteLine("REGISTER IN: Elapsed Time is {0} ms" + name, stopwatch.ElapsedMilliseconds);
                 v.OnNext(result);
@@ -139,14 +141,14 @@ namespace DataModel.Server.Services
         }
         public IDisposable LogOffUseronDispose(IUser user)
         {
-            return Disposable.Create(() => {DataBaseFunctions.UpdateUserOnlineState(user.UserId, false); });
+            return Disposable.Create(() => {MongoDBFunctions.UpdateUserOnlineState(user.UserId, false).Wait(); });
         }
         
         public IObservable<bool> LogoutUser(string name)
         {
             return Observable.Create<bool>(v =>
             {
-                var result = DataBaseFunctions.UpdateUserOnlineState(name, false);
+                var result = MongoDBFunctions.UpdateUserOnlineState(name, false).Result;
                 v.OnNext(result);
                 v.OnCompleted();
                 return Disposable.Empty;
