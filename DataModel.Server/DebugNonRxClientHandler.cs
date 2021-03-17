@@ -36,24 +36,25 @@ namespace DataModel.Server
         public override void ChannelRead(IChannelHandlerContext context, object message)
         {
             var msg = (IMessage)message;
-            Task.Factory.StartNew(() =>
+            switch (msg)
             {
-                switch (msg)
-                {
-                    case AccountMessage x:
-                        if (x.Context == MessageContext.REGISTER)
-                        {
-                            context.WriteAndFlushAsync(registerSuccess);
-                        }
-                        if (x.Context == MessageContext.LOGIN)
-                        {
-                            context.WriteAndFlushAsync(loginSuccess);
-                        }
-                        break;
-                }
-            });
-        }
+                case AccountMessage x:
+                    if (x.Context == MessageContext.REGISTER)
+                    {
+                        var tmp = new UserActionMessage() { MessageContext = MessageContext.REGISTER, MessageState = MessageState.SUCCESS};
+                        //var tmp = new AccountMessage() { Name = "TESTNAME", Password = "PASSPASS" };
+                         context.WriteAndFlushAsync(tmp);
+                    }
+                    if (x.Context == MessageContext.LOGIN)
+                    {
+                        var tmp = new UserActionMessage() { MessageContext = MessageContext.LOGIN, MessageState = MessageState.SUCCESS };
+                        //var tmp = new AccountMessage() { Name = "TESTNAME", Password = "PASSPASS" };
+                         context.WriteAndFlushAsync(tmp);
+                    }
+                    break;
+            }
 
+        }
         // The Channel is closed hence the connection is closed
         public override void ChannelInactive(IChannelHandlerContext ctx)
         {

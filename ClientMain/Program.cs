@@ -131,7 +131,10 @@ namespace ClientMain
             //Try to log in, create account if cant log in:
             ClientFunctions.TryRegisterAndLogInInfiniteAttempts(instance, name, password);
 
-            Console.Write("Connected and logged in!");
+
+            Console.Write("Connected and logged in!"); 
+            Thread.Sleep(1000);
+            
             var sendPath = Task.Run(() => ClientFunctions.SendGpsPath(instance, tokenSrc.Token, path, 16000));
             do
             {
@@ -140,7 +143,15 @@ namespace ClientMain
                 Thread.Sleep(1000);
 
             } while (!cancellationToken.IsCancellationRequested);
+            
+            
+            /*do
+            {
+                if (cancellationToken.IsCancellationRequested)
+                    break;
+                Thread.Sleep(1000);
 
+            } while (!cancellationToken.IsCancellationRequested); */
             tokenSrc.Cancel();
             sendPath.Wait();
             instance.ShutDown();

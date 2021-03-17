@@ -52,7 +52,9 @@ namespace DataModel.Server.Tests
         [Test]
         public void CanCreateUserLoginAndLogOut()
         {
-            var user = DataBaseFunctions.CreateAccount("test", "test");
+            User user = new User() { UserName = "test" };
+            var createAccount = DataBaseFunctions.CreateAccount(user);
+            Assert.IsTrue(createAccount);
             var findUser = DataBaseFunctions.FindUserInDatabase("test");
             Assert.IsTrue(findUser != null);
             var logOn = DataBaseFunctions.UpdateUserOnlineState(findUser.UserId.ToByteArray(), true);

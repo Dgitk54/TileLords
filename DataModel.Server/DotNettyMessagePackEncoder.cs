@@ -15,18 +15,14 @@ namespace DataModel.Server
         MessagePackSerializerOptions lz4Options = MessagePackSerializerOptions.Standard.WithCompression(MessagePackCompression.Lz4BlockArray);
         protected override void Encode(IChannelHandlerContext context, object message, IByteBuffer output)
         {
-            if(message is IMessage)
+
+            if (message is IMessage)
             {
                 var msg = message as IMessage;
                 var data = MessagePackSerializer.Serialize(msg, lz4Options);
                 output.WriteBytes(data);
-            } 
-            else
-            {
-                throw new Exception("Encoding non messagepack objects");
             }
-           
+
         }
-        public override bool IsSharable => true;
     }
 }

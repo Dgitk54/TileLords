@@ -17,11 +17,14 @@ namespace DataModel.Client
         {
             try
             {
-                var length = message.ReadableBytes;
-                var array = new byte[length];
-                message.GetBytes(message.ReaderIndex, array, 0, length);
-                var deserialized = MessagePackSerializer.Deserialize<IMessage>(array, lz4Options);
-                output.Add(deserialized);
+                if (message.IsReadable())
+                {
+                    var length = message.ReadableBytes;
+                    var array = new byte[length];
+                    message.GetBytes(message.ReaderIndex, array, 0, length);
+                    var deserialized = MessagePackSerializer.Deserialize<IMessage>(array, lz4Options);
+                    output.Add(deserialized);
+                }
             }
             catch (Exception e)
             {

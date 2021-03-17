@@ -1,21 +1,25 @@
-﻿using DataModel.Common.Messages;
-using DataModel.Server.Model;
-using DotNetty.Buffers;
-using DotNetty.Codecs;
-using DotNetty.Handlers.Logging;
+﻿using DotNetty.Codecs;
+using DotNetty.Common.Internal.Logging;
 using DotNetty.Transport.Bootstrapping;
 using DotNetty.Transport.Channels;
 using DotNetty.Transport.Channels.Sockets;
+using Microsoft.Extensions.Logging;
 using System;
-using System.Linq;
-using System.Reactive.Concurrency;
 using System.Threading.Tasks;
+using NLog.Extensions.Logging;
+using DotNetty.Handlers.Logging;
+using DotNetty.Handlers.Flush;
 
 namespace DataModel.Server
 {
     public class ServerInstance
     {
-
+        public static void AttachConsoleLogging()
+        {
+            var factory = new LoggerFactory();
+            factory.AddNLog();
+            InternalLoggerFactory.DefaultFactory = factory;
+        }
         MultithreadEventLoopGroup bossGroup;//  accepts an incoming connection
         MultithreadEventLoopGroup workerGroup;
         ServerBootstrap bootstrap;
@@ -27,60 +31,46 @@ namespace DataModel.Server
         }
         public async Task RunServerAsync()
         {
-
             var serverPort = 8080;
 
             if (bootstrap != null)
             {
                 throw new Exception("Server already running!");
             }
-            UserActionMessage registerSuccess = new UserActionMessage()
-            {
-                MessageContext = MessageContext.REGISTER,
-                MessageInfo = MessageInfo.NONE,
-                MessageState = MessageState.SUCCESS,
-                MessageType = MessageType.RESPONSE
-            };
-
-            UserActionMessage loginSuccess = new UserActionMessage()
-            {
-                MessageContext = MessageContext.LOGIN,
-                MessageInfo = MessageInfo.NONE,
-                MessageState = MessageState.SUCCESS,
-                MessageType = MessageType.RESPONSE
-            };
-
             bossGroup = new MultithreadEventLoopGroup(1); //  accepts an incoming connection
             workerGroup = new MultithreadEventLoopGroup(3); // handles the traffic of the accepted connection once the boss accepts the connection and registers the accepted connection to the worker
+            var handler = new DebugNonRxClientHandler(null, null);
             bootstrap = new ServerBootstrap();
             bootstrap
                 .Group(bossGroup, workerGroup)
                 .Channel<TcpServerSocketChannel>()
-                .Option(ChannelOption.SoBacklog, 8196)
-                .ChildOption(ChannelOption.SoReuseaddr, true)
-                .ChildOption(ChannelOption.SoReuseport, false)
+                .Option(ChannelOption.SoBacklog, 1024)
+                .Handler(new LoggingHandler())
+                //.ChildOption(ChannelOption.SoReuseaddr, true)
+                //.ChildOption(ChannelOption.SoReuseport, false)
                 //.ChildOption(ChannelOption.SoBroadcast, true)
                 //.ChildOption(ChannelOption.SoKeepalive, true)
-               // .ChildOption(ChannelOption.TcpNodelay, true)
+                .ChildOption(ChannelOption.TcpNodelay, true)
                 .ChildOption(ChannelOption.SoSndbuf, 2048)
                 .ChildOption(ChannelOption.SoRcvbuf, 8196)
-                .ChildHandler(new ActionChannelInitializer<TcpSocketChannel>(channel =>
+                .ChildHandler(new ActionChannelInitializer<ISocketChannel>(channel =>
                 {
 
                     IChannelPipeline pipeline = channel.Pipeline;
-                    
+                    pipeline.AddLast(new LoggingHandler("SRV-CONN"));
                     //  pipeline.AddLast(TlsHandler.Server(tlsCertificate));
                     pipeline.AddLast("framing-enc", new LengthFieldPrepender(2));
                     pipeline.AddLast("framing-dec", new LengthFieldBasedFrameDecoder(short.MaxValue, 0, 2, 0, 2));
                     pipeline.AddLast(new DotNettyMessagePackDecoder());
                     pipeline.AddLast(new DotNettyMessagePackEncoder());
-                    pipeline.AddLast(new ClientHandler());
+                    pipeline.AddLast(handler);
                 }));
                
 
             bootstrapChannel = await bootstrap.BindAsync(serverPort);
-
+           
             Console.WriteLine("Server Up");
+            Console.ReadLine();
         }
 
         public async Task ShutDownServer()

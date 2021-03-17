@@ -5,6 +5,7 @@ using DotNetty.Common.Internal.Logging;
 using DotNetty.Transport.Channels;
 using System;
 using System.Linq;
+using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Text;
@@ -33,14 +34,17 @@ namespace DataModel.Client
 
         public override void ChannelActive(IChannelHandlerContext context)
         {
-            outBoundManager = instance.OutboundTraffic.Subscribe(v => context.WriteAndFlushAsync(v));
+            outBoundManager = instance.OutboundTraffic.Subscribe(v => TaskPoolScheduler.Default.Schedule(() => context.WriteAndFlushAsync(v)));
             connectionState.OnNext(true);
         }
 
         public override void ChannelRead(IChannelHandlerContext context, object message)
         {
+            
             var asMsg = message as IMessage;
-            inboundTraffic.OnNext(asMsg);    
+            Console.WriteLine(asMsg.ToString());
+            TaskPoolScheduler.Default.Schedule(() => inboundTraffic.OnNext(asMsg) );
+               
         }
 
         public override void ChannelInactive(IChannelHandlerContext ctx)
