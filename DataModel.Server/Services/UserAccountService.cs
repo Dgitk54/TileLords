@@ -31,18 +31,6 @@ namespace DataModel.Server.Services
         
         public IObservable<IUser> LoginUser(string name, string password)
         {
-            
-            
-            return Observable.Start(() => userNameLookup(name))
-                                .Where(v => !v.CurrentlyOnline)
-                                .Select(v =>
-                                {
-                                    var debug = Observable.Start(() => passwordMatcher(Encoding.UTF8.GetBytes(password), v.SaltedHash, v.Salt)).Where(e => e);
-                                    return (debug, v);
-                                }).Select(v => v.v);
-
-            
-            /*    
             return Observable.Create<IUser>(v =>
             {
                 Stopwatch stopwatch = new Stopwatch();
@@ -78,16 +66,11 @@ namespace DataModel.Server.Services
                     v.OnError(new Exception("Password does not match"));
                     return Disposable.Empty;
                 }
-
             });
-            */
-            
         }
 
         public IObservable<bool> RegisterUser(string name, string password)
         {
-
-            
                return Observable.Defer(() => Observable.Start(() =>
                       {
                           byte[] salt;
@@ -110,32 +93,6 @@ namespace DataModel.Server.Services
                       .Switch()
                       .Select(v => { return Observable.Defer(() => Observable.Start(() => DataBaseFunctions.CreateAccount(v))); })
                       .Switch();
-            
-
-            /*
-            return Observable.Create<bool>(v =>
-            {
-                Stopwatch stopwatch = new Stopwatch();
-                stopwatch.Start();
-                byte[] salt;
-                new RNGCryptoServiceProvider().GetBytes(salt = new byte[16]);
-                var hashedpass = ServerFunctions.Hash(password, salt);
-                var userForDb = new User
-                {
-                    AccountCreated = DateTime.Now,
-                    Salt = salt,
-                    SaltedHash = hashedpass,
-                    UserName = name,
-                    CurrentlyOnline = false,
-                };
-                var result = DataBaseFunctions.CreateAccount(userForDb);
-                stopwatch.Stop();
-                Console.WriteLine("REGISTER IN: Elapsed Time is {0} ms" + name, stopwatch.ElapsedMilliseconds);
-                v.OnNext(result);
-                v.OnCompleted();
-                return Disposable.Empty;
-            }); 
-            */
         }
         public IDisposable LogOffUseronDispose(IUser user)
         {
