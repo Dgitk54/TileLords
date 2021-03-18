@@ -42,7 +42,7 @@ namespace DataModel.Client
         {
             
             var asMsg = message as IMessage;
-            Console.WriteLine(asMsg.ToString());
+           // Console.WriteLine(asMsg.ToString());
             TaskPoolScheduler.Default.Schedule(() => inboundTraffic.OnNext(asMsg) );
                
         }

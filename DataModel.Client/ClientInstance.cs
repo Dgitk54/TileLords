@@ -35,13 +35,16 @@ namespace DataModel.Client
 
         public ClientInstance()
         {
+            
             serverHandler = new ServerHandler(this);
             actionChannelInitializer = new ActionChannelInitializer<ISocketChannel>(channel =>
             {
                 IChannelPipeline pipeline = channel.Pipeline;
-                pipeline.AddLast("framing-enc", new LengthFieldPrepender(2));
-                pipeline.AddLast("framing-dec", new LengthFieldBasedFrameDecoder(ushort.MaxValue, 0, 2, 0, 2));
-                pipeline.AddLast(new DotNettyMessagePackEncoder());
+
+             //   pipeline.AddLast("framing-enc", new LengthFieldPrepender(2));
+              //  pipeline.AddLast("framing-dec", new LengthFieldBasedFrameDecoder(ushort.MaxValue, 0, 2, 0, 2));
+               // pipeline.AddLast(new DelimiterBasedFrameDecoder(1024,true,true,Delimiters.LineDelimiter()));
+                pipeline.AddLast(new DotNettyMessagePackDelimitEncoder());
                 pipeline.AddLast(new DotNettyMessagePackDecoder());
                 pipeline.AddLast(serverHandler);
             });

@@ -8,7 +8,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace DataModel.Client
+namespace DataModel.Server
 {
     public class DotNettyMessagePackEncoder : MessageToByteEncoder<object>
     {

@@ -1,5 +1,6 @@
 ﻿using DataModel.Client;
 using DataModel.Common;
+using DataModel.Common.Messages;
 using System;
 using System.Collections.Generic;
 using System.Threading;
@@ -50,6 +51,7 @@ namespace ClientMain
                 for (int i = 0; i < number; i++)
                 {
                     Task.Run(() => DebugRegisterAndLoginClient("test" + i, "test" + i, GetRandomSpotsInArea(spots), token.Token));
+                    //Task.Run(() => DebugSendSomeMessagesClient("test" + i, "test" + i, GetRandomSpotsInArea(spots), token.Token)); debug.
                     Thread.Sleep(2000);
                 }
             }
@@ -120,6 +122,26 @@ namespace ClientMain
             sendPath.Wait();
             instance.ShutDown();
 
+        }
+        static void DebugSendSomeMessagesClient(string name, string password, List<GPS> path, CancellationToken cancellationToken)
+        {
+            var instance = new ClientInstanceManager();
+            instance.StartClient();
+            instance.SendMessage(new AccountMessage() { Name = name, Password = password, Context = MessageContext.REGISTER });
+            Thread.Sleep(1000);
+            instance.SendMessage(new AccountMessage() { Name = name, Password = password, Context = MessageContext.LOGIN });
+            Thread.Sleep(1000);
+            instance.SendMessage(new UserGpsMessage() { Lat = 33.0002, Lon = 12.000035 });
+            Thread.Sleep(1000);
+            instance.SendMessage(new UserGpsMessage() { Lat = 33.0002, Lon = 12.000035 });
+            do
+            {
+                if (cancellationToken.IsCancellationRequested)
+                    break;
+                Thread.Sleep(1000);
+
+            } while (!cancellationToken.IsCancellationRequested);
+            instance.ShutDown();
         }
         static void DebugRegisterAndLoginClient(string name, string password, List<GPS> path, CancellationToken cancellationToken)
         {
