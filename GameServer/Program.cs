@@ -1,5 +1,4 @@
 ﻿using System;
-using System;
 using System.Buffers;
 using System.IO.Pipelines;
 using System.Net;
@@ -25,7 +24,6 @@ namespace GameServer
             listenSocket.Bind(new IPEndPoint(IPAddress.Loopback, 8080));
 
             Console.WriteLine("Listening on port 8080");
-
             listenSocket.Listen(120);
 
             while (true)
@@ -43,12 +41,14 @@ namespace GameServer
 
             // Create a PipeReader over the network stream
             var stream = new NetworkStream(socket);
-
             var reader = PipeReader.Create(stream);
             var writer = PipeWriter.Create(stream);
 
             var inboundTraffic = new Subject<byte[]>();
-            var disposable = ReactiveSocketWrapper.AttachGateWay(inboundTraffic)
+
+            var disposable = ReactiveSocketWrapper.AttachGatewayNoTask(inboundTraffic).Subscribe(v => writer.WriteAsync(v));
+
+            /*var disposable = ReactiveSocketWrapper.AttachGateWay(inboundTraffic)
                 .Select(v => Observable.Defer(() => Observable.Start(() =>
                 {
                     var data = MessagePackSerializer.Serialize(v, lz4Options);
@@ -60,7 +60,7 @@ namespace GameServer
                 {
                     writer.WriteAsync(v);
                 });
-
+            */
 
 
             while (true)
@@ -121,7 +121,6 @@ namespace GameServer
         {
             foreach (var segment in buffer)
             {
-                //Console.Write("RECEIVED: " + Encoding.UTF8.GetString(segment.Span));
                 observableWrapper.OnNext(segment.Span.ToArray());
             }
             Console.WriteLine();

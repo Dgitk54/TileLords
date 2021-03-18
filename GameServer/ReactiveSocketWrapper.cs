@@ -1,10 +1,17 @@
-﻿using DataModel.Common.Messages;
-using MessagePack;
+﻿using System;
 using System;
-using System.Collections.Generic;
-using System.Reactive.Concurrency;
-using System.Reactive.Linq;
+using System.Buffers;
+using System.IO.Pipelines;
+using System.Net;
+using System.Net.Sockets;
+using System.Reactive.Subjects;
 using System.Text;
+using System.Threading.Tasks;
+using System.Linq;
+using System.Reactive.Linq;
+using MessagePack;
+using DataModel.Common.Messages;
+using System.Reactive.Concurrency;
 
 namespace GameServer
 {
@@ -39,6 +46,28 @@ namespace GameServer
             MessageState = MessageState.SUCCESS,
             MessageType = MessageType.RESPONSE
         };
+
+        static byte[] NewLineDelimiter = new byte[] { (byte)'\n' };
+        public static IObservable<ReadOnlyMemory<byte>> AttachGatewayNoTask(IObservable<byte[]> inbound)
+        {
+            return inbound.Select(v => MessagePackSerializer.Deserialize<IMessage>(v, lz4Options))
+                          .Select(v =>
+                          {
+                              var observable = Observable.Return(v);
+                              var register = HandleRegisterResponse(observable);
+                              var login = LoginRequestsResponse(observable);
+                              var consolePrinter = ConsolePrinter(observable);
+                              return Observable.Concat(register, login, consolePrinter);
+                          }).SelectMany(v => v)
+                          .Select(v =>
+                          {
+                              var data = MessagePackSerializer.Serialize(v, lz4Options);
+
+                              var result = data.Concat(NewLineDelimiter).ToArray();
+                              return new ReadOnlyMemory<byte>(result);
+                          });
+        }
+
         public static IObservable<IMessage> AttachGateWay(IObservable<byte[]> inbound)
         {
             return inbound.ObserveOn(TaskPoolScheduler.Default).Select(v => Observable.Defer(() => Observable.Start(() => MessagePackSerializer.Deserialize<IMessage>(v, lz4Options)).Catch<IMessage,Exception>(v=> { return Observable.Empty<IMessage>(); }) ))

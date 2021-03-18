@@ -38,8 +38,7 @@ namespace DataModel.Server
                 throw new Exception("Server already running!");
             }
             bossGroup = new MultithreadEventLoopGroup(1); //  accepts an incoming connection
-            workerGroup = new MultithreadEventLoopGroup(3); // handles the traffic of the accepted connection once the boss accepts the connection and registers the accepted connection to the worker
-            var handler = new DebugNonRxClientHandler(null, null);
+            workerGroup = new MultithreadEventLoopGroup(); // handles the traffic of the accepted connection once the boss accepts the connection and registers the accepted connection to the worker
             bootstrap = new ServerBootstrap();
             bootstrap
                 .Group(bossGroup, workerGroup)
@@ -55,15 +54,14 @@ namespace DataModel.Server
                 .ChildOption(ChannelOption.SoRcvbuf, 8196)
                 .ChildHandler(new ActionChannelInitializer<ISocketChannel>(channel =>
                 {
-
                     IChannelPipeline pipeline = channel.Pipeline;
+                    pipeline.AddLast(new FlushConsolidationHandler());
                     pipeline.AddLast(new LoggingHandler("SRV-CONN"));
-                    //  pipeline.AddLast(TlsHandler.Server(tlsCertificate));
                     pipeline.AddLast("framing-enc", new LengthFieldPrepender(2));
                     pipeline.AddLast("framing-dec", new LengthFieldBasedFrameDecoder(short.MaxValue, 0, 2, 0, 2));
                     pipeline.AddLast(new DotNettyMessagePackDecoder());
                     pipeline.AddLast(new DotNettyMessagePackEncoder());
-                    pipeline.AddLast(handler);
+                    pipeline.AddLast(new ClientHandler());
                 }));
                
 
