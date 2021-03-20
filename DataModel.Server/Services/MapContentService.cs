@@ -12,15 +12,9 @@ namespace DataModel.Server.Services
     public class MapContentService
     {
         const int CONTENTSAMPLE = 3;
-        readonly Func<string, BatchContentMessage> areaLookup;
-        readonly Func<string, List<MapContent>> areaLookupAsContent;
-        readonly Action<MapContent, string> userContentStorage;
 
-        public MapContentService(Func<string, BatchContentMessage> areaLookup, Action<MapContent, string> userContentStorage, Func<string, List<MapContent>> areaLookupAsContent)
+        public MapContentService()
         {
-            this.areaLookup = areaLookup;
-            this.userContentStorage = userContentStorage;
-            this.areaLookupAsContent = areaLookupAsContent;
         }
 
         /// <summary>
@@ -32,11 +26,11 @@ namespace DataModel.Server.Services
         public IDisposable AddMapContent(MapContent content, IObservable<PlusCode> contentLocation)
         {
             return contentLocation.Sample(TimeSpan.FromSeconds(CONTENTSAMPLE))
-                                  .Finally(() => Task.Factory.StartNew(() => userContentStorage(content, null)))
+                                  .Finally(() => Task.Factory.StartNew(() => DataBaseFunctions.UpdateOrDeleteContent(content, null)))
                                   .Subscribe(v =>
                                   {
-                                      Task.Factory.StartNew(() => userContentStorage(content, v.Code));
-                                  },() => Task.Factory.StartNew(() => userContentStorage(content, null)));
+                                      Task.Factory.StartNew(() => DataBaseFunctions.UpdateOrDeleteContent(content, v.Code));
+                                  },() => Task.Factory.StartNew(() => DataBaseFunctions.UpdateOrDeleteContent(content, null)));
         }
 
 
@@ -44,11 +38,10 @@ namespace DataModel.Server.Services
         {
             return Observable.Create<List<MapContent>>(v =>
             {
-
                 List<MapContent> result = null;
                 try
                 {
-                    result = areaLookupAsContent.Invoke(userLocation);
+                    result = DataBaseFunctions.AreaContentAsListRequest(userLocation);
                 }
                 catch (Exception e)
                 {
@@ -80,7 +73,7 @@ namespace DataModel.Server.Services
                 BatchContentMessage result = null;
                 try
                 {
-                    result = areaLookup.Invoke(userLocation);
+                    result = DataBaseFunctions.AreaContentAsMessageRequest(userLocation);
                 }
                 catch (Exception e)
                 {

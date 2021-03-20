@@ -35,7 +35,7 @@ namespace DataModel.Server
         public ClientHandler(TaskFactory scheduler, ref MessagePackSerializerOptions options)
         {
             userAccountService = new UserAccountService(DataBaseFunctions.FindUserInDatabase, ServerFunctions.PasswordMatches);
-            mapContentService = new MapContentService(DataBaseFunctions.AreaContentAsMessageRequest, DataBaseFunctions.UpdateOrDeleteContent, DataBaseFunctions.AreaContentAsListRequest);
+            mapContentService = new MapContentService();
             resourceSpawnService = new ResourceSpawnService(mapContentService, DataBaseFunctions.UpdateOrDeleteContent, new List<Func<List<MapContent>, bool>>() { ServerFunctions.Only5ResourcesInArea });
             var InventoryService = new InventoryService();
             var questService = new QuestService();
@@ -60,7 +60,6 @@ namespace DataModel.Server
                                                                   .Select(v=> Unpooled.WrappedBuffer(v))
                                                                   .Subscribe(v =>
                                                                   {
-                                                                      // TaskPoolScheduler.Default.Schedule(() => ctx.WriteAndFlushAsync(v));
                                                                       ctx.WriteAndFlushAsync(v);
                                                                   });
         }
@@ -73,12 +72,10 @@ namespace DataModel.Server
                 int length = castedMessage.ReadableBytes;
                 var array = new byte[length];
                 castedMessage.GetBytes(castedMessage.ReaderIndex, array, 0, length);
-                //var deserialized = MessagePackSerializer.Deserialize<IMessage>(array, lz4Options);
                 synchronizedInboundTraffic.OnNext(array);
             });
         }
 
-        // The Channel is closed hence the connection is closed
         public override void ChannelInactive(IChannelHandlerContext ctx)
         {
             apiGatewayService.DetachGateway();

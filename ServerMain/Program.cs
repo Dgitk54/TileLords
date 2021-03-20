@@ -14,12 +14,10 @@ namespace ServerMain
             var server = new ServerInstance();
             var resourceCleanup = DataBaseFunctions.ResetMapContent();
             Console.WriteLine("Cleaned up resources amount:" + resourceCleanup);
-            //var task = server.RunServerAsync();
 
             server.RunServerAsync().Wait();
 
             Console.ReadLine();
-            //task.Wait();
         }
 
 

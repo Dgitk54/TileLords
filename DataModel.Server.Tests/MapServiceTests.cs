@@ -7,7 +7,9 @@ using LiteDB;
 using NUnit.Framework;
 using System;
 using System.Collections.Generic;
+using System.Reactive.Linq;
 using System.Reactive.Subjects;
+using System.Threading;
 
 namespace DataModel.Server.Tests
 {
@@ -31,7 +33,7 @@ namespace DataModel.Server.Tests
         public void PushedContentIsVisible()
         {
             //Data setup
-            MapContentService service = new MapContentService(DataBaseFunctions.AreaContentAsMessageRequest, DataBaseFunctions.UpdateOrDeleteContent, DataBaseFunctions.AreaContentAsListRequest);
+            MapContentService service = new MapContentService();
 
             var givenOne = new PlusCode("8FX9XW2F+9X", 10);
             var givenTwo = new PlusCode("8FX9XW2F+8X", 10);
@@ -57,48 +59,44 @@ namespace DataModel.Server.Tests
 
             //TEST: 1 player two requests:
             var disposable = service.AddMapContent(user1.AsMapContent(), user1location);
-
+            Thread.Sleep(1000); //TODO: Test async task with proper structure.
             user1location.OnNext(givenOne);
+            var result = service.GetMapUpdate(givenTwo.Code).Take(1).Wait();
 
-            service.GetMapUpdate(givenTwo.Code).Subscribe(v => responseList.AddRange(v.ContentList));
+            
+            Assert.IsTrue(result.ContentList.Count == 1); // user sees himself
+            
 
-            user1location.OnNext(givenThree);
+            user1location.OnNext(givenThree); // move player
+            result = service.GetMapUpdate(givenTwo.Code).Take(1).Wait();
+            Assert.IsTrue(result.ContentList.Count == 1); // user still sees himself
 
 
 
-            Assert.IsTrue(responseList.Count == 1); //Only one visible content
-            Assert.IsTrue(responseList[0] is ContentMessage);
-            responseList.Clear();
-
+            
 
 
             //TEST: Another content enters:
             var disposable2 = service.AddMapContent(user2.AsMapContent(), user2location);
             user2location.OnNext(givenOne);
-            service.GetMapUpdate(givenTwo.Code).Subscribe(v => responseList.AddRange(v.ContentList));
 
-            Assert.IsTrue(responseList.Count == 2); //two visible content
-            Assert.IsTrue(responseList[0] is ContentMessage);
-            var asContent = responseList[0] as ContentMessage;
-            Assert.IsTrue(asContent.Type == ContentType.PLAYER);
-            responseList.Clear();
+
+            result = service.GetMapUpdate(givenTwo.Code).Take(1).Wait();
+            Assert.IsTrue(result.ContentList.Count == 2);
+            Assert.IsTrue(result.ContentList[0].Type == ContentType.PLAYER);
 
 
             //TEST: player1 disconnects
             disposable.Dispose();
-            service.GetMapUpdate(givenTwo.Code).Subscribe(v => responseList.AddRange(v.ContentList));
-            Assert.IsTrue(responseList.Count == 1); //one visible content
-            Assert.IsTrue(responseList[0] is ContentMessage);
-            asContent = responseList[0] as ContentMessage;
-            Assert.IsTrue(asContent.Type == ContentType.PLAYER);
-            responseList.Clear();
+            result = service.GetMapUpdate(givenTwo.Code).Take(1).Wait();
+            Assert.IsTrue(result.ContentList.Count == 1);
 
+            
 
             //TEST: player2 disconnects
             disposable2.Dispose();
-            service.GetMapUpdate(givenTwo.Code).Subscribe(v => responseList.AddRange(v.ContentList));
-            Assert.IsTrue(responseList.Count == 0); //0 visible content for request
-            responseList.Clear();
+            result = service.GetMapUpdate(givenTwo.Code).Take(1).Wait();
+            Assert.IsTrue(result.ContentList.Count == 0);
         }
 
     }
