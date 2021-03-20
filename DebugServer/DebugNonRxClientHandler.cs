@@ -1,64 +1,66 @@
-﻿using DataModel.Common;
-using DataModel.Common.Messages;
+﻿using DataModel.Common.Messages;
+using DataModel.Common;
 using DotNetty.Buffers;
-using DotNetty.Common.Internal.Logging;
 using DotNetty.Transport.Channels;
+using MessagePack;
 using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Reactive.Concurrency;
-using System.Reactive.Linq;
-using System.Reactive.Subjects;
-using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace DataModel.Server
 {
     public class DebugNonRxClientHandler : ChannelHandlerAdapter
     {
-        UserActionMessage loginSuccess;
-        UserActionMessage registerSuccess;
-
-        public DebugNonRxClientHandler(UserActionMessage registerSuccess, UserActionMessage loginSuccess)
+        readonly MessagePackSerializerOptions lz4Options;
+        readonly TaskScheduler scheduler;
+        readonly TaskFactory factory;
+        public DebugNonRxClientHandler(ref MessagePackSerializerOptions options, TaskScheduler scheduler)
         {
-            this.loginSuccess = loginSuccess;
-            this.registerSuccess = registerSuccess;
-        }
-        public override void ChannelActive(IChannelHandlerContext ctx)
-        {
-            Console.WriteLine("Client Connected");
+            lz4Options = options;
+            this.scheduler = scheduler;
+            factory = new TaskFactory(scheduler);
         }
 
-        public override void ChannelRead(IChannelHandlerContext context, object message)
+        public override void ChannelRead(IChannelHandlerContext context, object msg)
         {
-            var msg = (IMessage)message;
-            switch (msg)
+            
+            factory.StartNew(() =>
             {
-                case AccountMessage x:
-                    if (x.Context == MessageContext.REGISTER)
-                    {
-                        var tmp = new UserActionMessage() { MessageContext = MessageContext.REGISTER, MessageState = MessageState.SUCCESS};
-                        //var tmp = new AccountMessage() { Name = "TESTNAME", Password = "PASSPASS" };
-                         context.WriteAndFlushAsync(tmp);
-                    }
-                    if (x.Context == MessageContext.LOGIN)
-                    {
-                        var tmp = new UserActionMessage() { MessageContext = MessageContext.LOGIN, MessageState = MessageState.SUCCESS };
-                        //var tmp = new AccountMessage() { Name = "TESTNAME", Password = "PASSPASS" };
-                         context.WriteAndFlushAsync(tmp);
-                    }
-                    break;
-            }
+                var castedMessage = (IByteBuffer)msg;
 
+                int length = castedMessage.ReadableBytes;
+                var array = new byte[length];
+                castedMessage.GetBytes(castedMessage.ReaderIndex, array, 0, length);
+                var deserialized = MessagePackSerializer.Deserialize<IMessage>(array, lz4Options);
+                switch (deserialized)
+                {
+                    case AccountMessage x:
+                        if (x.Context == MessageContext.REGISTER)
+                        {
+                            HandleAccountMessage(context, x); 
+                        }
+                        if (x.Context == MessageContext.LOGIN)
+                        {
+                            HandleRegisterMessage(context, x);    
+                        }
+                        break;
+                }
+            });
         }
-        // The Channel is closed hence the connection is closed
-        public override void ChannelInactive(IChannelHandlerContext ctx)
+        
+        async void HandleAccountMessage(IChannelHandlerContext context, AccountMessage msg)
         {
-
+            IMessage tmp = new UserActionMessage() { MessageContext = MessageContext.REGISTER, MessageState = MessageState.SUCCESS };
+            var serialized = MessagePackSerializer.Serialize(tmp, lz4Options);
+            var buffer = Unpooled.WrappedBuffer(serialized);
+            await context.WriteAndFlushAsync(buffer);
         }
-
+        async void HandleRegisterMessage(IChannelHandlerContext context, AccountMessage msg)
+        {
+            IMessage tmp = new UserActionMessage() { MessageContext = MessageContext.LOGIN, MessageState = MessageState.SUCCESS };
+            var serialized = MessagePackSerializer.Serialize(tmp, lz4Options);
+            var buffer = Unpooled.WrappedBuffer(serialized);
+            await context.WriteAndFlushAsync(buffer);
+        }
 
         public override bool IsSharable => true;
 

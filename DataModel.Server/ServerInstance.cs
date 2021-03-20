@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using NLog.Extensions.Logging;
 using DotNetty.Handlers.Logging;
 using DotNetty.Handlers.Flush;
+using MessagePack;
 
 namespace DataModel.Server
 {
@@ -39,16 +40,15 @@ namespace DataModel.Server
             }
             bossGroup = new MultithreadEventLoopGroup(1); //  accepts an incoming connection
             workerGroup = new MultithreadEventLoopGroup(); // handles the traffic of the accepted connection once the boss accepts the connection and registers the accepted connection to the worker
+            var scheduler = TaskScheduler.Default;
+            var factory = new TaskFactory(scheduler);
+            var options = MessagePackSerializerOptions.Standard.WithCompression(MessagePackCompression.Lz4BlockArray);
             bootstrap = new ServerBootstrap();
             bootstrap
                 .Group(bossGroup, workerGroup)
                 .Channel<TcpServerSocketChannel>()
                 .Option(ChannelOption.SoBacklog, 1024)
                 .Handler(new LoggingHandler())
-                //.ChildOption(ChannelOption.SoReuseaddr, true)
-                //.ChildOption(ChannelOption.SoReuseport, false)
-                //.ChildOption(ChannelOption.SoBroadcast, true)
-                //.ChildOption(ChannelOption.SoKeepalive, true)
                 .ChildOption(ChannelOption.TcpNodelay, true)
                 .ChildOption(ChannelOption.SoSndbuf, 2048)
                 .ChildOption(ChannelOption.SoRcvbuf, 8196)
@@ -59,9 +59,9 @@ namespace DataModel.Server
                     pipeline.AddLast(new LoggingHandler("SRV-CONN"));
                     pipeline.AddLast("framing-enc", new LengthFieldPrepender(2));
                     pipeline.AddLast("framing-dec", new LengthFieldBasedFrameDecoder(short.MaxValue, 0, 2, 0, 2));
-                    pipeline.AddLast(new DotNettyMessagePackDecoder());
-                    pipeline.AddLast(new DotNettyMessagePackEncoder());
-                    pipeline.AddLast(new ClientHandler());
+               //   pipeline.AddLast(new DotNettyMessagePackDecoder());
+               //   pipeline.AddLast(new DotNettyMessagePackEncoder());
+                    pipeline.AddLast(new ClientHandler(factory, ref options));
                 }));
                
 

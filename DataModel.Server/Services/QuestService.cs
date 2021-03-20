@@ -19,18 +19,15 @@ namespace DataModel.Server.Services
 
                 var userQuests = DataBaseFunctions.GetQuestsForUser(player.UserId);
                 var enumerable = userQuests.Where(e => e.Quest.QuestId.SequenceEqual(questId));
-                if(enumerable.Count() == 0)
+                if (enumerable.Count() == 0)
                 {
                     v.OnNext(false);
                     v.OnCompleted();
                     return Disposable.Empty;
                 }
-                if(enumerable.Count() > 1)
+                if (enumerable.Count() > 1)
                 {
                     throw new Exception("duplicate state");
-                    v.OnNext(false);
-                    v.OnCompleted();
-                    return Disposable.Empty;
                 }
                 var inventory = DataBaseFunctions.RequestInventory(player.UserId, player.UserId);
 
@@ -39,15 +36,15 @@ namespace DataModel.Server.Services
                 var itemKey = quest.Quest.GetQuestItemDictionaryKey();
                 var questItems = 0;
                 var userHasQuestItems = inventory.TryGetValue(itemKey, out questItems);
-                
+
                 if (!userHasQuestItems)
                 {
                     v.OnNext(false);
                     v.OnCompleted();
                     return Disposable.Empty;
                 }
-                
-                if(questItems < quest.Quest.RequiredAmountForCompletion)
+
+                if (questItems < quest.Quest.RequiredAmountForCompletion)
                 {
                     v.OnNext(false);
                     v.OnCompleted();

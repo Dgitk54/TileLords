@@ -13,6 +13,23 @@ namespace ClientMain
 
         static void Main(string[] args)
         {
+
+            //LaunchWithChoice(); 
+            LaunchSingle10ClientBatch();
+
+        }
+        static void LaunchSingle10ClientBatch()
+        {
+            AutoResetEvent closingEvent = new AutoResetEvent(false);
+            for (int i = 0; i < 10; i++)
+            {
+                Task.Run(() => LargeScaleTestClientDebug());
+            }
+
+            closingEvent.WaitOne();
+        }
+        static void LaunchWithChoice()
+        {
             var token = new CancellationTokenSource();
             for (; ; )
             {
@@ -31,10 +48,17 @@ namespace ClientMain
                     case 'c':
                         Task.Run(() => DebugLoginAndObserveTestClient("observer", "observer", GetRandomSpotsInArea(3), token.Token));
                         break;
+                    case 'd':
+                        LargeScaleTestClientDebug();
+                        break;
                 }
             }
-
-
+        }
+        static void LargeScaleTestClientDebug()
+        {
+            var token = new CancellationTokenSource();
+            int spots = 3;
+            DebugRegisterAndLoginClient("GUID" + Guid.NewGuid().ToString() + DateTime.Now.ToLongTimeString() + DateTime.Now.Millisecond, "test" + DateTime.Now.ToLongTimeString() + DateTime.Now.Millisecond, GetRandomSpotsInArea(spots), token.Token);
         }
         static void LargeScaleTests()
         {
@@ -43,16 +67,25 @@ namespace ClientMain
             int spots = 3;
             for (; ; )
             {
-                Console.WriteLine("Clientamount:");
+                Console.WriteLine("Enter Clientamount: x 10");
+
                 string input = Console.ReadLine();
                 int number;
                 if (!Int32.TryParse(input, out number))
                     continue;
                 for (int i = 0; i < number; i++)
                 {
-                    Task.Run(() => DebugRegisterAndLoginClient("test" + i, "test" + i, GetRandomSpotsInArea(spots), token.Token));
-                    //Task.Run(() => DebugSendSomeMessagesClient("test" + i, "test" + i, GetRandomSpotsInArea(spots), token.Token)); debug.
-                    Thread.Sleep(2000);
+                    Task.Run(() =>
+                    {
+                        AutoResetEvent closingEvent = new AutoResetEvent(false);
+                        for (int j = 0; j < 10; j++)
+                        {
+                            Task.Run(() => LargeScaleTestClientDebug());
+                        }
+
+                        closingEvent.WaitOne();
+
+                    });
                 }
             }
 
@@ -147,17 +180,17 @@ namespace ClientMain
         {
             var instance = new ClientInstanceManager();
             instance.StartClient();
-
+            Thread.Sleep(1000);
             var tokenSrc = new CancellationTokenSource();
 
             //Try to log in, create account if cant log in:
             ClientFunctions.TryRegisterAndLogInInfiniteAttempts(instance, name, password);
 
 
-            Console.Write("Connected and logged in!"); 
-            Thread.Sleep(1000);
-            
-            var sendPath = Task.Run(() => ClientFunctions.SendGpsPath(instance, tokenSrc.Token, path, 16000));
+            Console.Write("Connected and logged in!");
+            //Thread.Sleep(1000);
+
+            var sendPath = Task.Run(() => ClientFunctions.SendGpsPath(instance, tokenSrc.Token, path, 3000));
             do
             {
                 if (cancellationToken.IsCancellationRequested)
@@ -165,8 +198,8 @@ namespace ClientMain
                 Thread.Sleep(1000);
 
             } while (!cancellationToken.IsCancellationRequested);
-            
-            
+
+
             /*do
             {
                 if (cancellationToken.IsCancellationRequested)
@@ -219,7 +252,7 @@ namespace ClientMain
                 list.Add(new GPS() { Lat = mainzLatMin + rollLat, Lon = mainzLonMin + rollLon });
             }
 
-            list.ConvertAll(v => v.GetPlusCode(10)).ForEach(v => Console.WriteLine(v.Code));
+            // list.ConvertAll(v => v.GetPlusCode(10)).ForEach(v => Console.WriteLine(v.Code));
             return list;
         }
 

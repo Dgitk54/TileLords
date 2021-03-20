@@ -55,10 +55,16 @@
     <ManifestKeyFile>Debug472_TemporaryKey.pfx</ManifestKeyFile>
   </PropertyGroup>
   <PropertyGroup>
-    <GenerateManifests>true</GenerateManifests>
+    <GenerateManifests>false</GenerateManifests>
   </PropertyGroup>
   <PropertyGroup>
-    <SignManifests>true</SignManifests>
+    <SignManifests>false</SignManifests>
+  </PropertyGroup>
+  <PropertyGroup>
+    <TargetZone>LocalIntranet</TargetZone>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationManifest>Properties\app.manifest</ApplicationManifest>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="DotNetty.Buffers, Version=0.7.0.0, Culture=neutral, PublicKeyToken=bc13ca065fa06c29, processorArchitecture=MSIL">
@@ -159,6 +165,24 @@
     <Compile Include="DebugNonRxClientHandler.cs" />
     <Compile Include="DotNettyMessagePackDecoder.cs" />
     <Compile Include="DotNettyMessagePackEncoder.cs" />
+    <Compile Include="GameModel\GameEnums.cs" />
+    <Compile Include="GameModel\InventoryType.cs" />
+    <Compile Include="GameModel\Quest.cs" />
+    <Compile Include="GameModel\QuestReward.cs" />
+    <Compile Include="GameModel\Town.cs" />
+    <Compile Include="Messages\AccountMessage.cs" />
+    <Compile Include="Messages\ActiveUserQuestsMessage.cs" />
+    <Compile Include="Messages\BatchContentMessage.cs" />
+    <Compile Include="Messages\ContentMessage.cs" />
+    <Compile Include="Messages\IMessage.cs" />
+    <Compile Include="Messages\InventoryContentMessage.cs" />
+    <Compile Include="Messages\MapContentTransactionMessage.cs" />
+    <Compile Include="Messages\MessageEnums.cs" />
+    <Compile Include="Messages\QuestRequestMessage.cs" />
+    <Compile Include="Messages\TransactionMessage.cs" />
+    <Compile Include="Messages\TurnInQuestMessage.cs" />
+    <Compile Include="Messages\UserActionMessage.cs" />
+    <Compile Include="Messages\UserGpsMessage.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ServerInstance.cs" />
@@ -167,12 +191,7 @@
     <None Include="App.config" />
     <None Include="Debug472_TemporaryKey.pfx" />
     <None Include="packages.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\DataModel.Common\DataModel.Common.csproj">
-      <Project>{9aec4ce9-2acf-41ea-b45a-f3192095a6d1}</Project>
-      <Name>DataModel.Common</Name>
-    </ProjectReference>
+    <None Include="Properties\app.manifest" />
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include=".NETFramework,Version=v4.7.2">

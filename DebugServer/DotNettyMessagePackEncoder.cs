@@ -3,26 +3,25 @@ using DotNetty.Buffers;
 using DotNetty.Codecs;
 using DotNetty.Transport.Channels;
 using MessagePack;
-using System;
-using System.Collections.Generic;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace DataModel.Server
 {
-    public class DotNettyMessagePackEncoder : MessageToByteEncoder<object>
+    public class DotNettyMessagePackEncoder : MessageToByteEncoder<IMessage>
     {
-        MessagePackSerializerOptions lz4Options = MessagePackSerializerOptions.Standard.WithCompression(MessagePackCompression.Lz4BlockArray);
-        protected override void Encode(IChannelHandlerContext context, object message, IByteBuffer output)
+        MessagePackSerializerOptions lz4Options;
+        public DotNettyMessagePackEncoder(ref MessagePackSerializerOptions options)
         {
-
-            if (message is IMessage)
-            {
-                var msg = message as IMessage;
-                var data = MessagePackSerializer.Serialize(msg, lz4Options);
+            lz4Options = options;
+        }
+        protected override void Encode(IChannelHandlerContext context, IMessage message, IByteBuffer output)
+        {
+            
+                var data = MessagePackSerializer.Serialize(message, lz4Options);
                 output.WriteBytes(data);
-            }
+            
 
         }
+
     }
 }

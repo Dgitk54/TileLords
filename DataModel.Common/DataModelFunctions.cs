@@ -26,7 +26,16 @@ namespace DataModel.Common
                 TypeNameHandling = TypeNameHandling.Auto
             };
         }
-
+        public static string ToConsoleString(this byte[] bytes)
+        {
+            var stringBuilder = new StringBuilder("byte[] array: [ ");
+            foreach (var @byte in bytes)
+            {
+                stringBuilder.Append(@byte + ", ");
+            }
+            stringBuilder.Append("]");
+            return stringBuilder.ToString();
+        }
         public static byte[] ToJsonPayload(this IMessage msg)
         {
             var serialized = JsonConvert.SerializeObject(msg, objectSettings);

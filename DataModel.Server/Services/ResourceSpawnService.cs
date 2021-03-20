@@ -66,23 +66,25 @@ namespace DataModel.Server.Services
 
         public IDisposable AddMoveableQuestResourceSpawnArea(byte[] moveableOwnerId, IObservable<PlusCode> location)
         {
-            return Observable.Interval(TimeSpan.FromSeconds(RESOURCESPAWNCHECKTHROTTLEINSECONDS))
+            return Observable.Interval(TimeSpan.FromSeconds(RESOURCESPAWNCHECKTHROTTLEINSECONDS)) // use timer => in case player doesnt move
                                 .WithLatestFrom(location, (_, loc) => new { _, loc })
-                                .Select(v => v.loc)
+                                .Select(v => v.loc) // discard timer, reduce only to location
                                 .Select(v => (DataBaseFunctions.GetQuestsForUser(moveableOwnerId), v))
-                                .Where(v => v.Item1 != null)
-                                .Select(v => ServerFunctions.LocationIsInsideQuestSpawnableArea(v.v, v.Item1))
-                                .Where(v => v.Any())
-                                .Select(v => v.Where(e => ServerFunctions.ShouldResourceSpawn(e, RESOURCESPAWNCHECKTHROTTLEINSECONDS)))
-                                .Where(v => v.Any())
-
-                                .Subscribe(v =>
+                                .Where(v => v.Item1 != null) //User has Quests
+                                .Select(v => ServerFunctions.LocationIsInsideQuestSpawnableArea(v.v, v.Item1)) //Enumerable of quests zones the player is inside
+                                .Where(v => v.Any()) //Only when player is inside questzone
+                                .Select(v => v.Where(e => ServerFunctions.ShouldResourceSpawn(e, RESOURCESPAWNCHECKTHROTTLEINSECONDS))) // Calculate Questitemspawnchance
+                                .Where(v => v.Any()) //Only when item should spawn
+                                .Subscribe(v => //Handle SpawnRequests
                                 {
                                     v.ToList().ForEach(e =>
                                     {
-                                        var randomSpawnInQuestArea = DataModelFunctions.GetNearbyRandomSpawn(e.Quest.QuestTargetLocation, e.Quest.AreaRadiusFromLocation);
-                                        var resource = e.ExtractQuestResource(randomSpawnInQuestArea.Code);
-                                        resourceSpawnRequests.OnNext((resource, randomSpawnInQuestArea.Code));
+                                        //random nearby location
+                                        var randomLocationInSpawnArea = DataModelFunctions.GetNearbyRandomSpawn(e.Quest.QuestTargetLocation, e.Quest.AreaRadiusFromLocation);
+                                        //get proper resource to spawn for quest
+                                        var resource = e.ExtractQuestResource(randomLocationInSpawnArea.Code);
+                                        //send spawn request
+                                        resourceSpawnRequests.OnNext((resource, randomLocationInSpawnArea.Code)); // Push into internal observable stream
                                     });
                                 });
         }

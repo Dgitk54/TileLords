@@ -10,6 +10,7 @@ using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Security.Cryptography;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace DataModel.Server.Services
 {
@@ -31,12 +32,13 @@ namespace DataModel.Server.Services
         
         public IObservable<IUser> LoginUser(string name, string password)
         {
-            return Observable.Create<IUser>(v =>
+            return Observable.Create<IUser>(async v =>
             {
                 Stopwatch stopwatch = new Stopwatch();
                 stopwatch.Start();
-
+              //  var userTask = Task.Run(() => userNameLookup(name));
                 var user = userNameLookup(name);
+
                 if (user == null)
                 {
                     v.OnError(new Exception("Unkown User"));
@@ -48,16 +50,16 @@ namespace DataModel.Server.Services
                     v.OnError(new Exception("User is online!"));
                     return Disposable.Empty;
                 }
-                
                 var pass = Encoding.UTF8.GetBytes(password);
-                if (passwordMatcher(pass, user.SaltedHash, user.Salt))
+                var matcher = Task.Run(() => passwordMatcher(pass, user.SaltedHash, user.Salt));
+                var result = await matcher;
+                if (result)
                 {
-                    DataBaseFunctions.UpdateUserOnlineState(user.UserId.ToByteArray(), true);
-
                     stopwatch.Stop();
                     Console.WriteLine("LOG IN: Elapsed Time is {0} ms" + name, stopwatch.ElapsedMilliseconds);
-
                     v.OnNext(user);
+                  //  var updateUser = Task.Run(() => DataBaseFunctions.UpdateUserOnlineState(user.UserId.ToByteArray(), true));
+                  //  await updateUser;
                     v.OnCompleted();
                     return Disposable.Empty;
                 }

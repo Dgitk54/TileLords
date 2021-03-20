@@ -5,6 +5,7 @@ using DataModel.Server.Services;
 using DotNetty.Buffers;
 using DotNetty.Common.Internal.Logging;
 using DotNetty.Transport.Channels;
+using MessagePack;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -20,25 +21,28 @@ namespace DataModel.Server
 {
     public class ClientHandler : ChannelHandlerAdapter
     {
-        static readonly IInternalLogger Logger = InternalLoggerFactory.GetInstance<ClientHandler>();
 
         static bool logInConsole = false;
-        readonly Subject<IMessage> clientInboundTraffic = new Subject<IMessage>();
-        readonly ISubject<IMessage> synchronizedInboundTraffic;
+        readonly Subject<byte[]> clientInboundTraffic = new Subject<byte[]>();
+        readonly ISubject<byte[]> synchronizedInboundTraffic;
         readonly UserAccountService userAccountService;
         readonly MapContentService mapContentService;
         readonly ResourceSpawnService resourceSpawnService;
         readonly APIGatewayService apiGatewayService;
         IDisposable responseDisposable;
-        public ClientHandler()
+        readonly TaskFactory scheduler;
+        readonly MessagePackSerializerOptions lz4Options;
+        public ClientHandler(TaskFactory scheduler, ref MessagePackSerializerOptions options)
         {
             userAccountService = new UserAccountService(DataBaseFunctions.FindUserInDatabase, ServerFunctions.PasswordMatches);
             mapContentService = new MapContentService(DataBaseFunctions.AreaContentAsMessageRequest, DataBaseFunctions.UpdateOrDeleteContent, DataBaseFunctions.AreaContentAsListRequest);
             resourceSpawnService = new ResourceSpawnService(mapContentService, DataBaseFunctions.UpdateOrDeleteContent, new List<Func<List<MapContent>, bool>>() { ServerFunctions.Only5ResourcesInArea });
             var InventoryService = new InventoryService();
             var questService = new QuestService();
-            apiGatewayService = new APIGatewayService(userAccountService, mapContentService, resourceSpawnService, InventoryService, questService);
+            apiGatewayService = new APIGatewayService(userAccountService, mapContentService, resourceSpawnService, InventoryService, questService, ref options);
+            this.scheduler = scheduler;
             synchronizedInboundTraffic = Subject.Synchronize(clientInboundTraffic);
+            lz4Options = options;
         }
 
         public override void ChannelActive(IChannelHandlerContext ctx)
@@ -47,23 +51,33 @@ namespace DataModel.Server
                 Console.WriteLine("Client connected");
             apiGatewayService.AttachGateway(synchronizedInboundTraffic);
 
-            responseDisposable = apiGatewayService.GatewayResponse.Do(v => { if (logInConsole) { Console.WriteLine(v); } }).ObserveOn(TaskPoolScheduler.Default).Subscribe(v =>
-            {
-                TaskPoolScheduler.Default.Schedule(() => ctx.WriteAndFlushAsync(v));
-            });
+            responseDisposable = apiGatewayService.GatewayResponse.Do(v => { if (logInConsole) { Console.WriteLine("GATEWAYRESPONSEOUTPUT" + v); } })
+                                                                  .Select(v=>
+                                                                  {
+                                                                     return Observable.Start(() => MessagePackSerializer.Serialize(v, lz4Options));
+                                                                  })
+                                                                  .SelectMany(v=> v)
+                                                                  .Select(v=> Unpooled.WrappedBuffer(v))
+                                                                  .Subscribe(v =>
+                                                                  {
+                                                                      // TaskPoolScheduler.Default.Schedule(() => ctx.WriteAndFlushAsync(v));
+                                                                      ctx.WriteAndFlushAsync(v);
+                                                                  });
         }
 
         public override void ChannelRead(IChannelHandlerContext context, object message)
         {
-            var msg = (IMessage)message;
-            if (msg != null)
+            scheduler.StartNew(() =>
             {
-                if (logInConsole)
-                    Console.WriteLine("Received" + msg);
-                TaskPoolScheduler.Default.Schedule(() => synchronizedInboundTraffic.OnNext(msg));
-            }
+                var castedMessage = (IByteBuffer)message;
+                int length = castedMessage.ReadableBytes;
+                var array = new byte[length];
+                castedMessage.GetBytes(castedMessage.ReaderIndex, array, 0, length);
+                //var deserialized = MessagePackSerializer.Deserialize<IMessage>(array, lz4Options);
+                synchronizedInboundTraffic.OnNext(array);
+            });
         }
-       
+
         // The Channel is closed hence the connection is closed
         public override void ChannelInactive(IChannelHandlerContext ctx)
         {
@@ -73,7 +87,7 @@ namespace DataModel.Server
                 Console.WriteLine("Cleaned up ClientHandler");
         }
 
-        public override bool IsSharable => false;
+        public override bool IsSharable => true;
     }
 
 

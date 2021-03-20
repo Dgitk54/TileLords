@@ -126,7 +126,6 @@ namespace DataModel.Client
                 Bootstrap
                     .Group(group)
                     .Channel<TcpSocketChannel>()
-                    .Option(ChannelOption.TcpNodelay, true) // Do not buffer and send packages right away
                     .Handler(actionChannelInitializer);
 
                 BootstrapChannel = await Bootstrap.ConnectAsync(new IPEndPoint(serverIP, serverPort));

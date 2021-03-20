@@ -3,6 +3,7 @@ using DataModel.Common.GameModel;
 using DataModel.Common.Messages;
 using DataModel.Server.Model;
 using DotNetty.Buffers;
+using MessagePack;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -119,26 +120,40 @@ namespace DataModel.Server.Services
         }
 
 
+        readonly MessagePackSerializerOptions lz4Options;
 
-
-        public APIGatewayService(UserAccountService userService, MapContentService mapService, ResourceSpawnService spawnService, InventoryService inventoryService, QuestService questService)
+        public APIGatewayService(UserAccountService userService, MapContentService mapService, ResourceSpawnService spawnService, InventoryService inventoryService, QuestService questService,ref MessagePackSerializerOptions options)
         {
             this.userService = userService;
             this.mapService = mapService;
             this.inventoryService = inventoryService;
             this.resourceSpawnService = spawnService;
             this.questService = questService;
-
+            lz4Options = options;
 
         }
         public IObservable<IMessage> GatewayResponse => responses.ObserveOn(TaskPoolScheduler.Default).AsObservable();
-        public void AttachGateway(IObservable<IMessage> inboundtraffic)
+        public void AttachGateway(IObservable<byte[]> inboundBytes)
         {
+            var inboundtraffic = inboundBytes.ObserveOn(TaskPoolScheduler.Default)
+                   .Select(v => Observable.Defer(() =>
+                   {
+                       return Observable.Start(() =>
+                       {
+                           return MessagePackSerializer.Deserialize<IMessage>(v, lz4Options);
+                       })
+                       .Catch<IMessage, Exception>(e =>
+                       {
+                           return Observable.Empty<IMessage>();
+                       });
+                   }))
+                   .SelectMany(v=> v);
+
             disposables.Add(HandleRegister(inboundtraffic));
 
             LoggedInUser(inboundtraffic).Where(v => v != null)
                                         .Take(1)
-                                        .Do(v => { TaskPoolScheduler.Default.Schedule(() => responses.OnNext(loginSuccessWithId(v))); })
+                                        .Do(v => { responses.OnNext(loginSuccessWithId(v)); })
                                         .Subscribe(v =>
                                         {
                                             var mapServicePlayerUpdate = mapService.AddMapContent(v.AsMapContent(), LatestClientLocation(inboundtraffic));
@@ -187,7 +202,8 @@ namespace DataModel.Server.Services
                           {
                               return userService.LoginUser(v.Name, v.Password).Catch<IUser, Exception>(tx =>
                               {
-                                  TaskPoolScheduler.Default.Schedule(() => responses.OnNext(loginFail));
+                                  //TaskPoolScheduler.Default.Schedule(() => responses.OnNext(loginFail));
+                                  responses.OnNext(loginFail);
                                   return Observable.Empty<IUser>();
                               });
                           });
@@ -313,11 +329,13 @@ namespace DataModel.Server.Services
                                 {
                                     if (v)
                                     {
-                                        TaskPoolScheduler.Default.Schedule(() => responses.OnNext(registerSuccess));
+                                        // TaskPoolScheduler.Default.Schedule(() => responses.OnNext(registerSuccess));
+                                        responses.OnNext(registerSuccess);
                                     }
                                     else
                                     {
-                                        TaskPoolScheduler.Default.Schedule(() => responses.OnNext(registerFail));
+                                        // TaskPoolScheduler.Default.Schedule(() => responses.OnNext(registerFail));
+                                        responses.OnNext(registerFail);
                                     }
                                 });
         }

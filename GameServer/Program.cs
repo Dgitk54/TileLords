@@ -46,6 +46,7 @@ namespace GameServer
 
             var inboundTraffic = new Subject<byte[]>();
 
+            
             var disposable = ReactiveSocketWrapper.AttachGatewayNoTask(inboundTraffic).Subscribe(v => writer.WriteAsync(v));
 
             /*var disposable = ReactiveSocketWrapper.AttachGateWay(inboundTraffic)

@@ -10,7 +10,7 @@ namespace ServerMain
 
         public static void Main(String[] args)
         {
-            ServerInstance.AttachConsoleLogging();
+          //  ServerInstance.AttachConsoleLogging();
             var server = new ServerInstance();
             var resourceCleanup = DataBaseFunctions.ResetMapContent();
             Console.WriteLine("Cleaned up resources amount:" + resourceCleanup);

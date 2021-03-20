@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
+using System.Threading.Tasks;
 
 namespace DataModel.Server.Services
 {
@@ -31,15 +32,11 @@ namespace DataModel.Server.Services
         public IDisposable AddMapContent(MapContent content, IObservable<PlusCode> contentLocation)
         {
             return contentLocation.Sample(TimeSpan.FromSeconds(CONTENTSAMPLE))
-                                  .Finally(() => userContentStorage(content, null))
+                                  .Finally(() => Task.Factory.StartNew(() => userContentStorage(content, null)))
                                   .Subscribe(v =>
                                   {
-                                      userContentStorage(content, v.Code);
-                                  },
-                                      () =>
-                                      {
-                                          userContentStorage(content, null);
-                                      });
+                                      Task.Factory.StartNew(() => userContentStorage(content, v.Code));
+                                  },() => Task.Factory.StartNew(() => userContentStorage(content, null)));
         }
 
 

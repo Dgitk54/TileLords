@@ -1,5 +1,4 @@
 ﻿using System;
-using System;
 using System.Buffers;
 using System.IO.Pipelines;
 using System.Net;
@@ -68,18 +67,43 @@ namespace GameServer
                           });
         }
 
-        public static IObservable<IMessage> AttachGateWay(IObservable<byte[]> inbound)
+        public static IObservable<ReadOnlyMemory<byte>> AttachGateWay(IObservable<byte[]> inbound)
         {
-            return inbound.ObserveOn(TaskPoolScheduler.Default).Select(v => Observable.Defer(() => Observable.Start(() => MessagePackSerializer.Deserialize<IMessage>(v, lz4Options)).Catch<IMessage,Exception>(v=> { return Observable.Empty<IMessage>(); }) ))
-                          .SelectMany(v =>
-                          {
-                              var register = HandleRegisterResponse(v);
-                              var login = LoginRequestsResponse(v);
-                              var consolePrinter = ConsolePrinter(v);
-                              var userAndMore = CurrentlyLoggedInUser(v).Where(e => e != null).SelectMany(e => { return Observable.Concat(DoRandomStuff(v, e), DoRandomStuff2(v, e)); });
-
-                              return Observable.Concat(register, login, consolePrinter);
-                          });
+            return inbound.ObserveOn(TaskPoolScheduler.Default)
+                   //Deserialization:
+                   .Select(v => Observable.Defer(() =>
+                   {
+                       return Observable.Start(() =>
+                       {
+                           return MessagePackSerializer.Deserialize<IMessage>(v, lz4Options);
+                       })
+                       .Catch<IMessage, Exception>(v =>
+                       {
+                           return Observable.Empty<IMessage>();
+                       });
+                   }))
+                   //Handle Messages
+                   .SelectMany(messages =>
+                   {
+                       var register = HandleRegisterResponse(messages);
+                       var login = LoginRequestsResponse(messages);
+                       var consolePrinter = ConsolePrinter(messages);
+                       var userAndMore = CurrentlyLoggedInUser(messages).Where(user => user != null) //User logged in
+                                                                        .SelectMany(user =>
+                                                                        {
+                                                                            //Handle user with messages, subscribe to map/inventory/quest services etc.
+                                                                            return Observable.Concat(DoRandomStuff(messages, user), DoRandomStuff2(messages, user));
+                                                                        });
+                       //concat responses
+                       return Observable.Concat(register, login, consolePrinter, userAndMore);
+                   })
+                   //serialize responses
+                   .Select(v =>
+                   {
+                       var data = MessagePackSerializer.Serialize(v, lz4Options);
+                       var result = data.Concat(NewLineDelimiter).ToArray();
+                       return new ReadOnlyMemory<byte>(result);
+                   });;
         }
 
         public static IObservable<IMessage> ConsolePrinter(IObservable<IMessage> inbound)

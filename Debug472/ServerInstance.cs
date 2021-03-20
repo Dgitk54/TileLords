@@ -1,14 +1,14 @@
 ﻿using DotNetty.Codecs;
 using DotNetty.Common.Internal.Logging;
+using DotNetty.Handlers.Logging;
 using DotNetty.Transport.Bootstrapping;
 using DotNetty.Transport.Channels;
 using DotNetty.Transport.Channels.Sockets;
+using MessagePack;
 using Microsoft.Extensions.Logging;
+using NLog.Extensions.Logging;
 using System;
 using System.Threading.Tasks;
-using NLog.Extensions.Logging;
-using DotNetty.Handlers.Logging;
-using DotNetty.Handlers.Flush;
 
 namespace DataModel.Server
 {
@@ -35,33 +35,30 @@ namespace DataModel.Server
             {
                 throw new Exception("Server already running!");
             }
-            bossGroup = new MultithreadEventLoopGroup(2); //  accepts an incoming connection
-            workerGroup = new MultithreadEventLoopGroup(10); // handles the traffic of the accepted connection once the boss accepts the connection and registers the accepted connection to the worker
-            var handler = new DebugNonRxClientHandler(null, null);
+            bossGroup = new MultithreadEventLoopGroup(1); //  accepts an incoming connection
+            workerGroup = new MultithreadEventLoopGroup(); // handles the traffic of the accepted connection once the boss accepts the connection and registers the accepted connection to the worker
+            var handler = new DebugNonRxClientHandler();
+            var options = MessagePackSerializerOptions.Standard.WithCompression(MessagePackCompression.Lz4BlockArray);
+            var encoder = new DotNettyMessagePackEncoder(ref options);
+            var decoder = new DotNettyMessagePackDecoder(ref options);
             bootstrap = new ServerBootstrap();
             bootstrap
                 .Group(bossGroup, workerGroup)
                 .Channel<TcpServerSocketChannel>()
-                .Option(ChannelOption.SoBacklog, 1024)
+                .Option(ChannelOption.SoBacklog, 100)
+                .Option(ChannelOption.SoRcvbuf, int.MaxValue)
                 .Handler(new LoggingHandler())
-                //.ChildOption(ChannelOption.SoReuseaddr, true)
-                //.ChildOption(ChannelOption.SoReuseport, false)
-                //.ChildOption(ChannelOption.SoBroadcast, true)
-                //.ChildOption(ChannelOption.SoKeepalive, true)
-                .ChildOption(ChannelOption.TcpNodelay, true)
-                .ChildOption(ChannelOption.SoSndbuf, 2048)
-                .ChildOption(ChannelOption.SoRcvbuf, 8196)
                 .ChildHandler(new ActionChannelInitializer<ISocketChannel>(channel =>
                 {
 
                     IChannelPipeline pipeline = channel.Pipeline;
-                    pipeline.AddLast(new FlushConsolidationHandler(1000, true));
                     pipeline.AddLast(new LoggingHandler("SRV-CONN"));
                     //  pipeline.AddLast(TlsHandler.Server(tlsCertificate));
                     pipeline.AddLast("framing-enc", new LengthFieldPrepender(2));
+                    pipeline.AddLast(new DotNettyMessagePackEncoder(ref options));
                     pipeline.AddLast("framing-dec", new LengthFieldBasedFrameDecoder(short.MaxValue, 0, 2, 0, 2));
-                    pipeline.AddLast(new DotNettyMessagePackDecoder());
-                    pipeline.AddLast(new DotNettyMessagePackEncoder());
+
+                    pipeline.AddLast(new DotNettyMessagePackDecoder(ref options));
                     pipeline.AddLast(handler);
                 }));
 

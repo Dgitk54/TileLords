@@ -93,7 +93,7 @@ namespace DataModel.Client
                     tryLogin.Wait();
                     loginResponse = tryLogin.Result;
                     tryLogin.Dispose();
-                } catch(Exception e)
+                } catch(Exception )
                 {
                     Console.WriteLine("Log in timed out, retrying with!" + name);
                 }
