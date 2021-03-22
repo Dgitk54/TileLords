@@ -20,8 +20,8 @@ namespace ClientIntegration
         [SetUp]
         public void Setup()
         {
-            DataBaseFunctions.WipeAllDatabases();
-            DataBaseFunctions.InitializeDataBases();
+            LiteDBDatabaseFunctions.WipeAllDatabases();
+            LiteDBDatabaseFunctions.InitializeDataBases();
             server = new ServerInstance();
             serverRunning = server.RunServerAsync();
         }
@@ -29,7 +29,7 @@ namespace ClientIntegration
         [TearDown]
         public void TearDown()
         {
-            DataBaseFunctions.WipeAllDatabases();
+            LiteDBDatabaseFunctions.WipeAllDatabases();
             server.ShutDownServer().Wait();
         }
         [Test]

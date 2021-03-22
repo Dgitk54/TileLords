@@ -12,7 +12,7 @@ using System.Security.Cryptography;
 
 namespace DataModel.Server
 {
-    public static class DataBaseFunctions
+    public static class LiteDBDatabaseFunctions
     {
         public static string UserDatabaseName => @"Users.db";
         public static string MapDatabaseName => @"MapData.db";
@@ -422,6 +422,7 @@ namespace DataModel.Server
                 return true;
             }
         }
+
         public static Dictionary<InventoryType, int> RequestInventory(byte[] requestOwnerId, byte[] targetId)
         {
             using (var dataBase = new LiteDatabase(InventoryDatabaseRead()))
@@ -454,7 +455,7 @@ namespace DataModel.Server
         /// </summary>
         /// <param name="content">MapContent to insert/update</param>
         /// <param name="location">The current location of the MapContent, if null this function will delete the mapcontent</param>
-        public static void UpdateOrDeleteContent(MapContent content, string location)
+        public static void UpsertOrDeleteContent(MapContent content, string location)
         {
             using (var dataBase = new LiteDatabase(MapDataWrite()))
             {
@@ -515,7 +516,7 @@ namespace DataModel.Server
         /// </summary>
         /// <param name="location">Middle Location</param>
         /// <returns>List of visible content. </returns>
-        public static List<MapContent> AreaContentAsListRequest(string location)
+        public static List<MapContent> RequestVisibleContent(string location)
         {
             var nearbyCodes = LocationCodeTileUtility.GetTileSection(location, ServerFunctions.CLIENTVISIBILITY, ServerFunctions.CLIENTLOCATIONPRECISION);
             using (var dataBase = new LiteDatabase(MapDataRead()))
@@ -526,23 +527,7 @@ namespace DataModel.Server
             }
         }
 
-        /// <summary>
-        /// See <see cref="AreaContentAsListRequest"/> wrapped in a batchcontentmessage
-        /// </summary>
-        /// <param name="location">Middle Location</param>
-        /// <returns>Message with the List containing all content. </returns>
-        public static BatchContentMessage AreaContentAsMessageRequest(string location)
-        {
-            var nearbyCodes = LocationCodeTileUtility.GetTileSection(location, ServerFunctions.CLIENTVISIBILITY, ServerFunctions.CLIENTLOCATIONPRECISION);
-            using (var dataBase = new LiteDatabase(MapDataRead()))
-            {
-                var col = dataBase.GetCollection<MapContent>("mapcontent");
-                var enumerable = col.Find(v => nearbyCodes.Any(v2 => v2.Equals(v.Location)));
-                var list = enumerable.ToList().ConvertAll(v => v.AsMessage());
-                return new BatchContentMessage() { ContentList = list };
-            }
-        }
-
+       
         /// <summary>
         /// Function which creates a new user account
         /// </summary>

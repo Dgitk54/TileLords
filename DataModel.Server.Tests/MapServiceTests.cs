@@ -19,14 +19,14 @@ namespace DataModel.Server.Tests
         [SetUp]
         public void Setup()
         {
-            DataBaseFunctions.WipeAllDatabases();
-            DataBaseFunctions.InitializeDataBases();
+            LiteDBDatabaseFunctions.WipeAllDatabases();
+            LiteDBDatabaseFunctions.InitializeDataBases();
         }
 
         [TearDown]
         public void TearDown()
         {
-            DataBaseFunctions.WipeAllDatabases();
+            LiteDBDatabaseFunctions.WipeAllDatabases();
         }
 
         [Test]

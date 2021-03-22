@@ -26,11 +26,11 @@ namespace DataModel.Server.Services
         public IDisposable AddMapContent(MapContent content, IObservable<PlusCode> contentLocation)
         {
             return contentLocation.Sample(TimeSpan.FromSeconds(CONTENTSAMPLE))
-                                  .Finally(() => Task.Factory.StartNew(() => DataBaseFunctions.UpdateOrDeleteContent(content, null)))
+                                  .Finally(() => Task.Factory.StartNew(() => RedisDatabaseFunctions.UpsertOrDeleteContent(content, null)))
                                   .Subscribe(v =>
                                   {
-                                      Task.Factory.StartNew(() => DataBaseFunctions.UpdateOrDeleteContent(content, v.Code));
-                                  },() => Task.Factory.StartNew(() => DataBaseFunctions.UpdateOrDeleteContent(content, null)));
+                                      Task.Factory.StartNew(() => RedisDatabaseFunctions.UpsertOrDeleteContent(content, v.Code));
+                                  },() => Task.Factory.StartNew(() => RedisDatabaseFunctions.UpsertOrDeleteContent(content, null)));
         }
 
 
@@ -41,7 +41,7 @@ namespace DataModel.Server.Services
                 List<MapContent> result = null;
                 try
                 {
-                    result = DataBaseFunctions.AreaContentAsListRequest(userLocation);
+                    result = RedisDatabaseFunctions.RequestVisibleContent(userLocation);
                 }
                 catch (Exception e)
                 {
@@ -70,10 +70,11 @@ namespace DataModel.Server.Services
         {
             return Observable.Create<BatchContentMessage>(v =>
             {
-                BatchContentMessage result = null;
+                List<MapContent> result = null;
                 try
                 {
-                    result = DataBaseFunctions.AreaContentAsMessageRequest(userLocation);
+                    result = RedisDatabaseFunctions.RequestVisibleContent(userLocation);
+                    
                 }
                 catch (Exception e)
                 {
@@ -83,7 +84,9 @@ namespace DataModel.Server.Services
 
                 if (result != null)
                 {
-                    v.OnNext(result);
+                    var contentList = result.ConvertAll(e => e.AsMessage());
+                    var batchMessage = new BatchContentMessage() { ContentList = contentList };
+                    v.OnNext(batchMessage);
                     v.OnCompleted();
                     return Disposable.Empty;
                 }

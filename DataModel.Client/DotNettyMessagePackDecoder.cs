@@ -15,6 +15,7 @@ namespace DataModel.Client
         MessagePackSerializerOptions lz4Options = MessagePackSerializerOptions.Standard.WithCompression(MessagePackCompression.Lz4BlockArray);
         protected override void Decode(IChannelHandlerContext context, IByteBuffer message, List<object> output)
         {
+            Console.WriteLine("Received and decoding" + message.ReadableBytes);
             try
             {
                 if (message.IsReadable())

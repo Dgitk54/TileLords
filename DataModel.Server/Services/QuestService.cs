@@ -17,7 +17,7 @@ namespace DataModel.Server.Services
             {
                 //Perform read only checks if player is capable of turning quest in: 
 
-                var userQuests = DataBaseFunctions.GetQuestsForUser(player.UserId);
+                var userQuests = LiteDBDatabaseFunctions.GetQuestsForUser(player.UserId);
                 var enumerable = userQuests.Where(e => e.Quest.QuestId.SequenceEqual(questId));
                 if (enumerable.Count() == 0)
                 {
@@ -29,7 +29,7 @@ namespace DataModel.Server.Services
                 {
                     throw new Exception("duplicate state");
                 }
-                var inventory = DataBaseFunctions.RequestInventory(player.UserId, player.UserId);
+                var inventory = LiteDBDatabaseFunctions.RequestInventory(player.UserId, player.UserId);
 
                 var quest = enumerable.First();
 
@@ -53,7 +53,7 @@ namespace DataModel.Server.Services
 
 
                 //Performa action with write locks:
-                v.OnNext(DataBaseFunctions.TurnInQuest(player.UserId, questId));
+                v.OnNext(LiteDBDatabaseFunctions.TurnInQuest(player.UserId, questId));
                 v.OnCompleted();
                 return Disposable.Empty;
             });
@@ -68,7 +68,7 @@ namespace DataModel.Server.Services
                 {
                     var randomQuest = ServerFunctions.GetLevel1QuestForUser(startLocation.From10String());
                     var wrappedLevel1Quest = ServerFunctions.WrapLevel1Quest(randomQuest, player.UserId);
-                    var result = DataBaseFunctions.AddQuestForUser(player.UserId, wrappedLevel1Quest);
+                    var result = LiteDBDatabaseFunctions.AddQuestForUser(player.UserId, wrappedLevel1Quest);
                     if (result)
                     {
                         v.OnNext(wrappedLevel1Quest);
@@ -92,7 +92,7 @@ namespace DataModel.Server.Services
         {
             return Observable.Create<List<QuestContainer>>(v =>
             {
-                var quests = DataBaseFunctions.GetQuestsForUser(playerId);
+                var quests = LiteDBDatabaseFunctions.GetQuestsForUser(playerId);
                 v.OnNext(quests);
                 v.OnCompleted();
                 return Disposable.Empty;

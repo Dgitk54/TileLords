@@ -14,8 +14,8 @@ namespace ClientMain
         static void Main(string[] args)
         {
 
-            //LaunchWithChoice(); 
-            LaunchSingle10ClientBatch();
+            LaunchWithChoice(); 
+            //LaunchSingle10ClientBatch();
 
         }
         static void LaunchSingle10ClientBatch()
@@ -33,23 +33,17 @@ namespace ClientMain
             var token = new CancellationTokenSource();
             for (; ; )
             {
-                Console.WriteLine("Small or large scale tests? a: small, b: large, c: largescaleobserver");
+                Console.WriteLine("a: Launch 10 Debugclients       b: Launch observer");
                 var testSize = Console.ReadLine();
                 if (string.IsNullOrEmpty(testSize))
                     continue;
                 switch (testSize[0])
                 {
                     case 'a':
-                        SmallScaleTests();
+                        LaunchSingle10ClientBatch();
                         break;
                     case 'b':
-                        LargeScaleTests();
-                        break;
-                    case 'c':
                         Task.Run(() => DebugLoginAndObserveTestClient("observer", "observer", GetRandomSpotsInArea(3), token.Token));
-                        break;
-                    case 'd':
-                        LargeScaleTestClientDebug();
                         break;
                 }
             }

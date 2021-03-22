@@ -33,7 +33,7 @@ namespace DataModel.Server.Services
 
         readonly MessagePackSerializerOptions lz4Options;
 
-        public APIGatewayService(UserAccountService userService, MapContentService mapService, ResourceSpawnService spawnService, InventoryService inventoryService, QuestService questService,ref MessagePackSerializerOptions options)
+        public APIGatewayService(UserAccountService userService, MapContentService mapService, ResourceSpawnService spawnService, InventoryService inventoryService, QuestService questService, ref MessagePackSerializerOptions options)
         {
             this.userService = userService;
             this.mapService = mapService;
@@ -58,7 +58,7 @@ namespace DataModel.Server.Services
                            return Observable.Empty<IMessage>();
                        });
                    }))
-                   .SelectMany(v=> v);
+                   .SelectMany(v => v);
 
             disposables.Add(HandleRegister(inboundtraffic));
 
@@ -68,11 +68,13 @@ namespace DataModel.Server.Services
                                         .Subscribe(v =>
                                         {
                                             var mapServicePlayerUpdate = mapService.AddMapContent(v.AsMapContent(), LatestClientLocation(inboundtraffic));
-                                            var mapDataRequests = Observable.Interval(TimeSpan.FromSeconds(3)).WithLatestFrom(LatestClientLocation(inboundtraffic), (time, location) => new { time, location })
-                                                                                                                          .Select(v2 => v2.location)
-                                                                                                                          .Select(v2 => mapService.GetMapUpdate(v2.Code))
-                                                                                                                          .Switch()
-                                                                                                                          .Subscribe(v2 => TaskPoolScheduler.Default.Schedule(() => responses.OnNext(v2)));
+                                            var mapDataRequests = LatestClientLocation(inboundtraffic).Sample(TimeSpan.FromSeconds(3))
+                                                                                                      .Select(v2 =>
+                                                                                                      {
+                                                                                                          return mapService.GetMapUpdate(v2.Code).Catch<BatchContentMessage, Exception>(e => Observable.Empty<BatchContentMessage>());
+                                                                                                      })
+                                                                                                      .Switch()
+                                                                                                      .Subscribe(v2 => responses.OnNext(v2));
                                             //TODO: Equals and Hashcode for DistinctUntilChanged updates.
 
 
@@ -85,14 +87,18 @@ namespace DataModel.Server.Services
                                             var handleQuestGenerationRequests = HandleQuestGenerationRequests(v, inboundtraffic);
                                             var handleQuestList = HandleQuestlistRequest(v, inboundtraffic);
 
+
+                                            disposables.Add(spawnDisposable);
+                                            disposables.Add(spawnQuestDisposable);
+
                                             disposables.Add(userService.LogOffUseronDispose(v));
                                             disposables.Add(handleQuestList);
                                             disposables.Add(handleQuestGenerationRequests);
-                                            disposables.Add(spawnQuestDisposable);
+                                            
                                             disposables.Add(handleInventoryRequests);
                                             disposables.Add(mapServicePlayerUpdate);
                                             disposables.Add(mapDataRequests);
-                                            disposables.Add(spawnDisposable);
+                                            
                                             disposables.Add(handleInventoryRequests);
                                             disposables.Add(handlePickupRequests);
                                             disposables.Add(HandleQuestTurnIn(v, inboundtraffic));

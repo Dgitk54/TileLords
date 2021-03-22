@@ -69,7 +69,7 @@ namespace DataModel.Server.Services
             return Observable.Interval(TimeSpan.FromSeconds(RESOURCESPAWNCHECKTHROTTLEINSECONDS)) // use timer => in case player doesnt move
                                 .WithLatestFrom(location, (_, loc) => new { _, loc })
                                 .Select(v => v.loc) // discard timer, reduce only to location
-                                .Select(v => (DataBaseFunctions.GetQuestsForUser(moveableOwnerId), v))
+                                .Select(v => (LiteDBDatabaseFunctions.GetQuestsForUser(moveableOwnerId), v))
                                 .Where(v => v.Item1 != null) //User has Quests
                                 .Select(v => ServerFunctions.LocationIsInsideQuestSpawnableArea(v.v, v.Item1)) //Enumerable of quests zones the player is inside
                                 .Where(v => v.Any()) //Only when player is inside questzone

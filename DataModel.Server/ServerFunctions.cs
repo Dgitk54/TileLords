@@ -212,7 +212,7 @@ namespace DataModel.Server
 
         public static MapContent AsMapContent(this IUser user)
         {
-            return new MapContent() { Id = user.UserId, Name = user.UserName, ResourceType = ResourceType.NONE, Type = ContentType.PLAYER, Location = null, MapContentId = null, CanBeLootedByPlayer = false };
+            return new MapContent() { Id = user.UserId, Name = user.UserName, ResourceType = ResourceType.NONE, Type = ContentType.PLAYER, Location = null, CanBeLootedByPlayer = false };
         }
 
         public static MapContent AsMapContent(this Resource resource)

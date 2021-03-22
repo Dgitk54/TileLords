@@ -18,14 +18,14 @@ namespace DataModel.Server.Tests
         [SetUp]
         public void Setup()
         {
-            DataBaseFunctions.WipeAllDatabases();
-            DataBaseFunctions.InitializeDataBases();
+            LiteDBDatabaseFunctions.WipeAllDatabases();
+            LiteDBDatabaseFunctions.InitializeDataBases();
         }
 
         [TearDown]
         public void TearDown()
         {
-            DataBaseFunctions.WipeAllDatabases();
+            LiteDBDatabaseFunctions.WipeAllDatabases();
         }
 
 
@@ -33,9 +33,9 @@ namespace DataModel.Server.Tests
         [Test]
         public void RegisterGetsResponse()
         {
-            var accountservice = new UserAccountService(DataBaseFunctions.FindUserInDatabase, ServerFunctions.PasswordMatches);
+            var accountservice = new UserAccountService(LiteDBDatabaseFunctions.FindUserInDatabase, ServerFunctions.PasswordMatches);
             var mapservice = new MapContentService();
-            var resourceSpawnService = new ResourceSpawnService(mapservice, DataBaseFunctions.UpdateOrDeleteContent, new List<Func<List<MapContent>, bool>>() { ServerFunctions.Only5ResourcesInArea });
+            var resourceSpawnService = new ResourceSpawnService(mapservice, LiteDBDatabaseFunctions.UpsertOrDeleteContent, new List<Func<List<MapContent>, bool>>() { ServerFunctions.Only5ResourcesInArea });
             var inventoryService = new InventoryService();
             var questService = new QuestService();
             var responses = new List<IMessage>();

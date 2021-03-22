@@ -32,11 +32,12 @@ namespace DataModel.Server
         IDisposable responseDisposable;
         readonly TaskFactory scheduler;
         readonly MessagePackSerializerOptions lz4Options;
+        
         public ClientHandler(TaskFactory scheduler, ref MessagePackSerializerOptions options)
         {
-            userAccountService = new UserAccountService(DataBaseFunctions.FindUserInDatabase, ServerFunctions.PasswordMatches);
+            userAccountService = new UserAccountService(LiteDBDatabaseFunctions.FindUserInDatabase, ServerFunctions.PasswordMatches);
             mapContentService = new MapContentService();
-            resourceSpawnService = new ResourceSpawnService(mapContentService, DataBaseFunctions.UpdateOrDeleteContent, new List<Func<List<MapContent>, bool>>() { ServerFunctions.Only5ResourcesInArea });
+            resourceSpawnService = new ResourceSpawnService(mapContentService, LiteDBDatabaseFunctions.UpsertOrDeleteContent, new List<Func<List<MapContent>, bool>>() { ServerFunctions.Only5ResourcesInArea });
             var InventoryService = new InventoryService();
             var questService = new QuestService();
             apiGatewayService = new APIGatewayService(userAccountService, mapContentService, resourceSpawnService, InventoryService, questService, ref options);

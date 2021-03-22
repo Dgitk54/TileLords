@@ -27,8 +27,8 @@ namespace DataModel.Server
         IChannel bootstrapChannel;
         public ServerInstance()
         {
-            DataBaseFunctions.WipeAllDatabases();
-            DataBaseFunctions.InitializeDataBases();
+            LiteDBDatabaseFunctions.WipeAllDatabases();
+            LiteDBDatabaseFunctions.InitializeDataBases();
         }
         public async Task RunServerAsync()
         {

@@ -14,21 +14,21 @@ namespace DataModel.Server.Tests
         [SetUp]
         public void Setup()
         {
-            DataBaseFunctions.WipeAllDatabases();
-            DataBaseFunctions.InitializeDataBases();
+            LiteDBDatabaseFunctions.WipeAllDatabases();
+            LiteDBDatabaseFunctions.InitializeDataBases();
         }
 
         [TearDown]
         public void TearDown()
         {
-            DataBaseFunctions.WipeAllDatabases();
+            LiteDBDatabaseFunctions.WipeAllDatabases();
         }
 
         [Test]
         public void CanRegisterAndLogIn()
         {
             //Setup:
-            var service = new UserAccountService(DataBaseFunctions.FindUserInDatabase, ServerFunctions.PasswordMatches);
+            var service = new UserAccountService(LiteDBDatabaseFunctions.FindUserInDatabase, ServerFunctions.PasswordMatches);
             var registerResults = new List<bool>();
             var userLoginResults = new List<IUser>();
 

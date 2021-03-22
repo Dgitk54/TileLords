@@ -93,19 +93,19 @@ namespace DataModel.Server.Services
                           
                       })
                       .Switch()
-                      .Select(v => { return Observable.Defer(() => Observable.Start(() => DataBaseFunctions.CreateAccount(v))); })
+                      .Select(v => { return Observable.Defer(() => Observable.Start(() => LiteDBDatabaseFunctions.CreateAccount(v))); })
                       .Switch();
         }
         public IDisposable LogOffUseronDispose(IUser user)
         {
-            return Disposable.Create(() => {DataBaseFunctions.UpdateUserOnlineState(user.UserId, false); });
+            return Disposable.Create(() => {LiteDBDatabaseFunctions.UpdateUserOnlineState(user.UserId, false); });
         }
         
         public IObservable<bool> LogoutUser(string name)
         {
             return Observable.Create<bool>(v =>
             {
-                var result = DataBaseFunctions.UpdateUserOnlineState(name, false);
+                var result = LiteDBDatabaseFunctions.UpdateUserOnlineState(name, false);
                 v.OnNext(result);
                 v.OnCompleted();
                 return Disposable.Empty;

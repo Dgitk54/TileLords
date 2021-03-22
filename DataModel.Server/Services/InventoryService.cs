@@ -15,7 +15,7 @@ namespace DataModel.Server.Services
         {
             return Observable.Create<Dictionary<InventoryType, int>>(v =>
              {
-                 var result = DataBaseFunctions.RequestInventory(playerId, playerId);
+                 var result = LiteDBDatabaseFunctions.RequestInventory(playerId, playerId);
                  if (result == null)
                  {
                      v.OnError(new Exception("No inventory for player found!"));
@@ -31,7 +31,7 @@ namespace DataModel.Server.Services
         {
             return Observable.Create<(Dictionary<InventoryType, int>, byte[])>(v =>
              {
-                 var inventory = DataBaseFunctions.RequestInventory(playerId, containerId);
+                 var inventory = LiteDBDatabaseFunctions.RequestInventory(playerId, containerId);
                  if (inventory == null)
                  {
                      v.OnError(new Exception("Could not fetch inventory for id"));
@@ -47,7 +47,7 @@ namespace DataModel.Server.Services
         {
             return Observable.Create<(bool, byte[])>(v =>
             {
-                var result = DataBaseFunctions.RemoveContentAndAddToPlayer(requestId, mapContentTarget);
+                var result = LiteDBDatabaseFunctions.RemoveContentAndAddToPlayer(requestId, mapContentTarget);
                 v.OnNext((result, mapContentTarget));
                 v.OnCompleted();
                 return Disposable.Empty;
