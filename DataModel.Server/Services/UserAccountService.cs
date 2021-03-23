@@ -1,5 +1,5 @@
 ﻿using DataModel.Server.Model;
-using LiteDB;
+using MongoDB.Bson;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -85,7 +85,8 @@ namespace DataModel.Server.Services
                            SaltedHash = e,
                            UserName = name,
                            CurrentlyOnline = false,
-                       });
+                           UserId = ObjectId.GenerateNewId()
+                       }) ;
 
                        return obs;
 
@@ -96,7 +97,7 @@ namespace DataModel.Server.Services
         }
         public IDisposable LogOffUseronDispose(IUser user)
         {
-            return Disposable.Create(async () => { await MongoDBFunctions.UpdateUserOnlineState(user.UserId, false); });
+            return Disposable.Create( () => {  MongoDBFunctions.UpdateUserOnlineState(user.UserId, false); });
         }
 
         public IObservable<bool> LogoutUser(string name)

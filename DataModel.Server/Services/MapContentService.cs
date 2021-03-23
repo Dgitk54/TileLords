@@ -3,6 +3,7 @@ using DataModel.Common.Messages;
 using DataModel.Server.Model;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
@@ -27,9 +28,16 @@ namespace DataModel.Server.Services
         {
             return contentLocation.Sample(TimeSpan.FromSeconds(CONTENTSAMPLE))
                                   .Finally(() => RedisDatabaseFunctions.UpsertOrDeleteContent(content, null))
-                                  .Subscribe(v =>
+                                  .ToAsyncEnumerable() // swap to pull based model
+                                  .Select(v=>
                                   {
                                       RedisDatabaseFunctions.UpsertOrDeleteContent(content, v.Code);
+                                      return true;
+                                  })
+                                  .ToObservable()
+                                  .Subscribe(v =>
+                                  {
+                                      
                                   },() => RedisDatabaseFunctions.UpsertOrDeleteContent(content, null));
         }
 

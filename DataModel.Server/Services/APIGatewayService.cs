@@ -67,6 +67,7 @@ namespace DataModel.Server.Services
                                         .Do(v => { responses.OnNext(GatewayResponses.LoginSuccessWithId(v)); })
                                         .Subscribe(v =>
                                         {
+                                            Console.WriteLine("Subscribe for " + v.UserId.ToConsoleString());
                                             var mapServicePlayerUpdate = mapService.AddMapContent(v.AsMapContent(), LatestClientLocation(inboundtraffic));
                                             var mapDataRequests = LatestClientLocation(inboundtraffic).Sample(TimeSpan.FromSeconds(3))
                                                                                                       .ToAsyncEnumerable()
@@ -80,8 +81,8 @@ namespace DataModel.Server.Services
                                             //TODO: Equals and Hashcode for DistinctUntilChanged updates.
 
 
-                                            var spawnDisposable = resourceSpawnService.AddMovableResourceSpawnArea(v.UserId, LatestClientLocation(inboundtraffic));
-                                            var spawnQuestDisposable = resourceSpawnService.AddMoveableQuestResourceSpawnArea(v.UserId, LatestClientLocation(inboundtraffic));
+                                        //    var spawnDisposable = resourceSpawnService.AddMovableResourceSpawnArea(v.UserId, LatestClientLocation(inboundtraffic));
+                                        //    var spawnQuestDisposable = resourceSpawnService.AddMoveableQuestResourceSpawnArea(v.UserId, LatestClientLocation(inboundtraffic));
 
 
                                             var handleInventoryRequests = HandleInventoryRequests(v, inboundtraffic);
@@ -90,8 +91,8 @@ namespace DataModel.Server.Services
                                             var handleQuestList = HandleQuestlistRequest(v, inboundtraffic);
 
 
-                                            disposables.Add(spawnDisposable);
-                                            disposables.Add(spawnQuestDisposable);
+                                        //    disposables.Add(spawnDisposable);
+                                        //    disposables.Add(spawnQuestDisposable);
 
                                             disposables.Add(userService.LogOffUseronDispose(v));
                                             disposables.Add(handleQuestList);
