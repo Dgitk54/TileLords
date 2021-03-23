@@ -68,12 +68,12 @@ namespace DataModel.Server.Services
                                         .Subscribe(v =>
                                         {
                                             Console.WriteLine("Subscribe for " + v.UserId.ToConsoleString());
-                                            var mapServicePlayerUpdate = mapService.AddMapContent(v.AsMapContent(), LatestClientLocation(inboundtraffic));
-                                            var mapDataRequests = LatestClientLocation(inboundtraffic).Sample(TimeSpan.FromSeconds(3))
+                                            var mapServicePlayerUpdate = mapService.AddMapContent(v.AsMapContent(), LatestClientGPS(inboundtraffic));
+                                            var mapDataRequests = LatestClientGPS(inboundtraffic).Sample(TimeSpan.FromSeconds(3))
                                                                                                       .ToAsyncEnumerable()
                                                                                                       .Select(v2 =>
                                                                                                       {
-                                                                                                          return mapService.GetMapUpdate(v2.Code).Catch<BatchContentMessage, Exception>(e => Observable.Empty<BatchContentMessage>());
+                                                                                                          return mapService.GetMapUpdate(v2.Lat, v2.Lon).Catch<BatchContentMessage, Exception>(e => Observable.Empty<BatchContentMessage>());
                                                                                                       })
                                                                                                       .ToObservable()
                                                                                                       .SelectMany(v2 => v2)
@@ -256,7 +256,11 @@ namespace DataModel.Server.Services
                                     }
                                 });
         }
-
+        IObservable<GPS> LatestClientGPS(IObservable<IMessage> inboundtraffic)
+        {
+            return inboundtraffic.ObserveOn(TaskPoolScheduler.Default).OfType<UserGpsMessage>()
+                                      .Select(v => { return new GPS(v.Lat, v.Lon); });
+        }
         IObservable<PlusCode> LatestClientLocation(IObservable<IMessage> inboundtraffic)
         {
             return inboundtraffic.ObserveOn(TaskPoolScheduler.Default).OfType<UserGpsMessage>()

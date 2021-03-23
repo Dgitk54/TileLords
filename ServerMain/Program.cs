@@ -20,11 +20,11 @@ namespace ServerMain
             var server = new ServerInstance();
             var resourceCleanup = MongoDBFunctions.ResetMapContent();
             Console.WriteLine("Cleaned up resources amount:" + resourceCleanup);
-
             server.RunServerAsync().Wait();
 
             Console.ReadLine();
         }
+
     }
 }
 
