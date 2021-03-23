@@ -25,7 +25,7 @@ namespace DataModel.Server
         public static string InventoryDatabaseName => "Inventory";
         public static string QuestDatabaseName => "Quest";
 
-        static MongoClient client = new MongoClient("mongodb://localhost:27017");
+        static MongoClient client = new MongoClient("mongodb://192.168.1.184:27017");
 
 
         public static void WipeAllDatabases()
@@ -77,8 +77,8 @@ namespace DataModel.Server
             return enumerable.Count();
 
         }
-        
-        
+
+
 
         public static async Task<BatchContentMessage> AreaContentAsMessageRequest(string location)
         {
@@ -97,42 +97,33 @@ namespace DataModel.Server
 
         public static async Task<bool> AddQuestForUser(QuestContainer container)
         {
-
-            {
-
-                var database = client.GetDatabase("Quest");
-                var col = database.GetCollection<QuestContainer>("quests");
-                await col.InsertOneAsync(container);
-                return true;
-            }
-
+            var database = client.GetDatabase("Quest");
+            var col = database.GetCollection<QuestContainer>("quests");
+            await col.InsertOneAsync(container);
+            return true;
         }
 
 
         public static async Task<MapContent> GetMapContentById(byte[] mapcontentid)
         {
-            Debug.WriteLine("1");
             var database = client.GetDatabase("MapContent");
             var col = database.GetCollection<MapContent>("mapcontent");
 
 
-            var filter = Builders<MapContent>.Filter.Eq<byte[]>(m => m.MapId, mapcontentid);
+            var filter = Builders<MapContent>.Filter.Eq<byte[]>(m => m.Id, mapcontentid);
 
-            Debug.WriteLine("2");
             var enumerable = await col.Find(filter).ToListAsync();
 
             if (enumerable.Count() > 1)
                 throw new Exception("Multiple objects with same ID in database");
             if (enumerable.Count() == 0)
             {
-                Debug.WriteLine("count 0 ");
                 return null;
             }
-            Debug.WriteLine("3");
             var ret = enumerable.First();
 
             return ret;
-  
+
 
         }
 
@@ -247,14 +238,14 @@ namespace DataModel.Server
         {
             var database = client.GetDatabase("MapContent");
             var col = database.GetCollection<MapContent>("mapcontent");
-            var enumerable = await col.Find(v => v.MapId == contentId).ToListAsync();
+            var enumerable = await col.Find(v => v.Id == contentId).ToListAsync();
 
             if (enumerable.Count() > 1)
                 throw new Exception("Multiple objects with same ID in database");
             if (enumerable.Count() == 0)
                 return null;
             var ret = enumerable.First();
-            var deleted = await col.DeleteManyAsync(v => v.MapId == contentId);
+            var deleted = await col.DeleteManyAsync(v => v.Id == contentId);
             Debug.Assert(deleted.DeletedCount == 1);
             return ret;
         }
@@ -387,7 +378,7 @@ namespace DataModel.Server
         {
             var database = client.GetDatabase("MapContent");
             var col = database.GetCollection<MapContent>("mapcontent");
-            var enumerable = await col.Find(v => v.MapId == content.MapId).ToListAsync();
+            var enumerable = await col.Find(v => v.Id == content.Id).ToListAsync();
             if (enumerable.Count() > 1)
                 throw new Exception("Multiple objects with same ID in database");
 
@@ -410,7 +401,7 @@ namespace DataModel.Server
             //Delte value out of database, if it is still present.
             if (enumerable.Count() != 0 && location == null)
             {
-                var deletedAmount = col.DeleteMany(v => v.MapId == first.MapId);
+                var deletedAmount = col.DeleteMany(v => v.Id == first.Id);
                 return;
             }
 
@@ -418,7 +409,7 @@ namespace DataModel.Server
             first.Location = location;
 
 
-            var filter = Builders<MapContent>.Filter.Eq<byte[]>(m => m.MapId, content.MapId);
+            var filter = Builders<MapContent>.Filter.Eq<byte[]>(m => m.Id, content.Id);
 
             var result = await col.ReplaceOneAsync(filter, first);
 

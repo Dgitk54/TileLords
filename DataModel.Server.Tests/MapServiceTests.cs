@@ -3,7 +3,7 @@ using DataModel.Common.GameModel;
 using DataModel.Common.Messages;
 using DataModel.Server.Model;
 using DataModel.Server.Services;
-using LiteDB;
+using MongoDB.Bson;
 using NUnit.Framework;
 using System;
 using System.Collections.Generic;
@@ -44,13 +44,13 @@ namespace DataModel.Server.Tests
 
             IUser user1 = new User()
             {
-                UserId = ObjectId.NewObjectId(),
+                UserId = ObjectId.GenerateNewId(),
                 UserName = "TestUser",
 
             };
             IUser user2 = new User()
             {
-                UserId = ObjectId.NewObjectId(),
+                UserId = ObjectId.GenerateNewId(),
                 UserName = "TestUser2",
 
             };

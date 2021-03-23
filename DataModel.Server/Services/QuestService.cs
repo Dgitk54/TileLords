@@ -13,11 +13,11 @@ namespace DataModel.Server.Services
     {
         public IObservable<bool> TurnInQuest(IUser player, byte[] questId)
         {
-            return Observable.Create<bool>(v =>
+            return Observable.Create<bool>(async v =>
             {
                 //Perform read only checks if player is capable of turning quest in: 
 
-                var userQuests = LiteDBDatabaseFunctions.GetQuestsForUser(player.UserId);
+                var userQuests = await MongoDBFunctions.GetQuestsForUser(player.UserId);
                 var enumerable = userQuests.Where(e => e.Quest.QuestId.SequenceEqual(questId));
                 if (enumerable.Count() == 0)
                 {
@@ -29,7 +29,7 @@ namespace DataModel.Server.Services
                 {
                     throw new Exception("duplicate state");
                 }
-                var inventory = LiteDBDatabaseFunctions.RequestInventory(player.UserId, player.UserId);
+                var inventory = await MongoDBFunctions.RequestInventory(player.UserId, player.UserId);
 
                 var quest = enumerable.First();
 
@@ -53,7 +53,7 @@ namespace DataModel.Server.Services
 
 
                 //Performa action with write locks:
-                v.OnNext(LiteDBDatabaseFunctions.TurnInQuest(player.UserId, questId));
+                v.OnNext(await MongoDBFunctions.TurnInQuest(player.UserId, questId));
                 v.OnCompleted();
                 return Disposable.Empty;
             });
@@ -61,14 +61,14 @@ namespace DataModel.Server.Services
 
         public IObservable<QuestContainer> GenerateNewQuest(IUser player, byte[] questTarget, string startLocation)
         {
-            return Observable.Create<QuestContainer>(v =>
+            return Observable.Create<QuestContainer>(async v =>
             {
                 //TODO: Add TownQuests with questtargets
                 if (questTarget == null) //Null due to only level 1 quests are supported yet.
                 {
                     var randomQuest = ServerFunctions.GetLevel1QuestForUser(startLocation.From10String());
                     var wrappedLevel1Quest = ServerFunctions.WrapLevel1Quest(randomQuest, player.UserId);
-                    var result = LiteDBDatabaseFunctions.AddQuestForUser(player.UserId, wrappedLevel1Quest);
+                    var result = await MongoDBFunctions.AddQuestForUser(player.UserId, wrappedLevel1Quest);
                     if (result)
                     {
                         v.OnNext(wrappedLevel1Quest);
@@ -90,9 +90,9 @@ namespace DataModel.Server.Services
         }
         public IObservable<List<QuestContainer>> RequestActiveQuests(byte[] playerId)
         {
-            return Observable.Create<List<QuestContainer>>(v =>
+            return Observable.Create<List<QuestContainer>>(async v =>
             {
-                var quests = LiteDBDatabaseFunctions.GetQuestsForUser(playerId);
+                var quests = await MongoDBFunctions.GetQuestsForUser(playerId);
                 v.OnNext(quests);
                 v.OnCompleted();
                 return Disposable.Empty;

@@ -24,7 +24,7 @@ namespace DataModel.Server.Services
         readonly Subject<(Resource, string)> storedMapResources = new Subject<(Resource, string)>();
         readonly ISubject<(Resource, string)> resourceSpawnRequests;
 
-        public ResourceSpawnService(MapContentService service, Action<MapContent, string> userContentStorage, List<Func<List<MapContent>, bool>> spawnCheckFunctions)
+        public ResourceSpawnService(MapContentService service, List<Func<List<MapContent>, bool>> spawnCheckFunctions)
         {
             this.service = service;
             this.spawnCheckFunctions = spawnCheckFunctions;
@@ -32,10 +32,10 @@ namespace DataModel.Server.Services
             resourceSpawnRequests = Subject.Synchronize(storedMapResources);
 
             //Handling spawn requests
-            var disposable = resourceSpawnRequests.Subscribe(v => userContentStorage(v.Item1.AsMapContent(), v.Item2));
+            var disposable = resourceSpawnRequests.Subscribe(async v => await MongoDBFunctions.UpdateOrDeleteContent(v.Item1.AsMapContent(), v.Item2));
 
             //Handling delete requests
-            var deleteRequests = resourceSpawnRequests.Delay(TimeSpan.FromSeconds(RESOURCEALIVEINSEC)).Subscribe(v => userContentStorage(v.Item1.AsMapContent(), null));
+            var deleteRequests = resourceSpawnRequests.Delay(TimeSpan.FromSeconds(RESOURCEALIVEINSEC)).Subscribe(async v => await MongoDBFunctions.UpdateOrDeleteContent(v.Item1.AsMapContent(), null));
 
             disposables.Add(disposable);
             disposables.Add(deleteRequests);
@@ -69,8 +69,13 @@ namespace DataModel.Server.Services
             return Observable.Interval(TimeSpan.FromSeconds(RESOURCESPAWNCHECKTHROTTLEINSECONDS)) // use timer => in case player doesnt move
                                 .WithLatestFrom(location, (_, loc) => new { _, loc })
                                 .Select(v => v.loc) // discard timer, reduce only to location
-                                .Select(v => (LiteDBDatabaseFunctions.GetQuestsForUser(moveableOwnerId), v))
-                                .Where(v => v.Item1 != null) //User has Quests
+                                .Select(async v =>
+                                {
+                                    var result = await MongoDBFunctions.GetQuestsForUser(moveableOwnerId);
+                                    return (result, v);
+                                })
+                                .Switch()
+                                .Where(v => v.result != null) //User has Quests
                                 .Select(v => ServerFunctions.LocationIsInsideQuestSpawnableArea(v.v, v.Item1)) //Enumerable of quests zones the player is inside
                                 .Where(v => v.Any()) //Only when player is inside questzone
                                 .Select(v => v.Where(e => ServerFunctions.ShouldResourceSpawn(e, RESOURCESPAWNCHECKTHROTTLEINSECONDS))) // Calculate Questitemspawnchance

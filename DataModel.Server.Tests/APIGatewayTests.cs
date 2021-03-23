@@ -12,20 +12,18 @@ using System.Reactive.Concurrency;
 
 namespace DataModel.Server.Tests
 {
+    //TODO: Fix broken tests
     [TestFixture]
     public class APIGatewayTests
     {
         [SetUp]
         public void Setup()
         {
-            LiteDBDatabaseFunctions.WipeAllDatabases();
-            LiteDBDatabaseFunctions.InitializeDataBases();
         }
 
         [TearDown]
         public void TearDown()
         {
-            LiteDBDatabaseFunctions.WipeAllDatabases();
         }
 
 

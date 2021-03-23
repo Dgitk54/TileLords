@@ -27,8 +27,8 @@ namespace DataModel.Server
         IChannel bootstrapChannel;
         public ServerInstance()
         {
-            LiteDBDatabaseFunctions.WipeAllDatabases();
-            LiteDBDatabaseFunctions.InitializeDataBases();
+            MongoDBFunctions.WipeAllDatabases();
+            MongoDBFunctions.InitializeDataBases();
         }
         public async Task RunServerAsync()
         {

@@ -12,8 +12,6 @@ namespace DataModel.Server.Model
 
         public MongoDB.Bson.ObjectId UserId { get; set; }
 
-        public LiteDB.ObjectId UserIdLite { get; set; }
-
         public string UserName { get; set; }
 
         public DateTime LastOnline { get; set; }

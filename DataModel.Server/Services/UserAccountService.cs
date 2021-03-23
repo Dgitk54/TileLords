@@ -20,24 +20,21 @@ namespace DataModel.Server.Services
     public class UserAccountService
     {
 
-        readonly Func<string, User> userNameLookup;
         readonly Func<byte[], byte[], byte[], bool> passwordMatcher;
 
-        public UserAccountService(Func<string, User> userDatabaseLookup, Func<byte[], byte[], byte[], bool> passwordMatchAlgorithm)
+        public UserAccountService(Func<byte[], byte[], byte[], bool> passwordMatchAlgorithm)
         {
             passwordMatcher = passwordMatchAlgorithm;
-            userNameLookup = userDatabaseLookup;
         }
 
-        
+
         public IObservable<IUser> LoginUser(string name, string password)
         {
             return Observable.Create<IUser>(async v =>
             {
                 Stopwatch stopwatch = new Stopwatch();
                 stopwatch.Start();
-              //  var userTask = Task.Run(() => userNameLookup(name));
-                var user = userNameLookup(name);
+                var user = await MongoDBFunctions.FindUserInDatabase(name);
 
                 if (user == null)
                 {
@@ -58,8 +55,8 @@ namespace DataModel.Server.Services
                     stopwatch.Stop();
                     Console.WriteLine("LOG IN: Elapsed Time is {0} ms" + name, stopwatch.ElapsedMilliseconds);
                     v.OnNext(user);
-                  //  var updateUser = Task.Run(() => DataBaseFunctions.UpdateUserOnlineState(user.UserId.ToByteArray(), true));
-                  //  await updateUser;
+                    //  var updateUser = Task.Run(() => DataBaseFunctions.UpdateUserOnlineState(user.UserId.ToByteArray(), true));
+                    //  await updateUser;
                     v.OnCompleted();
                     return Disposable.Empty;
                 }
@@ -73,43 +70,38 @@ namespace DataModel.Server.Services
 
         public IObservable<bool> RegisterUser(string name, string password)
         {
-               return Observable.Defer(() => Observable.Start(() =>
-                      {
-                          byte[] salt;
-                          new RNGCryptoServiceProvider().GetBytes(salt = new byte[16]);
-                          return salt;
-                      }))
-                      .Select(salt => 
-                      {
-                          var obs = Observable.Defer(() => Observable.Start(() => ServerFunctions.Hash(password, salt))).Select(e => new User() {
-                              AccountCreated = DateTime.Now,
-                              Salt = salt,
-                              SaltedHash = e,
-                              UserName = name,
-                              CurrentlyOnline = false,
-                          });
+            return Observable.Defer(() => Observable.Start(() =>
+                   {
+                       byte[] salt;
+                       new RNGCryptoServiceProvider().GetBytes(salt = new byte[16]);
+                       return salt;
+                   }))
+                   .Select(salt =>
+                   {
+                       var obs = Observable.Defer(() => Observable.Start(() => ServerFunctions.Hash(password, salt))).Select(e => new User()
+                       {
+                           AccountCreated = DateTime.Now,
+                           Salt = salt,
+                           SaltedHash = e,
+                           UserName = name,
+                           CurrentlyOnline = false,
+                       });
 
-                          return obs;
-                          
-                      })
-                      .Switch()
-                      .Select(v => { return Observable.Defer(() => Observable.Start(() => LiteDBDatabaseFunctions.CreateAccount(v))); })
-                      .Switch();
+                       return obs;
+
+                   })
+                   .Switch()
+                   .Select(v => MongoDBFunctions.InsertUser(v))
+                   .Switch();
         }
         public IDisposable LogOffUseronDispose(IUser user)
         {
-            return Disposable.Create(() => {LiteDBDatabaseFunctions.UpdateUserOnlineState(user.UserId, false); });
+            return Disposable.Create(async () => { await MongoDBFunctions.UpdateUserOnlineState(user.UserId, false); });
         }
-        
+
         public IObservable<bool> LogoutUser(string name)
         {
-            return Observable.Create<bool>(v =>
-            {
-                var result = LiteDBDatabaseFunctions.UpdateUserOnlineState(name, false);
-                v.OnNext(result);
-                v.OnCompleted();
-                return Disposable.Empty;
-            });
+            return Observable.FromAsync(v => MongoDBFunctions.UpdateUserOnlineState(name, false));
         }
 
     }

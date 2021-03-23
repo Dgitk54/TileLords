@@ -13,9 +13,9 @@ namespace DataModel.Server.Services
     {
         public IObservable<Dictionary<InventoryType, int>> RequestPlayerInventory(byte[] playerId)
         {
-            return Observable.Create<Dictionary<InventoryType, int>>(v =>
+            return Observable.Create<Dictionary<InventoryType, int>>(async v =>
              {
-                 var result = LiteDBDatabaseFunctions.RequestInventory(playerId, playerId);
+                 var result = await MongoDBFunctions.RequestInventory(playerId, playerId);
                  if (result == null)
                  {
                      v.OnError(new Exception("No inventory for player found!"));
@@ -29,9 +29,9 @@ namespace DataModel.Server.Services
         }
         public IObservable<(Dictionary<InventoryType, int>, byte[])> RequestContainerInventory(byte[] playerId, byte[] containerId)
         {
-            return Observable.Create<(Dictionary<InventoryType, int>, byte[])>(v =>
+            return Observable.Create<(Dictionary<InventoryType, int>, byte[])>(async v =>
              {
-                 var inventory = LiteDBDatabaseFunctions.RequestInventory(playerId, containerId);
+                 var inventory = await MongoDBFunctions.RequestInventory(playerId, containerId);
                  if (inventory == null)
                  {
                      v.OnError(new Exception("Could not fetch inventory for id"));
@@ -45,9 +45,9 @@ namespace DataModel.Server.Services
         }
         public IObservable<(bool, byte[])> MapContentPickUp(byte[] requestId, byte[] mapContentTarget)
         {
-            return Observable.Create<(bool, byte[])>(v =>
+            return Observable.Create<(bool, byte[])>(async v =>
             {
-                var result = LiteDBDatabaseFunctions.RemoveContentAndAddToPlayer(requestId, mapContentTarget);
+                var result = await MongoDBFunctions.RemoveContentAndAddToPlayer(requestId, mapContentTarget);
                 v.OnNext((result, mapContentTarget));
                 v.OnCompleted();
                 return Disposable.Empty;

@@ -35,9 +35,9 @@ namespace DataModel.Server
         
         public ClientHandler(TaskFactory scheduler, ref MessagePackSerializerOptions options)
         {
-            userAccountService = new UserAccountService(LiteDBDatabaseFunctions.FindUserInDatabase, ServerFunctions.PasswordMatches);
+            userAccountService = new UserAccountService( ServerFunctions.PasswordMatches);
             mapContentService = new MapContentService();
-            resourceSpawnService = new ResourceSpawnService(mapContentService, LiteDBDatabaseFunctions.UpsertOrDeleteContent, new List<Func<List<MapContent>, bool>>() { ServerFunctions.Only5ResourcesInArea });
+            resourceSpawnService = new ResourceSpawnService(mapContentService, new List<Func<List<MapContent>, bool>>() { ServerFunctions.Only5ResourcesInArea });
             var InventoryService = new InventoryService();
             var questService = new QuestService();
             apiGatewayService = new APIGatewayService(userAccountService, mapContentService, resourceSpawnService, InventoryService, questService, ref options);
