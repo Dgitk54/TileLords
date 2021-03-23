@@ -26,11 +26,11 @@ namespace DataModel.Server.Services
         public IDisposable AddMapContent(MapContent content, IObservable<PlusCode> contentLocation)
         {
             return contentLocation.Sample(TimeSpan.FromSeconds(CONTENTSAMPLE))
-                                  .Finally(() => Task.Factory.StartNew(() => RedisDatabaseFunctions.UpsertOrDeleteContent(content, null)))
+                                  .Finally(() => RedisDatabaseFunctions.UpsertOrDeleteContent(content, null))
                                   .Subscribe(v =>
                                   {
-                                      Task.Factory.StartNew(() => RedisDatabaseFunctions.UpsertOrDeleteContent(content, v.Code));
-                                  },() => Task.Factory.StartNew(() => RedisDatabaseFunctions.UpsertOrDeleteContent(content, null)));
+                                      RedisDatabaseFunctions.UpsertOrDeleteContent(content, v.Code);
+                                  },() => RedisDatabaseFunctions.UpsertOrDeleteContent(content, null));
         }
 
 

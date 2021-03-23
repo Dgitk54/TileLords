@@ -16,6 +16,7 @@
     <PackageReference Include="SpanNetty.Transport" Version="0.7.2012.2221" />
     <PackageReference Include="SpanNetty.Transport.Libuv" Version="0.7.2012.2221" />
     <PackageReference Include="StackExchange.Redis" Version="2.2.4" />
+    <PackageReference Include="System.Linq.Async" Version="5.0.0" />
   </ItemGroup>
 
   <ItemGroup>

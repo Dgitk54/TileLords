@@ -69,11 +69,13 @@ namespace DataModel.Server.Services
                                         {
                                             var mapServicePlayerUpdate = mapService.AddMapContent(v.AsMapContent(), LatestClientLocation(inboundtraffic));
                                             var mapDataRequests = LatestClientLocation(inboundtraffic).Sample(TimeSpan.FromSeconds(3))
+                                                                                                      .ToAsyncEnumerable()
                                                                                                       .Select(v2 =>
                                                                                                       {
                                                                                                           return mapService.GetMapUpdate(v2.Code).Catch<BatchContentMessage, Exception>(e => Observable.Empty<BatchContentMessage>());
                                                                                                       })
-                                                                                                      .Switch()
+                                                                                                      .ToObservable()
+                                                                                                      .SelectMany(v2 => v2)
                                                                                                       .Subscribe(v2 => responses.OnNext(v2));
                                             //TODO: Equals and Hashcode for DistinctUntilChanged updates.
 

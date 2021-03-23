@@ -15,14 +15,14 @@ namespace DataModel.Server
 {
     public static class RedisDatabaseFunctions
     {
-        public static ConnectionMultiplexer redis { get; }
+        public static ConnectionMultiplexer Redis { get; }
         static RedisDatabaseFunctions()
         {
             //Docker run -p INC:OUT --name -d redis
-            redis = ConnectionMultiplexer.Connect("192.168.1.184,allowAdmin=true");
+            Redis = ConnectionMultiplexer.Connect("192.168.1.184,allowAdmin=true");
             
-            EndPoint endPoint = redis.GetEndPoints().First();
-            var server = redis.GetServer(endPoint);
+            EndPoint endPoint = Redis.GetEndPoints().First();
+            var server = Redis.GetServer(endPoint);
             server.FlushAllDatabases();
         }
 
@@ -32,7 +32,7 @@ namespace DataModel.Server
 
         public static void StoreValue(string key, string value)
         {
-            var db = redis.GetDatabase();
+            var db = Redis.GetDatabase();
             db.StringSet(key, value);
             var debug = db.StringGet(key);
             Console.WriteLine(debug);
@@ -40,27 +40,27 @@ namespace DataModel.Server
 
         public static void UpsertOrDeleteContent(MapContent content, string location)
         {
-            var db = redis.GetDatabase();
+            var db = Redis.GetDatabase();
             var idAsString = Convert.ToBase64String(content.Id);
             if (location != null)
             {
                 var contentWithLocation = new MapContent() { CanBeLootedByPlayer = content.CanBeLootedByPlayer, Id = content.Id, Location = location, Name = content.Name, ResourceType = content.ResourceType, Type = content.Type };
                 var contentAsByte = MessagePackSerializer.Serialize(contentWithLocation);
                 var redisMapValue = DatabaseMapStorage.ToDatabaseString(location, contentAsByte);
-                db.StringSet(idAsString, redisMapValue);
+                db.StringSetAsync(idAsString, redisMapValue);
             }
             else
             {
-                db.KeyDelete(idAsString);
+                db.KeyDeleteAsync(idAsString);
             }
         }
         
         //TODO: Partitioning per zone
         public static List<MapContent> RequestVisibleContent(string location)
         {
-            EndPoint endPoint = redis.GetEndPoints().First();
+            EndPoint endPoint = Redis.GetEndPoints().First();
             RedisKey[] keys = KeyPoll();
-            var db = redis.GetDatabase();
+            var db = Redis.GetDatabase();
             var nearbyCodes = LocationCodeTileUtility.GetTileSection(location, ServerFunctions.CLIENTVISIBILITY, ServerFunctions.CLIENTLOCATIONPRECISION);
             var set = new HashSet<string>(nearbyCodes);
 
@@ -96,9 +96,9 @@ namespace DataModel.Server
             if (latestKeys == null) 
             {
                 redisKeyRequestLock.WaitOne();
-                EndPoint endPoint = redis.GetEndPoints().First();
+                EndPoint endPoint = Redis.GetEndPoints().First();
                 latestRequest = DateTime.Now;
-                latestKeys = redis.GetServer(endPoint).Keys(pattern: "*").ToArray();
+                latestKeys = Redis.GetServer(endPoint).Keys(pattern: "*").ToArray();
                 redisKeyRequestLock.ReleaseMutex();
             };
             if((DateTime.Now - latestRequest).TotalSeconds > 3)
@@ -110,8 +110,8 @@ namespace DataModel.Server
                     return latestKeys;
                 }
                 latestRequest = DateTime.Now;
-                var endPoint = redis.GetEndPoints().First();
-                var updateTask = Task.Run(() => redis.GetServer(endPoint).Keys(pattern: "*").ToArray());
+                var endPoint = Redis.GetEndPoints().First();
+                var updateTask = Task.Run(() => Redis.GetServer(endPoint).Keys(pattern: "*").ToArray());
                 redisKeyRequestLock.ReleaseMutex();
                 updateTask.Wait();
                 latestKeys = updateTask.Result;
