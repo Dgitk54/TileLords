@@ -47,7 +47,7 @@ namespace DataModel.Server.Services
         }
 
         //TODO: minor bugprone: Propagate location downstream via touples
-        public IDisposable AddMovableResourceSpawnArea(byte[] moveableOwnerId, IObservable<PlusCode> location)
+        public IDisposable AddMovableResourceSpawnArea(byte[] moveableOwnerId, IObservable<GPS> location)
         {
             return Observable.Interval(TimeSpan.FromSeconds(RESOURCESPAWNCHECKTHROTTLEINSECONDS))
                              .WithLatestFrom(location, (_, loc) => new { _, loc })
@@ -59,7 +59,7 @@ namespace DataModel.Server.Services
                              .WithLatestFrom(location, (res, loc) => new { res, loc })
                              .Subscribe(v =>
                              {
-                                 var randomNearbyLocation = DataModelFunctions.GetNearbyRandomSpawn(v.loc.Code, 10).Code;
+                                 var randomNearbyLocation = DataModelFunctions.GetNearbyRandomSpawn(v.loc.GetPlusCode(10), 10).Code;
                                  resourceSpawnRequests.OnNext((v.res, randomNearbyLocation));
                              });
         }
@@ -85,7 +85,7 @@ namespace DataModel.Server.Services
                                     v.ToList().ForEach(e =>
                                     {
                                         //random nearby location
-                                        var randomLocationInSpawnArea = DataModelFunctions.GetNearbyRandomSpawn(e.Quest.QuestTargetLocation, e.Quest.AreaRadiusFromLocation);
+                                        var randomLocationInSpawnArea = DataModelFunctions.GetNearbyRandomSpawn(e.Quest.QuestTargetLocation.From10String(), e.Quest.AreaRadiusFromLocation);
                                         //get proper resource to spawn for quest
                                         var resource = e.ExtractQuestResource(randomLocationInSpawnArea.Code);
                                         //send spawn request

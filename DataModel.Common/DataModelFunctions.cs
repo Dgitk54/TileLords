@@ -141,9 +141,17 @@ namespace DataModel.Common
             return new PlusCode(result[random], 10);
         }
 
-        public static PlusCode GetNearbyRandomSpawn(string vicinity, int radius)
+        public static GPS PlusCodeToGPS(PlusCode code)
         {
-            var list = LocationCodeTileUtility.GetTileSection(vicinity, radius, 10);
+            CodeArea codeArea = OpenLocationCode.Decode(code.Code);
+            GPS gpsCenter = new GPS(codeArea.Center.Latitude, codeArea.Center.Longitude);
+            return gpsCenter;
+
+        }
+
+        public static PlusCode GetNearbyRandomSpawn(PlusCode vicinity, int radius)
+        {
+            var list = LocationCodeTileUtility.GetTileSection(vicinity.Code, radius, 10);
             var randomSpot = new Random().Next(list.Count);
             return new PlusCode(list[randomSpot], 10);
         }

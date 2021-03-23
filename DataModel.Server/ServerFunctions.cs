@@ -146,9 +146,9 @@ namespace DataModel.Server
             return true;
         }
 
-        public static IObservable<bool> SpawnConditionMet(this IObservable<PlusCode> code, MapContentService service, List<Func<List<MapContent>, bool>> spawnCheckFunctions)
+        public static IObservable<bool> SpawnConditionMet(this IObservable<GPS> code, MapContentService service, List<Func<List<MapContent>, bool>> spawnCheckFunctions)
         {
-            return code.Select(v => service.GetListMapUpdate(v.Code)).Switch().Select(v =>
+            return code.Select(v => service.GetListMapUpdate(v.Lat, v.Lon)).Switch().Select(v =>
             {
                 return spawnCheckFunctions.All(v2 =>
                 {

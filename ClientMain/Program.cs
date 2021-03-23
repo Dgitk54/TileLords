@@ -172,7 +172,7 @@ namespace ClientMain
         }
         static void DebugRegisterAndLoginClient(string name, string password, List<GPS> path, CancellationToken cancellationToken)
         {
-            var instance = new ClientInstanceManager();
+            var instance = new ClientInstanceManager("127.0.0.1");
             instance.StartClient();
             Thread.Sleep(1000);
             var tokenSrc = new CancellationTokenSource();
@@ -241,8 +241,13 @@ namespace ClientMain
 
             for (int i = 0; i <= jumpspots; i++)
             {
-                var rollLat = random.NextDouble() * 0.0005;
-                var rollLon = random.NextDouble() * 0.0005;
+                //~5x5 minitiles
+                //var rollLat = random.NextDouble() * 0.0005; 
+                //var rollLon = random.NextDouble() * 0.0005;
+                
+                //~500x500 minitiles
+                var rollLat = random.NextDouble() * 0.05; 
+                var rollLon = random.NextDouble() * 0.05;
                 list.Add(new GPS() { Lat = mainzLatMin + rollLat, Lon = mainzLonMin + rollLon });
             }
 

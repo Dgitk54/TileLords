@@ -13,7 +13,7 @@ namespace DataModel.Server.Services
     public class MapContentService
     {
         const int CONTENTSAMPLE = 3;
-
+        
         public MapContentService()
         {
         }
@@ -24,32 +24,32 @@ namespace DataModel.Server.Services
         /// <param name="content">The content to add on the map</param>
         /// <param name="contentLocation">The stream of the location</param>
         /// <returns>Disposable to remove the content.</returns>
-        public IDisposable AddMapContent(MapContent content, IObservable<PlusCode> contentLocation)
+        public IDisposable AddMapContent(MapContent content, IObservable<GPS> contentLocation)
         {
             return contentLocation.Sample(TimeSpan.FromSeconds(CONTENTSAMPLE))
-                                  .Finally(() => RedisDatabaseFunctions.UpsertOrDeleteContent(content, null))
+                                  .Finally(() => RedisDatabaseFunctions.RemoveContent(content))
                                   .ToAsyncEnumerable() // swap to pull based model
                                   .Select(v=>
                                   {
-                                      RedisDatabaseFunctions.UpsertOrDeleteContent(content, v.Code);
+                                      RedisDatabaseFunctions.UpsertContent(content, v.Lat, v.Lon);
                                       return true;
                                   })
                                   .ToObservable()
                                   .Subscribe(v =>
                                   {
                                       
-                                  },() => RedisDatabaseFunctions.UpsertOrDeleteContent(content, null));
+                                  },() => RedisDatabaseFunctions.RemoveContent(content));
         }
 
 
-        public IObservable<List<MapContent>> GetListMapUpdate(string userLocation)
+        public IObservable<List<MapContent>> GetListMapUpdate(double lat, double lon)
         {
             return Observable.Create<List<MapContent>>(v =>
             {
                 List<MapContent> result = null;
                 try
                 {
-                    result = RedisDatabaseFunctions.RequestVisibleContent(userLocation);
+                    result = RedisDatabaseFunctions.RequestVisibleContent(lat, lon);
                 }
                 catch (Exception e)
                 {
@@ -74,14 +74,14 @@ namespace DataModel.Server.Services
         }
 
 
-        public IObservable<BatchContentMessage> GetMapUpdate(string userLocation)
+        public IObservable<BatchContentMessage> GetMapUpdate(double lat, double lon)
         {
             return Observable.Create<BatchContentMessage>(v =>
             {
                 List<MapContent> result = null;
                 try
                 {
-                    result = RedisDatabaseFunctions.RequestVisibleContent(userLocation);
+                    result = RedisDatabaseFunctions.RequestVisibleContent(lat, lon);
                     
                 }
                 catch (Exception e)
