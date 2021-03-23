@@ -1,12 +1,18 @@
-﻿using LiteDB;
+﻿
+using MongoDB.Bson;
+using MongoDB.Bson.Serialization.Attributes;
 using System;
 
 namespace DataModel.Server.Model
 {
+    [BsonIgnoreExtraElements]
     public class User : IUser
     {
         byte[] IUser.UserId => UserId.ToByteArray();
-        public ObjectId UserId { get; set; }
+
+        public MongoDB.Bson.ObjectId UserId { get; set; }
+
+        public LiteDB.ObjectId UserIdLite { get; set; }
 
         public string UserName { get; set; }
 
