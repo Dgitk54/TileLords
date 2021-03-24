@@ -5,6 +5,9 @@ using System;
 
 namespace DataModel.Server.Model
 {
+    /// <summary>
+    /// Class wrapping a quest containing server internal Questinformation 
+    /// </summary>
     [BsonIgnoreExtraElements]
     public class QuestContainer
     {

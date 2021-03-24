@@ -15,10 +15,12 @@ using System.Text;
 namespace DataModel.Server
 {
     /// <summary>
-    /// Class with functions shared between multiple handlers.
+    /// Class with helper functions shared between multiple services.
     /// </summary>
     public static class ServerFunctions
     {
+
+        //TODO: Make a config file
         public static readonly int CLIENTVISIBILITY = 10;
         public static readonly int CLIENTLOCATIONPRECISION = 10;
 

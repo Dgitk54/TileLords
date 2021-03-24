@@ -2,7 +2,7 @@
 using DataModel.Common.GameModel;
 using DataModel.Server.Model;
 using DataModel.Server.Services;
-using LiteDB;
+using MongoDB.Bson;
 using NUnit.Framework;
 using System.Collections.Generic;
 using System.Reactive.Linq;
@@ -15,14 +15,12 @@ namespace DataModel.Server.Tests
         [SetUp]
         public void Setup()
         {
-            LiteDBDatabaseFunctions.WipeAllDatabases();
-            LiteDBDatabaseFunctions.InitializeDataBases();
+            MongoDBFunctions.WipeAllDatabases();
         }
 
         [TearDown]
         public void TearDown()
         {
-            LiteDBDatabaseFunctions.WipeAllDatabases();
         }
 
         [Test]
@@ -32,7 +30,7 @@ namespace DataModel.Server.Tests
 
             IUser user1 = new User()
             {
-                UserId = ObjectId.NewObjectId(),
+                UserId = ObjectId.GenerateNewId(),
                 UserName = "TestUser",
 
             };
@@ -55,7 +53,7 @@ namespace DataModel.Server.Tests
 
             IUser user1 = new User()
             {
-                UserId = ObjectId.NewObjectId(),
+                UserId = ObjectId.GenerateNewId(),
                 UserName = "TestUser",
 
             };
@@ -75,13 +73,15 @@ namespace DataModel.Server.Tests
 
 
             //for testing purposes:
-            LiteDBDatabaseFunctions.AddContentToPlayerInventory(user1.UserId, doubleQuestItemsDictionary);
+            MongoDBFunctions.AddContentToPlayerInventory(user1.UserId, doubleQuestItemsDictionary).Wait();
             var result = service.TurnInQuest(user1, questsRequest[0].Quest.QuestId).Take(1).Wait();
             Assert.IsTrue(result);
 
             //After turn in, the user inventory should have at least 2 inventorytype keys with some values:
-            var userInventory = LiteDBDatabaseFunctions.RequestInventory(user1.UserId, user1.UserId);
-            Assert.IsTrue(userInventory.Keys.Count == 2);
+            var userInventoryTask = MongoDBFunctions.RequestInventory(user1.UserId, user1.UserId);
+            userInventoryTask.Wait();
+            var userInventoryResult = userInventoryTask.Result;
+            Assert.IsTrue(userInventoryResult.Keys.Count == 2);
 
             //User should not have any quests:
             var newQuestRequest = service.RequestActiveQuests(user1.UserId).Take(1).Wait();

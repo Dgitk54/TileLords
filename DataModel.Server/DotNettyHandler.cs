@@ -19,7 +19,7 @@ using System.Threading.Tasks;
 
 namespace DataModel.Server
 {
-    public class ClientHandler : ChannelHandlerAdapter
+    public class DotNettyHandler : ChannelHandlerAdapter
     {
 
         static bool logInConsole = false;
@@ -33,7 +33,7 @@ namespace DataModel.Server
         readonly TaskFactory scheduler;
         readonly MessagePackSerializerOptions lz4Options;
         
-        public ClientHandler(TaskFactory scheduler, ref MessagePackSerializerOptions options)
+        public DotNettyHandler(TaskFactory scheduler, ref MessagePackSerializerOptions options)
         {
             userAccountService = new UserAccountService( ServerFunctions.PasswordMatches);
             mapContentService = new MapContentService();

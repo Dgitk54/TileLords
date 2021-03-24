@@ -80,10 +80,12 @@ namespace DataModel.Server.Services
                                                                                                       .Subscribe(v2 => responses.OnNext(v2));
                                             //TODO: Equals and Hashcode for DistinctUntilChanged updates.
 
-
-                                        //    var spawnDisposable = resourceSpawnService.AddMovableResourceSpawnArea(v.UserId, LatestClientLocation(inboundtraffic));
-                                        //    var spawnQuestDisposable = resourceSpawnService.AddMoveableQuestResourceSpawnArea(v.UserId, LatestClientLocation(inboundtraffic));
-
+                                            
+                                            //TODO: Implement interaction between MongoDB and Redis cache
+                                            //    var spawnDisposable = resourceSpawnService.AddMovableResourceSpawnArea(v.UserId, LatestClientLocation(inboundtraffic));
+                                            //    var spawnQuestDisposable = resourceSpawnService.AddMoveableQuestResourceSpawnArea(v.UserId, LatestClientLocation(inboundtraffic));
+                                            //    disposables.Add(spawnDisposable);
+                                            //    disposables.Add(spawnQuestDisposable);
 
                                             var handleInventoryRequests = HandleInventoryRequests(v, inboundtraffic);
                                             var handlePickupRequests = HandleMapContentPickup(v, inboundtraffic);
@@ -91,8 +93,7 @@ namespace DataModel.Server.Services
                                             var handleQuestList = HandleQuestlistRequest(v, inboundtraffic);
 
 
-                                        //    disposables.Add(spawnDisposable);
-                                        //    disposables.Add(spawnQuestDisposable);
+                                       
 
                                             disposables.Add(userService.LogOffUseronDispose(v));
                                             disposables.Add(handleQuestList);

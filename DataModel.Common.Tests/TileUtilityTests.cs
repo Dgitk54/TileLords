@@ -28,9 +28,6 @@ namespace DataModel.Common.Tests
         [Test]
         public void TestCodeBigger()
         {
-
-
-
             bool isBigger = MiniTileComp.IsTileCodeBigger(new PlusCode("9F4MGC94+X2", 10), new PlusCode("8F4MGC94+X2", 10));
             Assert.IsFalse(isBigger);
             isBigger = MiniTileComp.IsTileCodeBigger(new PlusCode("8F4MGC94+X2", 10), new PlusCode("9F4MGC94+X2", 10));

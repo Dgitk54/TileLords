@@ -13,7 +13,7 @@ using MessagePack;
 
 namespace DataModel.Server
 {
-    public class ServerInstance
+    public class DotNettyServerInstance
     {
         public static void AttachConsoleLogging()
         {
@@ -25,10 +25,9 @@ namespace DataModel.Server
         MultithreadEventLoopGroup workerGroup;
         ServerBootstrap bootstrap;
         IChannel bootstrapChannel;
-        public ServerInstance()
+        public DotNettyServerInstance()
         {
             MongoDBFunctions.WipeAllDatabases();
-            MongoDBFunctions.InitializeDataBases();
         }
         public async Task RunServerAsync()
         {
@@ -61,7 +60,7 @@ namespace DataModel.Server
                     pipeline.AddLast("framing-dec", new LengthFieldBasedFrameDecoder(short.MaxValue, 0, 2, 0, 2));
                //   pipeline.AddLast(new DotNettyMessagePackDecoder());
                //   pipeline.AddLast(new DotNettyMessagePackEncoder());
-                    pipeline.AddLast(new ClientHandler(factory, ref options));
+                    pipeline.AddLast(new DotNettyHandler(factory, ref options));
                 }));
                
 

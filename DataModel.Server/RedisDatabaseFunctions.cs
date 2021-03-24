@@ -13,11 +13,14 @@ using StackExchange.Redis;
 
 namespace DataModel.Server
 {
+
     public static class RedisDatabaseFunctions
     {
+        
         public static ConnectionMultiplexer Redis { get; }
         static RedisDatabaseFunctions()
         {
+            //TODO: Fix static ip for the local database server.
             //Docker run -p INC:OUT --name -d redis
             Redis = ConnectionMultiplexer.Connect("192.168.1.184,allowAdmin=true");
 
@@ -25,19 +28,29 @@ namespace DataModel.Server
             var server = Redis.GetServer(endPoint);
             server.FlushAllDatabases();
         }
+        static int CLIENT_VISIBILITY_IN_METERS = 300;
 
+        
 
-
+        /// <summary>
+        /// Requests visible mapcontent for the given position 
+        /// </summary>
+        /// <param name="lat"></param>
+        /// <param name="lon"></param>
+        /// <returns></returns>
         public static List<MapContent> RequestVisibleContent(double lat, double lon)
         {
             var db = Redis.GetDatabase();
-            var keys = db.GeoRadius("mapcontent", lon, lat, 300);
+            var keys = db.GeoRadius("mapcontent", lon, lat, CLIENT_VISIBILITY_IN_METERS);
             var batch = db.CreateBatch();
 
+            //Handle Keys
             var taskList = new List<Task<RedisValue>>();
             keys.ToList().ForEach(v => taskList.Add(batch.StringGetAsync(v.Member.ToString())));
             batch.Execute();
             Task.WhenAll(taskList.ToArray());
+
+            //Deserialize Content from cache
             ConcurrentBag<MapContent> result = new ConcurrentBag<MapContent>();
             taskList.AsParallel().ForAll(v =>
             {
@@ -54,6 +67,11 @@ namespace DataModel.Server
         }
 
 
+        /// <summary>
+        /// Removes content in redis cache
+        /// </summary>
+        /// <param name="content"></param>
+        /// <returns></returns>
         public static bool RemoveContent(MapContent content)
         {
             var db = Redis.GetDatabase();
@@ -66,6 +84,12 @@ namespace DataModel.Server
             return removeTask.Result && keydeletetask.Result;
         }
 
+        /// <summary>
+        /// Stores or updates the content in the redis cache
+        /// </summary>
+        /// <param name="content">content to store</param>
+        /// <param name="lat"></param>
+        /// <param name="lon"></param>
         public static void UpsertContent(MapContent content, double lat, double lon)
         {
             var db = Redis.GetDatabase();

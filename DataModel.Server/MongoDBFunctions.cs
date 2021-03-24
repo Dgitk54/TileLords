@@ -36,21 +36,12 @@ namespace DataModel.Server
             client.DropDatabase(QuestDatabaseName);
         }
 
-        public static void InitializeDataBases()
-        {
-            client.GetDatabase(UserDatabaseName);
-            client.GetDatabase(MapContentDatabaseName);
-            client.GetDatabase(InventoryDatabaseName);
-            client.GetDatabase(QuestDatabaseName);
-        }
-
+       
 
         public static async Task<bool> InsertUser(User user)
         {
-
             var database = client.GetDatabase("Users");
             var collection = database.GetCollection<User>("users");
-
             var col = collection.AsQueryable();
             if (IsNameTaken(user.UserName, col))
             {
@@ -78,22 +69,7 @@ namespace DataModel.Server
 
         }
 
-
-
-        public static async Task<BatchContentMessage> AreaContentAsMessageRequest(string location)
-        {
-            var nearbyCodes = LocationCodeTileUtility.GetTileSection(location, ServerFunctions.CLIENTVISIBILITY, ServerFunctions.CLIENTLOCATIONPRECISION);
-            var database = client.GetDatabase("MapContent");
-            var col = database.GetCollection<MapContent>("mapcontent");
-            //unsupported filter//
-            var all = await col.Find(Builders<MapContent>.Filter.Empty).ToListAsync();
-
-            var enumerable = all.Where(v => nearbyCodes.Any(v2 => v2.Equals(v.Location)));
-            var list = enumerable.ToList().ConvertAll(v => v.AsMessage());
-            return new BatchContentMessage() { ContentList = list };
-
-        }
-
+       
 
         public static async Task<bool> AddQuestForUser(QuestContainer container)
         {
@@ -104,29 +80,7 @@ namespace DataModel.Server
         }
 
 
-        public static async Task<MapContent> GetMapContentById(byte[] mapcontentid)
-        {
-            var database = client.GetDatabase("MapContent");
-            var col = database.GetCollection<MapContent>("mapcontent");
-
-
-            var filter = Builders<MapContent>.Filter.Eq<byte[]>(m => m.Id, mapcontentid);
-
-            var enumerable = await col.Find(filter).ToListAsync();
-
-            if (enumerable.Count() > 1)
-                throw new Exception("Multiple objects with same ID in database");
-            if (enumerable.Count() == 0)
-            {
-                return null;
-            }
-            var ret = enumerable.First();
-
-            return ret;
-
-
-        }
-
+       
         public static async Task<bool> UpdateUserOnlineState(byte[] id, bool state)
         {
             var objId = new MongoDB.Bson.ObjectId(id);
@@ -164,17 +118,7 @@ namespace DataModel.Server
             return result.IsAcknowledged;
         }
 
-        public static int ResetMapContent()
-        {
-            var database = client.GetDatabase("MapContent");
-            var col = database.GetCollection<MapContent>("mapcontent");
-            int players = (int)col.DeleteMany(v => v.Type == ContentType.PLAYER).DeletedCount;
-            int resources = (int)col.DeleteMany(v => v.Type == ContentType.RESOURCE).DeletedCount;
-            return players + resources;
-
-
-        }
-
+       
         public static async Task<List<QuestContainer>> GetQuestsForUser(byte[] userid)
         {
             var database = client.GetDatabase("Quest");
@@ -233,23 +177,7 @@ namespace DataModel.Server
             return result.DeletedCount > 0;
         }
 
-
-        public static async Task<MapContent> RemoveMapContent(byte[] contentId)
-        {
-            var database = client.GetDatabase("MapContent");
-            var col = database.GetCollection<MapContent>("mapcontent");
-            var enumerable = await col.Find(v => v.Id == contentId).ToListAsync();
-
-            if (enumerable.Count() > 1)
-                throw new Exception("Multiple objects with same ID in database");
-            if (enumerable.Count() == 0)
-                return null;
-            var ret = enumerable.First();
-            var deleted = await col.DeleteManyAsync(v => v.Id == contentId);
-            Debug.Assert(deleted.DeletedCount == 1);
-            return ret;
-        }
-
+       
 
         public static async Task<bool> RemoveContentFromInventory(byte[] inventoryId, byte[] ownerId, Dictionary<InventoryType, int> content)
         {
@@ -332,94 +260,19 @@ namespace DataModel.Server
 
 
 
-
+        //TODO: Implement MongoDB + Redis cache transactions
         public static async Task<bool> RemoveContentAndAddToPlayer(byte[] playerId, byte[] mapcontentId)
         {
-
-            //Check if the player can loot the item first with readonly db queries:
-            var contentAsRead = await GetMapContentById(mapcontentId);
-            if (contentAsRead == null)
-            {
-                Debug.WriteLine("content as read null");
-                return false;
-            }
-            if (!contentAsRead.CanBeLootedByPlayer)
-            {
-
-                Debug.WriteLine("content not lootable");
-                return false;
-
-            }
-            var playerCanLoot = ServerFunctions.PlayerCanLootObject(await GetQuestsForUser(playerId), contentAsRead);
-            if (!playerCanLoot)
-            {
-                Debug.WriteLine("player cant loot");
-                return false;
-            }
-
-
-
-            //var databaseMap = client.GetDatabase("MapData");
-            //var databaseInventory = client.GetDatabase("Inventory");
-
-            var content = await RemoveMapContent(mapcontentId);
-            if (content == null)
-            {
-                Debug.WriteLine("content null");
-                return false;
-            }
-            var asDictionary = content.ToResourceDictionary();
-            return await AddContentToPlayerInventory(playerId, asDictionary);
+            throw new NotImplementedException();
         }
 
 
-
+        //TODO: Implement MongoDB + Redis cache transactions
         public static async Task UpdateOrDeleteContent(MapContent content, string location)
         {
-            var database = client.GetDatabase("MapContent");
-            var col = database.GetCollection<MapContent>("mapcontent");
-            var enumerable = await col.Find(v => v.Id == content.Id).ToListAsync();
-            if (enumerable.Count() > 1)
-                throw new Exception("Multiple objects with same ID in database");
-
-            //No database entry and no location given, skip/ignore update
-            if (enumerable.Count() == 0 && location == null)
-            {
-                return;
-            }
-
-            //received mapcontent with location but its not in database, insert into database
-            if (enumerable.Count() == 0 && location != null)
-            {
-                content.Location = location;
-                await col.InsertOneAsync(content);
-                return;
-            }
-
-            var first = enumerable.First();
-
-            //Delte value out of database, if it is still present.
-            if (enumerable.Count() != 0 && location == null)
-            {
-                var deletedAmount = col.DeleteMany(v => v.Id == first.Id);
-                return;
-            }
-
-            //Update value:
-            first.Location = location;
-
-
-            var filter = Builders<MapContent>.Filter.Eq<byte[]>(m => m.Id, content.Id);
-
-            var result = await col.ReplaceOneAsync(filter, first);
-
-
-
-            if (!result.IsAcknowledged)
-                throw new Exception("Could not update entity");
-
-            return;
+            throw new NotImplementedException();   
         }
+
         public static async Task<bool> AddQuestForUser(byte[] userId, QuestContainer container)
         {
             var database = client.GetDatabase("Quest");
@@ -430,17 +283,7 @@ namespace DataModel.Server
 
         }
 
-        public static async Task<List<MapContent>> AreaContentAsListRequest(string location)
-        {
-            var nearbyCodes = LocationCodeTileUtility.GetTileSection(location, ServerFunctions.CLIENTVISIBILITY, ServerFunctions.CLIENTLOCATIONPRECISION);
-            var database = client.GetDatabase("MapContent");
-
-            var col = database.GetCollection<MapContent>("mapcontent");
-            var enumerable = await col.Find(v => nearbyCodes.Any(v2 => v2.Equals(v.Location))).ToListAsync();
-            return enumerable.ToList();
-
-        }
-
+       
         public static async Task<Dictionary<InventoryType, int>> RequestInventory(byte[] requestOwnerId, byte[] targetId)
         {
             var database = client.GetDatabase("Inventory");

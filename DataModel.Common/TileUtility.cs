@@ -164,7 +164,7 @@ namespace DataModel.Common
             string plusCode = code.Code;
             if (plusCode.Length > 8)
             {
-               plusCode = plusCode.Substring(0, 8);
+                plusCode = plusCode.Substring(0, 8);
             }
             var md5Hasher = MD5.Create();
             var hashed = md5Hasher.ComputeHash(Encoding.UTF8.GetBytes(plusCode));

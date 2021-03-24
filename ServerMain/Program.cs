@@ -17,9 +17,7 @@ namespace ServerMain
         public static void ServerStart()
         {
             //  ServerInstance.AttachConsoleLogging();
-            var server = new ServerInstance();
-            var resourceCleanup = MongoDBFunctions.ResetMapContent();
-            Console.WriteLine("Cleaned up resources amount:" + resourceCleanup);
+            var server = new DotNettyServerInstance();
             server.RunServerAsync().Wait();
 
             Console.ReadLine();

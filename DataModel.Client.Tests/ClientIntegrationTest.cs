@@ -14,7 +14,7 @@ namespace ClientIntegration
 {
     public class ClientIntegrationTest
     {
-        private ServerInstance server;
+        private DotNettyServerInstance server;
         private Task serverRunning;
 
         [SetUp]
@@ -22,7 +22,7 @@ namespace ClientIntegration
         {
             LiteDBDatabaseFunctions.WipeAllDatabases();
             LiteDBDatabaseFunctions.InitializeDataBases();
-            server = new ServerInstance();
+            server = new DotNettyServerInstance();
             serverRunning = server.RunServerAsync();
         }
 

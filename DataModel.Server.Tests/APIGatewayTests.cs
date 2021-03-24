@@ -31,9 +31,9 @@ namespace DataModel.Server.Tests
         [Test]
         public void RegisterGetsResponse()
         {
-            var accountservice = new UserAccountService(LiteDBDatabaseFunctions.FindUserInDatabase, ServerFunctions.PasswordMatches);
+            var accountservice = new UserAccountService(ServerFunctions.PasswordMatches);
             var mapservice = new MapContentService();
-            var resourceSpawnService = new ResourceSpawnService(mapservice, LiteDBDatabaseFunctions.UpsertOrDeleteContent, new List<Func<List<MapContent>, bool>>() { ServerFunctions.Only5ResourcesInArea });
+            var resourceSpawnService = new ResourceSpawnService(mapservice,  new List<Func<List<MapContent>, bool>>() { ServerFunctions.Only5ResourcesInArea });
             var inventoryService = new InventoryService();
             var questService = new QuestService();
             var responses = new List<IMessage>();

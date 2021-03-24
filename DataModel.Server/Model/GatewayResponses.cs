@@ -7,6 +7,9 @@ using System.Text;
 
 namespace DataModel.Server.Model
 {
+    /// <summary>
+    /// Static class for preconfigured server responses for Clientrequests.
+    /// </summary>
     public static class GatewayResponses
     {
         public static UserActionMessage LoginFail = new UserActionMessage()

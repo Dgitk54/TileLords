@@ -20,13 +20,11 @@ namespace DataModel.Server.Tests
         public void Setup()
         {
             MongoDBFunctions.WipeAllDatabases();
-            MongoDBFunctions.InitializeDataBases();
         }
 
         [TearDown]
         public void TearDown()
         {
-            MongoDBFunctions.WipeAllDatabases();
         }
 
         [Test]
@@ -38,14 +36,13 @@ namespace DataModel.Server.Tests
                 UserName = "TestUser",
 
             };
-
             MapContent randomContent = ServerFunctions.GetRandomNonQuestResource().AsMapContent();
   
             var startLocation = new PlusCode("8FX9XW2F+9X", 10);
             randomContent.Location = startLocation.Code;
 
             MongoDBFunctions.UpdateOrDeleteContent(randomContent, startLocation.Code).Wait();
-            var result =  MongoDBFunctions.RemoveContentAndAddToPlayer(user1.UserId, randomContent.MapId).Result;
+            var result =  MongoDBFunctions.RemoveContentAndAddToPlayer(user1.UserId, randomContent.Id).Result;
 
           
 
@@ -57,11 +54,12 @@ namespace DataModel.Server.Tests
             Assert.IsTrue(removeResult);
 
             userInventory =  MongoDBFunctions.RequestInventory(user1.UserId, user1.UserId).Result;
-            Assert.IsTrue(userInventory.Values.All(v => v == 0));
+            Assert.IsTrue(userInventory.Values.All(v => v == 0)); 
         }
         [Test]
         public void CanCreateUserLoginAndLogOut()
         {
+           
             User user = new User();
             user.UserName = "test";
           
@@ -78,7 +76,7 @@ namespace DataModel.Server.Tests
             Assert.IsTrue(logOff);
             updatedUser =  MongoDBFunctions.FindUserInDatabase("test").Result;
             Assert.IsTrue(updatedUser != null);
-            Assert.IsTrue(!updatedUser.CurrentlyOnline);
+            Assert.IsTrue(!updatedUser.CurrentlyOnline); 
         }
 
     }

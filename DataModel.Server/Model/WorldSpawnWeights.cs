@@ -5,6 +5,9 @@ using System.Collections.Generic;
 
 namespace DataModel.Server.Model
 {
+    /// <summary>
+    /// Lookup values for different biomes and the resource spawn weights.
+    /// </summary>
     public static class WorldSpawnWeights
     {
 
