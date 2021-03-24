@@ -45,44 +45,7 @@ namespace DataModel.Common.Tests
 
 
 
-        [Test]
-        public void SortList()
-        {
-
-            List<MiniTile> unsorted = new List<MiniTile>();
-            unsorted.Add(new MiniTile(new PlusCode("8FX9WWVC+W2", 10), MiniTileType.Grass_Dirt, null));
-            unsorted.Add(new MiniTile(new PlusCode("8FX9WWV9+XW", 10), MiniTileType.Grass_Dirt, null));
-            unsorted.Add(new MiniTile(new PlusCode("8FX9WWVC+X2", 10), MiniTileType.Grass_Dirt, null));
-            unsorted.Add(new MiniTile(new PlusCode("8FX9WWV9+WW", 10), MiniTileType.Grass_Dirt, null));
-            unsorted.Add(new MiniTile(new PlusCode("8FX9WWW9+2W", 10), MiniTileType.Grass_Dirt, null));
-            unsorted.Add(new MiniTile(new PlusCode("8FX9WWW9+2X", 10), MiniTileType.Grass_Dirt, null));
-            unsorted.Add(new MiniTile(new PlusCode("8FX9WWWC+22", 10), MiniTileType.Grass_Dirt, null));
-            unsorted.Add(new MiniTile(new PlusCode("8FX9WWV9+WX", 10), MiniTileType.Grass_Dirt, null));
-            unsorted.Add(new MiniTile(new PlusCode("8FX9WWV9+XX", 10), MiniTileType.Grass_Dirt, null));
-            unsorted = LocationCodeTileUtility.SortList(unsorted);
-
-            List<MiniTile> sorted = new List<MiniTile>();
-            sorted.Add(new MiniTile(new PlusCode("8FX9WWW9+2W", 10), MiniTileType.Grass_Dirt, null));
-            sorted.Add(new MiniTile(new PlusCode("8FX9WWW9+2X", 10), MiniTileType.Grass_Dirt, null));
-            sorted.Add(new MiniTile(new PlusCode("8FX9WWWC+22", 10), MiniTileType.Grass_Dirt, null));
-            sorted.Add(new MiniTile(new PlusCode("8FX9WWV9+XW", 10), MiniTileType.Grass_Dirt, null));
-            sorted.Add(new MiniTile(new PlusCode("8FX9WWV9+XX", 10), MiniTileType.Grass_Dirt, null));
-            sorted.Add(new MiniTile(new PlusCode("8FX9WWVC+X2", 10), MiniTileType.Grass_Dirt, null));
-            sorted.Add(new MiniTile(new PlusCode("8FX9WWV9+WW", 10), MiniTileType.Grass_Dirt, null));
-            sorted.Add(new MiniTile(new PlusCode("8FX9WWV9+WX", 10), MiniTileType.Grass_Dirt, null));
-            sorted.Add(new MiniTile(new PlusCode("8FX9WWVC+W2", 10), MiniTileType.Grass_Dirt, null));
-
-
-
-            for (int i = 0; i < unsorted.Count; i++)
-            {
-                Debug.WriteLine(sorted[i].MiniTileId.Code + " " + unsorted[i].MiniTileId.Code);
-                Assert.AreEqual(sorted[i].MiniTileId.Code, unsorted[i].MiniTileId.Code);
-            }
-
-
-        }
-
+       
         [Test]
         public void GetTileSectionsReturnsSameStringUnmodified()
         {
@@ -187,23 +150,7 @@ namespace DataModel.Common.Tests
 
         }
 
-        [Test]
-        public void GetRandomMiniTileByTileCodeTest()
-        {
-            PlusCode code = TileUtility.GetRandomMiniTileByTileCode(new Tile(new PlusCode("8FXW92W", 8), TileType.Desert, null));
-            Assert.IsTrue(code.Code.Contains("8FXW92W"));
-            Assert.AreEqual("8FXW92W", code.Code.Substring(0, 7));
-            Debug.WriteLine(code.Code);
-            code = TileUtility.GetRandomMiniTileByTileCode(new Tile(new PlusCode("8FXW92W", 8), TileType.Desert, null));
-            Assert.IsTrue(code.Code.Contains("8FXW92W"));
-            Assert.AreEqual("8FXW92W", code.Code.Substring(0, 7));
-            Debug.WriteLine(code.Code);
-            code = TileUtility.GetRandomMiniTileByTileCode(new Tile(new PlusCode("8FXW92W", 8), TileType.Desert, null));
-            Assert.IsTrue(code.Code.Contains("8FXW92W"));
-            Assert.AreEqual("8FXW92W", code.Code.Substring(0, 7));
-            Debug.WriteLine(code.Code);
-        }
-
+        
 
         [Test]
         public void DetermineLocationCodesTest()

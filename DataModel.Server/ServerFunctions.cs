@@ -3,7 +3,7 @@ using DataModel.Common.GameModel;
 using DataModel.Common.Messages;
 using DataModel.Server.Model;
 using DataModel.Server.Services;
-using LiteDB;
+using MongoDB.Bson;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,6 +11,7 @@ using System.Reactive;
 using System.Reactive.Linq;
 using System.Security.Cryptography;
 using System.Text;
+
 
 namespace DataModel.Server
 {
@@ -66,12 +67,12 @@ namespace DataModel.Server
             Array values = Enum.GetValues(typeof(ResourceType));
             Random random = new Random();
             ResourceType randomType = (ResourceType)values.GetValue(random.Next(1, values.Length));
-            var id = ObjectId.NewObjectId().ToByteArray();
+            var id = ObjectId.GenerateNewId().ToByteArray();
             return new Resource() { Id = id, Location = null, Name = randomType.ToString(), ResourceType = randomType, Type = ContentType.RESOURCE };
         }
         public static Resource ExtractQuestResource(this QuestContainer quest, string location)
         {
-            return new Resource() { Id = ObjectId.NewObjectId().ToByteArray(), Location = location, Name = quest.Quest.TypeToPickUp.ToString(), ResourceType = quest.Quest.TypeToPickUp, Type = quest.Quest.QuestLevel };
+            return new Resource() { Id = ObjectId.GenerateNewId().ToByteArray(), Location = location, Name = quest.Quest.TypeToPickUp.ToString(), ResourceType = quest.Quest.TypeToPickUp, Type = quest.Quest.QuestLevel };
         }
 
         public static bool PlayerCanLootObject(List<QuestContainer> currentPlayerQuests, MapContent contentToCheck)
@@ -205,7 +206,7 @@ namespace DataModel.Server
                 QuestTurninLocation = null,
                 RequiredAmountForCompletion = QUESTLEVEL1_REQUIREDAMOUNT_MAX,
                 TypeToPickUp = resourceTypeForQuest,
-                QuestId = ObjectId.NewObjectId().ToByteArray(),
+                QuestId = ObjectId.GenerateNewId().ToByteArray(),
                 QuestReward = new List<QuestReward>() { new QuestReward() { Amount = 10, ContentType = ContentType.QUESTREWARDPOINTS, ResourceType = ResourceType.NONE } }
             };
             return quest;

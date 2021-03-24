@@ -309,7 +309,7 @@ namespace DataModel.Common.Tests
         public void PlusCodeToTownNameTest()
         {
 
-            string townName = TileUtility.PlusCodeToTileName(new PlusCode("8FX9XW2F+XX", 10));
+            string townName = TownNames.PlusCodeToTileName(new PlusCode("8FX9XW2F+XX", 10));
             Assert.IsTrue(townName != null);
             Debug.WriteLine(townName);
 

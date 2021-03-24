@@ -1,4 +1,4 @@
-﻿namespace DataModel.Common
+﻿namespace DataModel.Common.GameModel
 {
     public interface ITileContent
     {

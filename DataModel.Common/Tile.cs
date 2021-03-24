@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using DataModel.Common.GameModel;
+using System.Collections.Generic;
 
 namespace DataModel.Common
 {
@@ -8,7 +9,6 @@ namespace DataModel.Common
     /// </summary>
     public class Tile
     {
-        public int Id { get; set; }
         public PlusCode PlusCode { get; set; }
         public TileType Ttype { get; set; }
 
@@ -18,14 +18,6 @@ namespace DataModel.Common
         {
             (PlusCode, Ttype, MiniTiles) = (c, t, miniTiles);
         }
-
-        public Tile(PlusCode c, TileType t)
-        {
-            (PlusCode, Ttype) = (c, t);
-        }
-
-        public Tile() { }
-
 
     }
 }

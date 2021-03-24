@@ -28,13 +28,13 @@ namespace DataModel.Common.Messages
         {
             if (Type == ContentType.RESOURCE)
             {
-                return ResourceType + "" + " at " + TileUtility.PlusCodeToTileName(new PlusCode(Location, 10)) + " " + Location;
+                return ResourceType + "" + " at " + TownNames.PlusCodeToTileName(new PlusCode(Location, 10)) + " " + Location;
             }
             else if (Type == ContentType.PLAYER)
             {
                 if (Name != null)
                 {
-                    return "Player: " + " " + Name + " at " + TileUtility.PlusCodeToTileName(new PlusCode(Location, 10)) + " " + Location;
+                    return "Player: " + " " + Name + " at " + TownNames.PlusCodeToTileName(new PlusCode(Location, 10)) + " " + Location;
                 }
                 else
                 {
@@ -45,7 +45,7 @@ namespace DataModel.Common.Messages
             {
                 if (Name != null)
                 {
-                    return "Quest: " + " " + Name + " at " + TileUtility.PlusCodeToTileName(new PlusCode(Location, 10)) + " " + Location;
+                    return "Quest: " + " " + Name + " at " + TownNames.PlusCodeToTileName(new PlusCode(Location, 10)) + " " + Location;
                 }
                 else
                 {

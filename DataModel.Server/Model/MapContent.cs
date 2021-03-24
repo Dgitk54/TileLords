@@ -1,6 +1,5 @@
 ﻿using DataModel.Common.GameModel;
 using DataModel.Common.Messages;
-using LiteDB;
 using MessagePack;
 
 namespace DataModel.Server.Model

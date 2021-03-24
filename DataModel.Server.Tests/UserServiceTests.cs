@@ -14,21 +14,19 @@ namespace DataModel.Server.Tests
         [SetUp]
         public void Setup()
         {
-            LiteDBDatabaseFunctions.WipeAllDatabases();
-            LiteDBDatabaseFunctions.InitializeDataBases();
+            MongoDBFunctions.WipeAllDatabases();
         }
 
         [TearDown]
         public void TearDown()
         {
-            LiteDBDatabaseFunctions.WipeAllDatabases();
         }
 
         [Test]
         public void CanRegisterAndLogIn()
         {
             //Setup:
-            var service = new UserAccountService(LiteDBDatabaseFunctions.FindUserInDatabase, ServerFunctions.PasswordMatches);
+            var service = new UserAccountService(ServerFunctions.PasswordMatches);
             var registerResults = new List<bool>();
             var userLoginResults = new List<IUser>();
 

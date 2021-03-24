@@ -20,8 +20,6 @@ namespace ClientIntegration
         [SetUp]
         public void Setup()
         {
-            LiteDBDatabaseFunctions.WipeAllDatabases();
-            LiteDBDatabaseFunctions.InitializeDataBases();
             server = new DotNettyServerInstance();
             serverRunning = server.RunServerAsync();
         }
@@ -29,7 +27,6 @@ namespace ClientIntegration
         [TearDown]
         public void TearDown()
         {
-            LiteDBDatabaseFunctions.WipeAllDatabases();
             server.ShutDownServer().Wait();
         }
         [Test]

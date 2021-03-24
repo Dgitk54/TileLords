@@ -12,7 +12,6 @@ namespace DataModel.Server.Model
     public class QuestContainer
     {
         public MongoDB.Bson.ObjectId Id { get; set; }
-        public LiteDB.ObjectId IdLite { get; set; }
         public byte[] OwnerId { get; set; }  //Player having the Quest
         public DateTime QuestCreatedOn { get; set; }
         public bool QuestHasExpired { get; set; }

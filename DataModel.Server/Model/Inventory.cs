@@ -9,9 +9,6 @@ namespace DataModel.Server.Model
     public class Inventory : IUserInventory
     {
         public MongoDB.Bson.ObjectId InventoryId { get; set; }
-
-        public LiteDB.ObjectId InventoryIdLite { get; set; }
-
         public byte[] OwnerId { get; set; }
         public byte[] ContainerId { get; set; }
         public int StorageCapacity { get; set; }

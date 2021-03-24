@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using DataModel.Common.GameModel;
+using System.Collections.Generic;
 
 namespace DataModel.Common
 {

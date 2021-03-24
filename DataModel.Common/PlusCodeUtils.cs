@@ -7,8 +7,6 @@ namespace DataModel.Common
     //Algorithms from https://github.com/bocops/open-geotiling/blob/master/java/org/bocops/opengeotiling/OpenGeoTile.java
     public static class PlusCodeUtils
     {
-
-
         public static int GetManhattenDistance(this PlusCode one, PlusCode two)
         {
             if (one.Precision != two.Precision)
