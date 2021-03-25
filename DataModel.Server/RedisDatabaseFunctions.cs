@@ -66,6 +66,41 @@ namespace DataModel.Server
             return result.ToList();
         }
 
+        /// <summary>
+        /// Removes the specified content from the database, if possible
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns>Mapcontent if the action was successful, null if not (target can not be picked up or error etc.) </returns>
+        public static  MapContent PickUpById(byte[] id)
+        {
+            var db = Redis.GetDatabase();
+            var idAsString = Convert.ToBase64String(id);
+            var storedObject = db.StringGet(idAsString);
+            if (!storedObject.HasValue)
+                return null;
+
+            var redisValue = storedObject.ToString();
+            var mapContentRaw = Convert.FromBase64String(redisValue);
+            var mapContentObject = MessagePackSerializer.Deserialize<MapContent>(mapContentRaw);
+
+            if (!mapContentObject.CanBeLootedByPlayer)
+                return null;
+
+            //Remove from Geokeys + ActualObject atomicly
+            var transaction = db.CreateTransaction();
+            var deleteGeoTask = transaction.GeoRemoveAsync("mapcontent", idAsString);
+            var deleteObjectTask = transaction.KeyDeleteAsync(idAsString);
+
+            transaction.Execute();
+
+            Task.WhenAll(deleteGeoTask, deleteObjectTask);
+
+            //throw exception, this should not happen
+            if (!(deleteGeoTask.Result && deleteObjectTask.Result))
+                throw new Exception("Invalid database transaction state at." + id.ToConsoleString()); 
+
+            return mapContentObject;
+        }
 
         /// <summary>
         /// Removes content in redis cache

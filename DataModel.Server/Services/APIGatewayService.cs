@@ -81,11 +81,9 @@ namespace DataModel.Server.Services
                                             //TODO: Equals and Hashcode for DistinctUntilChanged updates.
 
                                             
-                                            //TODO: Implement interaction between MongoDB and Redis cache
-                                            //    var spawnDisposable = resourceSpawnService.AddMovableResourceSpawnArea(v.UserId, LatestClientLocation(inboundtraffic));
-                                            //    var spawnQuestDisposable = resourceSpawnService.AddMoveableQuestResourceSpawnArea(v.UserId, LatestClientLocation(inboundtraffic));
-                                            //    disposables.Add(spawnDisposable);
-                                            //    disposables.Add(spawnQuestDisposable);
+                                            var spawnDisposable = resourceSpawnService.AddMovableResourceSpawnArea(v.UserId, LatestClientGPS(inboundtraffic));
+                                            var spawnQuestDisposable = resourceSpawnService.AddMoveableQuestResourceSpawnArea(v.UserId, LatestClientLocation(inboundtraffic));
+                                           
 
                                             var handleInventoryRequests = HandleInventoryRequests(v, inboundtraffic);
                                             var handlePickupRequests = HandleMapContentPickup(v, inboundtraffic);
@@ -102,7 +100,8 @@ namespace DataModel.Server.Services
                                             disposables.Add(handleInventoryRequests);
                                             disposables.Add(mapServicePlayerUpdate);
                                             disposables.Add(mapDataRequests);
-                                            
+                                            disposables.Add(spawnDisposable);
+                                            disposables.Add(spawnQuestDisposable);
                                             disposables.Add(handleInventoryRequests);
                                             disposables.Add(handlePickupRequests);
                                             disposables.Add(HandleQuestTurnIn(v, inboundtraffic));

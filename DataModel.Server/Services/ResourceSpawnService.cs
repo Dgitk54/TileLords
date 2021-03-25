@@ -31,10 +31,14 @@ namespace DataModel.Server.Services
             resourceSpawnRequests = Subject.Synchronize(storedMapResources);
 
             //Handling spawn requests
-            var disposable = resourceSpawnRequests.Subscribe(async v => await MongoDBFunctions.UpdateOrDeleteContent(v.Item1.AsMapContent(), v.Item2));
+            var disposable = resourceSpawnRequests.Subscribe(v => 
+            {
+                var gps = v.Item2.From10String().PlusCodeToGPS();
+                RedisDatabaseFunctions.UpsertContent(v.Item1.AsMapContent(), gps.Lat, gps.Lon);
+            });
 
             //Handling delete requests
-            var deleteRequests = resourceSpawnRequests.Delay(TimeSpan.FromSeconds(RESOURCEALIVEINSEC)).Subscribe(async v => await MongoDBFunctions.UpdateOrDeleteContent(v.Item1.AsMapContent(), null));
+            var deleteRequests = resourceSpawnRequests.Delay(TimeSpan.FromSeconds(RESOURCEALIVEINSEC)).Subscribe( v => RedisDatabaseFunctions.RemoveContent(v.Item1.AsMapContent()));
 
             disposables.Add(disposable);
             disposables.Add(deleteRequests);

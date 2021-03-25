@@ -141,7 +141,7 @@ namespace DataModel.Common
             return new PlusCode(result[random], 10);
         }
 
-        public static GPS PlusCodeToGPS(PlusCode code)
+        public static GPS PlusCodeToGPS(this PlusCode code)
         {
             CodeArea codeArea = OpenLocationCode.Decode(code.Code);
             GPS gpsCenter = new GPS(codeArea.Center.Latitude, codeArea.Center.Longitude);

@@ -11,7 +11,7 @@ using System.Reactive;
 using System.Reactive.Linq;
 using System.Security.Cryptography;
 using System.Text;
-
+using System.Threading.Tasks;
 
 namespace DataModel.Server
 {
@@ -211,7 +211,25 @@ namespace DataModel.Server
             };
             return quest;
         }
-
+        
+        public static async Task<bool> PickUpContentAndAddToInventory(byte[] mapContentId, byte[] playerId)
+        {
+            var mapContent = RedisDatabaseFunctions.PickUpById(mapContentId);
+            if (mapContent == null)
+                return false;
+            var insertResult = await MongoDBFunctions.AddContentToPlayerInventory(playerId, mapContent.ToResourceDictionary());
+            if (!insertResult)
+            {
+                //Roll back due to player not having inventory space
+                var approximateLocation = mapContent.Location.From10String().PlusCodeToGPS();
+                RedisDatabaseFunctions.UpsertContent(mapContent, approximateLocation.Lat, approximateLocation.Lon);
+                return false;
+            }
+            else
+            {
+                return true;
+            }
+        }
 
         public static MapContent AsMapContent(this IUser user)
         {

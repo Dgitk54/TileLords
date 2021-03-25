@@ -260,19 +260,7 @@ namespace DataModel.Server
 
 
 
-        //TODO: Implement MongoDB + Redis cache transactions
-        public static async Task<bool> RemoveContentAndAddToPlayer(byte[] playerId, byte[] mapcontentId)
-        {
-            throw new NotImplementedException();
-        }
-
-
-        //TODO: Implement MongoDB + Redis cache transactions
-        public static async Task UpdateOrDeleteContent(MapContent content, string location)
-        {
-            throw new NotImplementedException();   
-        }
-
+       
         public static async Task<bool> AddQuestForUser(byte[] userId, QuestContainer container)
         {
             var database = client.GetDatabase("Quest");
