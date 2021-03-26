@@ -58,7 +58,6 @@ namespace ClientMain
         {
 
             var token = new CancellationTokenSource();
-            int spots = 3;
             for (; ; )
             {
                 Console.WriteLine("Enter Clientamount: x 10");

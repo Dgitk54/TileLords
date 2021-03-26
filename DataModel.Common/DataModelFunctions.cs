@@ -1,7 +1,6 @@
 ﻿using DataModel.Common.Messages;
 using Google.OpenLocationCode;
 using MessagePack;
-using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -13,20 +12,7 @@ namespace DataModel.Common
 {
     public static class DataModelFunctions
     {
-        readonly static JsonSerializerSettings objectSettings;
-        readonly static JsonSerializerSettings autoSetttings;
-        static DataModelFunctions()
-        {
-            objectSettings = new JsonSerializerSettings()
-            {
-                TypeNameHandling = TypeNameHandling.Objects
-            };
-            autoSetttings = new JsonSerializerSettings()
-            {
-                TypeNameHandling = TypeNameHandling.Auto
-            };
-        }
-        public static string ToConsoleString(this byte[] bytes)
+       public static string ToConsoleString(this byte[] bytes)
         {
             var stringBuilder = new StringBuilder("byte[] array: [ ");
             foreach (var @byte in bytes)
@@ -36,27 +22,14 @@ namespace DataModel.Common
             stringBuilder.Append("]");
             return stringBuilder.ToString();
         }
-        public static byte[] ToJsonPayload(this IMessage msg)
-        {
-            var serialized = JsonConvert.SerializeObject(msg, objectSettings);
-            return Encoding.UTF8.GetBytes(serialized);
-        }
-        public static IMessage FromMessagePackPayload(this byte[] payload)
+       public static IMessage FromMessagePackPayload(this byte[] payload)
         {
             var msg = MessagePackSerializer.Deserialize<IMessage>(payload);
             return msg;
         }
 
 
-        public static IMessage FromJsonPayload(this byte[] payload)
-        {
-            return JsonConvert.DeserializeObject<IMessage>(Encoding.UTF8.GetString(payload));
-        }
-        public static IMessage FromString(this string payload)
-        {
-            return JsonConvert.DeserializeObject<IMessage>(payload, autoSetttings);
-        }
-
+       
         // see https://stackoverflow.com/questions/56692/random-weighted-choice
         public static T RandomElementByWeight<T>(this IEnumerable<T> sequence, Func<T, float> weightSelector, Random seed)
         {
