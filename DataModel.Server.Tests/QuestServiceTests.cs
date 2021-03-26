@@ -86,6 +86,7 @@ namespace DataModel.Server.Tests
             //User should not have any quests:
             var newQuestRequest = service.RequestActiveQuests(user1.UserId).Take(1).Wait();
             Assert.IsTrue(newQuestRequest == null);
+
         }
 
 

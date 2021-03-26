@@ -26,7 +26,6 @@ namespace DataModel.Server.Tests
 
             Assert.IsTrue(dict.Keys.Count == 2);
             Assert.IsTrue(dict[questRewardItemTypeKey] == 18);
-            ;
         }
     }
 }

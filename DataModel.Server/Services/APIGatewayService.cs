@@ -188,6 +188,7 @@ namespace DataModel.Server.Services
                                       })
                                       .Subscribe(v =>
                                       {
+                                          Console.WriteLine("DEBUG: MapContentPickup:" + v.Item2.ToConsoleString() + "  STATE:" + v.Item1);
                                           if (v.Item1 == true)
                                           {
                                               responses.OnNext(new MapContentTransactionMessage() { MessageType = MessageType.RESPONSE, MapContentId = v.Item2, MessageState = MessageState.SUCCESS });

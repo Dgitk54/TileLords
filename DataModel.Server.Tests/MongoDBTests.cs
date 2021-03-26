@@ -12,8 +12,10 @@ using System.Threading;
 
 namespace DataModel.Server.Tests
 {
-    [TestFixture]
-  
+    /// <summary>
+    /// Unit Tests involving only MongoDB functions.
+    /// </summary>
+    [TestFixture] 
     public class MongoDBTests
     {
         [SetUp]
@@ -27,57 +29,46 @@ namespace DataModel.Server.Tests
         {
         }
 
-        [Test]
-        public  void CanAddAndRemoveFromInventory()
-        {
-            IUser user1 = new User()
-            {
-                UserId = ObjectId.GenerateNewId(),
-                UserName = "TestUser",
 
-            };
-            MapContent randomContent = ServerFunctions.GetRandomNonQuestResource().AsMapContent();
-  
-            var startLocation = new PlusCode("8FX9XW2F+9X", 10);
-            randomContent.Location = startLocation.Code;
-
-            MongoDBFunctions.UpdateOrDeleteContent(randomContent, startLocation.Code).Wait();
-            var result =  MongoDBFunctions.RemoveContentAndAddToPlayer(user1.UserId, randomContent.Id).Result;
-
-          
-
-            Assert.IsTrue(result);
-            var userInventory =  MongoDBFunctions.RequestInventory(user1.UserId, user1.UserId).Result;
-            Assert.IsTrue(userInventory.Count == 1);
-
-            var removeResult =  MongoDBFunctions.RemoveContentFromInventory(user1.UserId, user1.UserId, randomContent.ToResourceDictionary()).Result;
-            Assert.IsTrue(removeResult);
-
-            userInventory =  MongoDBFunctions.RequestInventory(user1.UserId, user1.UserId).Result;
-            Assert.IsTrue(userInventory.Values.All(v => v == 0)); 
-        }
         [Test]
         public void CanCreateUserLoginAndLogOut()
         {
-           
-            User user = new User();
-            user.UserName = "test";
-          
-            var userDB =  MongoDBFunctions.InsertUser(user).Result;
-            var findUser =  MongoDBFunctions.FindUserInDatabase("test").Result;
+            User user = new User() { UserName = "test" };
+            var createAccount = MongoDBFunctions.InsertUser(user);
+            createAccount.Wait();
+            Assert.IsTrue(createAccount.Result);
+            var findUser = MongoDBFunctions.FindUserInDatabase("test");
             Assert.IsTrue(findUser != null);
-            var logOn =  MongoDBFunctions.UpdateUserOnlineState(findUser.UserId.ToByteArray(), true).Result;
-            Assert.IsTrue(logOn);
-            var updatedUser =  MongoDBFunctions.FindUserInDatabase("test").Result;
+            IUser userresult = findUser.Result;
+            var logOn = MongoDBFunctions.UpdateUserOnlineState(userresult.UserId, true);
+            logOn.Wait();
+            Assert.IsTrue(logOn.Result);
+            var updatedUserTask = MongoDBFunctions.FindUserInDatabase("test");
+            updatedUserTask.Wait();
+            var updatedUser = updatedUserTask.Result;
             Assert.IsTrue(updatedUser != null);
             Assert.IsTrue(updatedUser.CurrentlyOnline);
 
-            var logOff =  MongoDBFunctions.UpdateUserOnlineState(findUser.UserId.ToByteArray(), false).Result;
-            Assert.IsTrue(logOff);
-            updatedUser =  MongoDBFunctions.FindUserInDatabase("test").Result;
+            var logOffTask = MongoDBFunctions.UpdateUserOnlineState(userresult.UserId, false);
+            logOffTask.Wait();
+            var logOffResult = logOffTask.Result;
+            Assert.IsTrue(logOffResult);
+            updatedUserTask = MongoDBFunctions.FindUserInDatabase("test");
+            updatedUserTask.Wait();
+            updatedUser = updatedUserTask.Result;
             Assert.IsTrue(updatedUser != null);
-            Assert.IsTrue(!updatedUser.CurrentlyOnline); 
+            Assert.IsTrue(!updatedUser.CurrentlyOnline);
         }
+
+
+        [Test]
+        public void CanCreateAndTurnInQuests()
+        {
+            
+        }
+
+
+       
 
     }
 }

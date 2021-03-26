@@ -68,8 +68,6 @@ namespace DataModel.Server.Tests
             //Test Log out:
             bool couldLogOut = false;
             Assert.IsTrue(couldLogOut);
-
-
         }
 
 

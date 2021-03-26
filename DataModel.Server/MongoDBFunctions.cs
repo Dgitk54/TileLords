@@ -36,7 +36,7 @@ namespace DataModel.Server
             client.DropDatabase(QuestDatabaseName);
         }
 
-       
+
 
         public static async Task<bool> InsertUser(User user)
         {
@@ -69,7 +69,7 @@ namespace DataModel.Server
 
         }
 
-       
+
 
         public static async Task<bool> AddQuestForUser(QuestContainer container)
         {
@@ -80,7 +80,7 @@ namespace DataModel.Server
         }
 
 
-       
+
         public static async Task<bool> UpdateUserOnlineState(byte[] id, bool state)
         {
             var objId = new MongoDB.Bson.ObjectId(id);
@@ -118,7 +118,7 @@ namespace DataModel.Server
             return result.IsAcknowledged;
         }
 
-       
+
         public static async Task<List<QuestContainer>> GetQuestsForUser(byte[] userid)
         {
             var database = client.GetDatabase("Quest");
@@ -164,7 +164,6 @@ namespace DataModel.Server
         {
             var database = client.GetDatabase("Quest");
             var col = database.GetCollection<QuestContainer>("quests");
-
             var userQuests = await col.Find(v => v.OwnerId == userId).ToListAsync();
             var enumerable = userQuests.Where(e => e.Quest.QuestId.SequenceEqual(questId));
             if (enumerable.Count() > 1)
@@ -177,7 +176,30 @@ namespace DataModel.Server
             return result.DeletedCount > 0;
         }
 
-       
+        /// <summary>
+        /// Only enqueues the necessary transaction within the sessionhandle without commiting the transaction.
+        /// </summary>
+        /// <param name="session"></param>
+        /// <param name="col"></param>
+        /// <param name="inventoryId"></param>
+        /// <param name="ownerId"></param>
+        /// <param name="content"></param>
+        /// <returns></returns>
+        public static async Task RemoveContentFromInventoryInSessionContext(IClientSessionHandle session, IMongoCollection<Inventory> col, byte[] inventoryId, byte[] ownerId, Dictionary<InventoryType, int> content)
+        {
+            var enumerable = await col.Find(session, v => v.OwnerId == inventoryId).ToListAsync();
+            var containerRequest = enumerable.Where(v => v.ContainerId.SequenceEqual(ownerId));
+            if (containerRequest.Count() > 1)
+                throw new Exception("Multiple inventories for same player id");
+            var inventory = containerRequest.First();
+            var inventoryDictionary = inventory.InventoryItems.ToInventoryDictionary();
+            Dictionary<InventoryType, int> subtractedResult = null;
+            subtractedResult = inventoryDictionary.SubtractInventory(content);
+            Debug.Assert(subtractedResult != null);
+            inventory.InventoryItems = subtractedResult.ToDatabaseStorage();
+            var filter = Builders<Inventory>.Filter.Eq(m => m.ContainerId, inventoryId);
+            var result = await col.ReplaceOneAsync(session, filter, inventory);
+        }
 
         public static async Task<bool> RemoveContentFromInventory(byte[] inventoryId, byte[] ownerId, Dictionary<InventoryType, int> content)
         {
@@ -210,6 +232,46 @@ namespace DataModel.Server
 
 
             return result.IsAcknowledged;
+        }
+
+
+        /// <summary>
+        /// Only enqueues the necessary transaction within the sessionhandle without commiting the transaction.
+        /// </summary>
+        /// <param name="session"></param>
+        /// <param name="col"></param>
+        /// <param name="inventoryId"></param>
+        /// <param name="ownerId"></param>
+        /// <param name="content"></param>
+        /// <returns></returns>
+        public static async Task AddContentToPlayerInventoryInSessionContext(IClientSessionHandle session, IMongoCollection<Inventory> col, byte[] inventoryId, Dictionary<InventoryType, int> content)
+        {
+            var enumerable = await col.Find(session, v => v.OwnerId == inventoryId).ToListAsync();
+            var containerRequest = enumerable.Where(v => v.ContainerId.SequenceEqual(inventoryId));
+            if (containerRequest.Count() > 1)
+                throw new Exception("Multiple inventories for same player id");
+
+            var inventory = containerRequest.First();
+            var inventoryDictionary = inventory.InventoryItems.ToInventoryDictionary();
+
+            //Merge new dictionary:
+            content.ToList().ForEach(x =>
+            {
+                int i = 0;
+                if (inventoryDictionary.TryGetValue(x.Key, out i))
+                {
+                    inventoryDictionary[x.Key] = x.Value + i;
+                }
+                else
+                {
+                    inventoryDictionary.Add(x.Key, x.Value);
+                }
+            });
+
+            //Convert to a storable type:
+            inventory.InventoryItems = inventoryDictionary.ToDatabaseStorage();
+            var filter = Builders<Inventory>.Filter.Eq(m => m.ContainerId, inventoryId);
+            await col.ReplaceOneAsync(session, filter, inventory);
         }
 
 
@@ -260,7 +322,7 @@ namespace DataModel.Server
 
 
 
-       
+
         public static async Task<bool> AddQuestForUser(byte[] userId, QuestContainer container)
         {
             var database = client.GetDatabase("Quest");
@@ -271,7 +333,7 @@ namespace DataModel.Server
 
         }
 
-       
+
         public static async Task<Dictionary<InventoryType, int>> RequestInventory(byte[] requestOwnerId, byte[] targetId)
         {
             var database = client.GetDatabase("Inventory");
@@ -296,8 +358,6 @@ namespace DataModel.Server
             var inventory = getRequestedContainerInventory.First();
             return inventory.InventoryItems.ToInventoryDictionary();
         }
-
-
 
         public static async Task<bool> TurnInQuest(byte[] userId, byte[] questId)
         {
@@ -335,6 +395,76 @@ namespace DataModel.Server
             var addReward = await AddContentToPlayerInventory(userId, quest.Quest.QuestReward.ToResourceDictionary());
 
             return addReward;
+
+        }
+
+
+
+        public static async Task<bool> TurnInQuestTransaction(byte[] userId, byte[] questId)
+        {
+            var databaseQuest = client.GetDatabase("Quest");
+            var databaseInventory = client.GetDatabase("Inventory");
+            using (var session = await client.StartSessionAsync())
+            {
+                session.StartTransaction();
+                try
+                {
+                    var questCollection = databaseQuest.GetCollection<QuestContainer>("quests");
+                    var inventoryCollection = databaseInventory.GetCollection<Inventory>("inventory");
+                    var allPlayerQuests = await questCollection.Find(session, v => v.OwnerId == userId).ToListAsync();
+
+                    var playerQuestEnumerable = allPlayerQuests.Where(e => e.Quest.QuestId.SequenceEqual(questId));
+                    var playerQuestCount = playerQuestEnumerable.Count();
+
+                    //Check for invalid quest states:
+                    if (playerQuestCount > 1)
+                        throw new Exception("Error in queststate! Multiple Quests for same ID");
+                    if (playerQuestCount == 0)
+                        return false;
+                    var playerQuest = playerQuestEnumerable.First();
+
+                    var getContainersWherePlayerHasInventory = await inventoryCollection.Find(session, v => v.OwnerId == userId).ToListAsync();
+                    var playerInventoryEnumerable = getContainersWherePlayerHasInventory.Where(v => v.ContainerId.SequenceEqual(userId));
+
+                    //Check for invalid inventory states:
+                    if (playerInventoryEnumerable.Count() > 1)
+                        throw new Exception("Multiple objects with same ID in database");
+                    if (playerInventoryEnumerable.Count() == 0)
+                        throw new Exception(userId.ToConsoleString() + " has tried to turn in quests while not having a player inventory.");
+
+                    //Check if transaction is valid:
+                    var playerInventory = playerInventoryEnumerable.First();
+                    var transformedPlayerInventory = playerInventory.InventoryItems.ToInventoryDictionary();
+
+                    var itemKey = playerQuest.Quest.GetQuestItemDictionaryKey();
+                    var questItems = 0;
+                    var userHasQuestItems = transformedPlayerInventory.TryGetValue(itemKey, out questItems);
+
+                    if (!userHasQuestItems)
+                        return false;
+                    if (questItems < playerQuest.Quest.RequiredAmountForCompletion)
+                        return false;
+
+                    //User has enough items to complete the quest, handle transaction: 
+                    //remove the Quest:
+                    Debug.Assert(playerQuest.Id != null);
+                    await questCollection.FindOneAndDeleteAsync(session, v => v.Id == playerQuest.Id);
+
+                    //Calculate the difference to subtract from playerinventory:
+                    var differenceDictionary = new Dictionary<InventoryType, int>()
+                    { {itemKey, playerQuest.Quest.RequiredAmountForCompletion} };
+
+                    await RemoveContentFromInventoryInSessionContext(session, inventoryCollection, userId, userId, differenceDictionary);
+                    await AddContentToPlayerInventoryInSessionContext(session, inventoryCollection, userId, playerQuest.Quest.QuestReward.ToResourceDictionary());
+                }
+                catch
+                {
+                    await session.AbortTransactionAsync(); // now Dispose on the session has nothing to do and won't block
+                    return false;
+                }
+                await session.CommitTransactionAsync();
+                return true;
+            }
 
         }
     }
