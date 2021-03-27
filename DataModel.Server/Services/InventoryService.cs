@@ -47,7 +47,7 @@ namespace DataModel.Server.Services
         {
             return Observable.Create<(bool, byte[])>(async v =>
             {
-                var result = await ServerFunctions.PickUpContentAndAddToInventory(requestId, mapContentTarget);
+                var result = await ServerFunctions.PickUpContentAndAddToInventory(mapContentTarget, requestId);
                 v.OnNext((result, mapContentTarget));
                 v.OnCompleted();
                 return Disposable.Empty;
