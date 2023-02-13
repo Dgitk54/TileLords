@@ -23,7 +23,7 @@ The implementation is heavily using [ReactiveX](https://reactivex.io/) to achiev
 ### Big ToDo
 - The server has been tested with up to 500 fake users. The fake clients need to be improved to consume less resources or more machines need to be used to benchmark higher player numbers. Check for bottlenecks within ReactiveX or the server code. [Read more](https://github.com/Azure/DotNetty/issues/135#issuecomment-227676481)
 - Refactoring the functional code to have less side effects, if possible, for greater testability and thus safety.
-- The IP of the machines hosting the databases are currently hardcoded, this needs to be changed. (Service Discovery?)
+- The IP of the machines hosting the databases are currently hardcoded, this needs to be changed. (Service Discovery?) [See](https://github.com/Dgitk54/TileLords/issues/13)
 - Add a configuration file for different server settings, simplify the process of modifying spawn functions.
 - Add License
 
