@@ -1,3 +1,4 @@
+
 # TileLords
 
 ## Project Features
@@ -6,8 +7,10 @@ This repository contains multiple projects. This repository contains a fully fun
 ### Quests/Scavanger Hunt
 The current state of the project also has quests fully implemented. The player can pick up a limited amount of quests with exipration times which force the player to go to a randomly picked spot in his area (can be customized in the server for example making the player walk up to kilometers away). This game feature resembles a [Scavenger hunt](https://en.wikipedia.org/wiki/Scavenger_hunt), but the user would be rewarded in the game with coins for reaching a certain spot in his area. However, this game feature relies heavily on randomly generated spots in the area which might not be reachable and a solution for this problem is not yet implemented. (Reroll quest location area, make user confirm it is reachable etc.)
 ### Missing features:
+
 Privacy mode function to not share position publicly with other players due to concerns with privacy laws in some countries.
 The game core currently provides a way to generate resources, clients being able to move and see each other and compete for spawning resources or complete scavanger hunts. The project has currently no resource sinks implemented. Examples would be:
+
 - Player trading
 - Player pvp like maintaining player build cities and sieges.
 - Player pve like farming.
@@ -31,6 +34,9 @@ The client currently has an observable stream for the determenistic map, and oth
 ## 3D View example
 [Lurania](https://github.com/lurania) created a view for the game core with UnityEngine with 3d graphics and full support for registering/logging in, quests, user inventory, gps based movement, visible other players, resource/player interaction UI. This is a demonstration of how a view might look like. A cube in the game world represents roughly a 2x2m area on the earth.
 [3D example view in Unity.](https://drive.google.com/file/d/1xq3ykH7RO8Itfya0FpxPNkeWX6tF79Wn/view)
+![grafik](https://user-images.githubusercontent.com/68773319/219220935-898548c7-eac1-4636-b551-3dabb47f0df8.png)
+![grafik](https://user-images.githubusercontent.com/68773319/219221227-1b5b36aa-d65d-4114-b23f-c65273f15311.png)
+![grafik](https://user-images.githubusercontent.com/68773319/219221458-e826b73a-e210-4a08-97e2-83524b228f04.png)
 
 
 ### Big ToDo
