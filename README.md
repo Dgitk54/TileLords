@@ -36,7 +36,7 @@ The client currently has an observable stream for the determenistic map, and oth
 
 
 ## 3D view example + video
-[Lurania](https://github.com/lurania) created a view for the game core with UnityEngine with 3d graphics and full support for registering/logging in, quests, user inventory, gps based movement, visible other players, resource/player interaction UI. This is a demonstration of how a view might look like. A cube in the game world represents roughly a 2x2m area on the earth.
+[Lurania](https://github.com/lurania) created a view for the game core with UnityEngine with 3d graphics and full support for registering/logging in, quests, user inventory, gps based movement, visible other players, resource/player interaction UI. This is a demonstration of how a view might look like. A cube in the game world represents roughly a ~10x10m area on the earth.
 [3D example view in Unity with a video](https://drive.google.com/file/d/1xq3ykH7RO8Itfya0FpxPNkeWX6tF79Wn/view)
 ![grafik](https://user-images.githubusercontent.com/68773319/219220935-898548c7-eac1-4636-b551-3dabb47f0df8.png)
 ![grafik](https://user-images.githubusercontent.com/68773319/219221227-1b5b36aa-d65d-4114-b23f-c65273f15311.png)
